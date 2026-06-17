@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trials &amp; Tournaments</title>
+    <style>
+        *{box-sizing:border-box}
+        body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;background:#0b1320;color:#fff}
+        body::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,rgba(11,19,32,.88),rgba(16,185,129,.35));z-index:-1}
+        header,main,footer{max-width:1000px;margin:auto;padding:24px}
+        .panel{background:rgba(16,27,47,.9);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:24px}
+        .btn{display:inline-block;margin-right:10px;padding:10px 16px;border-radius:999px;text-decoration:none;color:#0b1320;background:#f8fafc;font-weight:700;transition:transform .2s ease}
+        .btn:hover{transform:translateY(-2px)}
+        .btn.alt{background:#f59e0b}
+        .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;margin-top:16px}
+        article{background:rgba(255,255,255,.04);border-radius:16px;padding:18px}
+        p{line-height:1.7;color:#dbe4f0}
+        h1{font-size:clamp(2rem,4vw,3.2rem);margin:0 0 12px}
+    </style>
+</head>
+<body>
+    <header>
+            <div class="panel">
+                <a class="btn" href="home.html">Home</a>
+                <a class="btn alt" href="opp.html">Trials &amp; Tournaments</a>
+            </div>
+    </header>
+
+    <main>
+        <section class="panel">
+            <h1>Trials &amp; Tournaments</h1>
+            <p>Hapa ndio players huona nafasi za kuonyesha uwezo wao, na scouts huweka taarifa za events na tryouts.</p>
+            <div class="grid">
+                <article>
+                    <h2>Trials</h2>
+                    <p>Open tryouts for players who want to register and get seen by scouts or clubs.</p>
+                </article>
+                <article>
+                    <h2>Tournaments</h2>
+                    <p>Competitive events that build exposure, experience, and confidence.</p>
+                </article>
+                <article>
+                    <h2>Scout Posts</h2>
+                    <p>Scouts share requirements, dates, locations, and contact details in one place.</p>
+                </article>
+            </div>
+        </section>
+    </main>
+</body>
+</html>
