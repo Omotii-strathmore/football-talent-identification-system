@@ -1,0 +1,14 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Player page | Talanta Soka{% endblock %}
+
+{% block content %}
+    <p class="eyebrow">Player</p>
+    <h1 class="title">Player account ready</h1>
+    <p class="lead">Your player profile is active. From here you can head to opportunities, trials, and tournaments.</p>
+
+    <div class="links d-flex flex-wrap gap-2 mt-4">
+        <a class="btn btn-brand" href="{% url 'opportunities' %}">View opportunities</a>
+        <a class="btn btn-outline-light" href="{% url 'login' %}">Back to login</a>
+    </div>
+{% endblock %}

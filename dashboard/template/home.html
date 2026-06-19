@@ -6,26 +6,30 @@
     <title>Talanta Soka</title>
     <style>
         *{box-sizing:border-box}
-        body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;color:#fff;background:#06121f url('https://images.unsplash.com/photo-1547347298-4074fc3086f0?auto=format&fit=crop&w=1600&q=80') center/cover fixed}
-        body::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,rgba(3,7,18,.9),rgba(15,23,42,.72));z-index:-1}
+        body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;color:#0f172a;background:#eaf2ff url('https://images.unsplash.com/photo-1526906912283-7c6f1b3f5c8c?auto=format&fit=crop&w=1600&q=80') center/cover fixed}
+        body::before{content:'';position:fixed;inset:0;background:linear-gradient(135deg,rgba(235,243,255,.82),rgba(245,248,255,.7));z-index:-1}
         header,main,footer{max-width:1100px;margin:auto;padding:24px}
         nav,.actions,.nav-links,.chips{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-        .panel{background:rgba(8,15,28,.74);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.12);border-radius:24px}
-        .btn{display:inline-block;padding:12px 18px;border-radius:999px;text-decoration:none;color:#06111f;background:#f8fafc;font-weight:700;transition:transform .2s ease,opacity .2s ease}
+        .panel{background:rgba(255,255,255,.78);backdrop-filter:blur(14px);border:1px solid rgba(148,163,184,.2);border-radius:24px;box-shadow:0 20px 50px rgba(15,23,42,.12)}
+        .btn{display:inline-block;padding:12px 18px;border-radius:999px;text-decoration:none;color:#fff;background:#0f172a;font-weight:700;transition:transform .2s ease,opacity .2s ease}
         .btn:hover{transform:translateY(-2px);opacity:.96}
-        .btn.alt{background:#f59e0b}
-        .btn.dark{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.35)}
+        .btn.alt{background:#f59e0b;color:#111827}
+        .btn.dark{background:transparent;color:#0f172a;border:1px solid rgba(15,23,42,.2)}
         .hero{padding:72px 0 32px}
         .wrap{padding:32px}
-        h1{font-size:clamp(2.8rem,6vw,5rem);line-height:1.02;margin:.15em 0;text-shadow:0 4px 20px rgba(0,0,0,.55)}
+        h1{font-size:clamp(2.8rem,6vw,5rem);line-height:1.02;margin:.15em 0;color:#0f172a}
         h2{margin-top:0}
-        p{line-height:1.75;color:#dbe4f0}
-        .eyebrow{letter-spacing:.16em;text-transform:uppercase;color:#f9c74f;font-size:.78rem;margin:0 0 12px}
+        p{line-height:1.75;color:#334155}
+        .eyebrow{letter-spacing:.16em;text-transform:uppercase;color:#b45309;font-size:.78rem;margin:0 0 12px}
         .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
-        .card{padding:20px;border-radius:18px;background:rgba(255,255,255,.08)}
+        .card{padding:20px;border-radius:18px;background:rgba(255,255,255,.72);border:1px solid rgba(148,163,184,.18)}
         .lede{max-width:760px}
         .section{margin-top:20px}
-        .highlight{color:#f9c74f}
+        .highlight{color:#0f766e}
+        .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:20px}
+        .kpi{padding:18px;border-radius:18px;background:rgba(255,255,255,.85);border:1px solid rgba(148,163,184,.18)}
+        .kpi strong{display:block;font-size:1.6rem;color:#0f172a;margin-bottom:6px}
+        .kpi span{color:#475569;line-height:1.5}
     </style>
 </head>
 <body>
@@ -33,8 +37,10 @@
         <nav class="panel" style="padding:16px 20px">
             <strong>Talanta Soka</strong>
             <div class="nav-links">
-                <a class="btn dark" href="home.html">Home</a>
-                <a class="btn dark" href="opp.html">Trials &amp; Tournaments</a>
+                <a class="btn dark" href="{% url 'home' %}">Home</a>
+                <a class="btn dark" href="{% url 'opportunities' %}">Trials &amp; Tournaments</a>
+                <a class="btn dark" href="{% url 'register' %}">Register</a>
+                <a class="btn dark" href="{% url 'login' %}">Login</a>
             </div>
         </nav>
     </header>
@@ -42,44 +48,58 @@
     <main>
         <section class="hero">
             <div class="panel wrap">
-                <p class="eyebrow">Football Talent Identification / Uhamasishaji wa Vipaji</p>
-                <h1><span class="highlight">Talanta Soka</span> huunganisha players, scouts, na opportunities.</h1>
-                <p class="lede">This is a simple football talent identification and exposure system. Wachezaji huunda profiles, huona trials and tournaments, na hupakia video za vipaji. Scouts huposti opportunities na kutafuta talent mapema.</p>
+                <p class="eyebrow">Football Talent Identification and Exposure System / Uhamasishaji wa Vipaji</p>
+                <h1><span class="highlight">Talanta Soka</span> is a shared space for players, scouts, and opportunities.</h1>
+                <p class="lede">The system shows players where trials and tournaments are posted, gives scouts one place to share openings, and keeps both sides on the right path with role-based access. It is built to help talent be noticed, organized, and connected in one place.</p>
                 <div class="actions">
-                    <a class="btn" href="#player">Register as Player</a>
-                    <a class="btn alt" href="#scout">Join as Scout</a>
-                    <a class="btn dark" href="opp.html">Go to Trials &amp; Tournaments</a>
+                    <a class="btn" href="{% url 'register' %}?role=player">Register as Player</a>
+                    <a class="btn alt" href="{% url 'register' %}?role=scout">Join as Scout</a>
+                    <a class="btn dark" href="{% url 'opportunities' %}">Go to Trials &amp; Tournaments</a>
+                </div>
+                <div class="kpis">
+                    <div class="kpi">
+                        <strong>Player profiles</strong>
+                        <span>Players create accounts, choose a role, and move into a player-specific page after signup.</span>
+                    </div>
+                    <div class="kpi">
+                        <strong>Scout posts</strong>
+                        <span>Scouts can publish trials, tournaments, and openings where players can easily find them.</span>
+                    </div>
+                    <div class="kpi">
+                        <strong>Role routing</strong>
+                        <span>After registration or login, the system sends each user to the correct area automatically.</span>
+                    </div>
                 </div>
             </div>
         </section>
 
         <section class="grid section">
             <article class="card">
-                <h2>For Players</h2>
-                <p>Unda profile yako, view opportunities, and upload videos that show your skills and growth.</p>
+                <h2>What players get</h2>
+                <p>A simple account, access to opportunities, and a clear place to begin their journey toward visibility.</p>
             </article>
             <article class="card">
-                <h2>For Scouts</h2>
-                <p>Post trials, tournaments, and requirements, then reach players who are ready for exposure.</p>
+                <h2>What scouts get</h2>
+                <p>A single posting space for trials and tournaments, plus a direct way to reach players who are ready to be noticed.</p>
             </article>
             <article class="card">
                 <h2>Why it matters</h2>
-                <p>Inarahisisha discovery ya talent, inaongeza exposure, na inasaidia players kupata chances haraka.</p>
+                <p>Talent often goes unseen because information is scattered. This system keeps the path from discovery to opportunity in one place.</p>
             </article>
         </section>
 
         <section class="grid section">
+            <article class="card">
+                <h2>How it works</h2>
+                <p>1. Choose a role. 2. Create your account. 3. Get taken to the right page. 4. Explore or post opportunities.</p>
+            </article>
             <article id="player" class="card">
-                <h2>Start as a Player</h2>
-                <p>Jisajili, build your profile, and then move to the opportunities page to see trials and tournaments.</p>
+                <h2>Player path</h2>
+                <p>Register as a player to see the opportunities area, then use it to follow trials and tournaments that match your goals.</p>
             </article>
             <article id="scout" class="card">
-                <h2>Start as a Scout</h2>
-                <p>Jiunge kama scout na andika opportunities ambazo players wanaweza kuona na kujiandikisha.</p>
-            </article>
-            <article class="card">
-                <h2>Simple flow</h2>
-                <p>Create profile. View or post opportunities. Upload videos. Discover talent.</p>
+                <h2>Scout path</h2>
+                <p>Register as a scout to share openings and guide players toward events, requirements, and next steps.</p>
             </article>
         </section>
     </main>

@@ -1,0 +1,14 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Scout page | Talanta Soka{% endblock %}
+
+{% block content %}
+    <p class="eyebrow">Scout</p>
+    <h1 class="title">Scout account ready</h1>
+    <p class="lead">Your scout profile is active. You can now review trials, tournaments, and post new opportunities for players.</p>
+
+    <div class="links d-flex flex-wrap gap-2 mt-4">
+        <a class="btn btn-brand" href="{% url 'opportunities' %}">Open opportunities</a>
+        <a class="btn btn-outline-light" href="{% url 'login' %}">Back to login</a>
+    </div>
+{% endblock %}
