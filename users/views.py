@@ -5,7 +5,6 @@ from django.shortcuts import render, redirect
 
 from .forms import RegistrationForm, LoginForm
 
-
 def home(request):
     return render(request, 'users/home.html')
 
@@ -22,16 +21,10 @@ def register_view(request):
 
             login(request, user)
 
-            messages.success(
-                request,
-                'Account created successfully.'
-            )
-
             if user.role == 'player':
-                return redirect('player_page')
+                return redirect('player_dashboard')
 
-            elif user.role == 'scout':
-                return redirect('scout_page')
+            return redirect('scout_dashboard')
 
     else:
 
@@ -40,9 +33,7 @@ def register_view(request):
     return render(
         request,
         'users/register.html',
-        {
-            'form': form
-        }
+        {'form': form}
     )
 
 
@@ -54,36 +45,20 @@ def login_view(request):
 
         if form.is_valid():
 
-            email = form.cleaned_data['email']
-            password = form.cleaned_data['password']
-
             user = authenticate(
                 request,
-                email=email,
-                password=password
+                email=form.cleaned_data['email'],
+                password=form.cleaned_data['password']
             )
 
-            if user is not None:
+            if user:
 
                 login(request, user)
 
-                messages.success(
-                    request,
-                    f'Welcome back {user.full_name}'
-                )
-
                 if user.role == 'player':
-                    return redirect('player_page')
+                    return redirect('player_dashboard')
 
-                elif user.role == 'scout':
-                    return redirect('scout_page')
-
-            else:
-
-                messages.error(
-                    request,
-                    'Invalid email or password.'
-                )
+                return redirect('scout_dashboard')
 
     else:
 
@@ -92,8 +67,5 @@ def login_view(request):
     return render(
         request,
         'users/login.html',
-        {
-            'form': form
-        }
+        {'form': form}
     )
-
