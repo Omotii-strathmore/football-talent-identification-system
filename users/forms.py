@@ -1,6 +1,6 @@
 from django import forms
 from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Submit
+from crispy_forms.layout import Layout
 
 from .models import User
 
@@ -35,7 +35,6 @@ class RegistrationForm(forms.ModelForm):
 			'role',
 			'password',
 			'confirm_password',
-			Submit('submit', 'Create account'),
 		)
 
 	def clean(self):
@@ -74,5 +73,4 @@ class LoginForm(forms.Form):
 		self.helper.layout = Layout(
 			'email',
 			'password',
-			Submit('submit', 'Login'),
 		)

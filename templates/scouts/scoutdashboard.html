@@ -1,11 +1,122 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Scout Dashboard</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<h1>Scout Dashboard</h1>
+{% block title %}Scout Dashboard{% endblock %}
 
-</body>
-</html>
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-hero mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <div>
+                <h2 class="fw-bold mb-1">Welcome to Scout Dashboard, {{ first_name }}</h2>
+                <p class="text-muted mb-2">Organization: {{ scout_profile.organization }}</p>
+                <p class="text-muted mb-0">Specialization: {{ scout_profile.specialization }}</p>
+
+                {% if scout_profile.verified %}
+                    <span class="badge bg-success mt-2">Status: Verified</span>
+                {% else %}
+                    <span class="badge bg-warning text-dark mt-2">Status: Pending Verification</span>
+                {% endif %}
+            </div>
+
+            {% if scout_profile.profile_photo %}
+                <img src="{{ scout_profile.profile_photo.url }}" alt="{{ first_name }}" class="hero-avatar">
+            {% else %}
+                <div class="hero-avatar-fallback">{{ first_name|slice:':1'|upper }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-value">{{ posted_count }}</div>
+                    <p class="text-muted mb-0">Posted Opportunities</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-value">{{ active_count }}</div>
+                    <p class="text-muted mb-0">Active Opportunities</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-value">{{ applications_count }}</div>
+                    <p class="text-muted mb-0">Total Applications</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-soft p-3 p-md-4 mb-4">
+            <h4 class="section-title">Quick Actions</h4>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <a href="{% url 'post_opportunity' %}" class="btn btn-primary w-100">Post Opportunity</a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'post_opportunity' %}" class="btn btn-outline-primary w-100">Manage Posted Opportunities</a>
+                </div>
+                <div class="col-md-4">
+                    <a href="{% url 'scout_player_directory' %}" class="btn btn-outline-dark w-100">View Players & Videos</a>
+                </div>
+            </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="mb-3">Recent Opportunities</h5>
+                    {% if recent_opportunities %}
+                        <ul class="list-group list-group-flush">
+                            {% for opportunity in recent_opportunities %}
+                                <li class="list-group-item px-0 d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <strong>{{ opportunity.title }}</strong>
+                                        <div class="text-muted">{{ opportunity.location }} | Deadline: {{ opportunity.deadline }}</div>
+                                    </div>
+                                    {% if opportunity.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">Closed</span>
+                                    {% endif %}
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">No opportunities posted yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-body">
+                    <h5 class="mb-3">Recent Applications</h5>
+                    {% if recent_applications %}
+                        <ul class="list-group list-group-flush">
+                            {% for application in recent_applications %}
+                                <li class="list-group-item px-0">
+                                    <strong>{{ application.player.full_name }}</strong>
+                                    applied for
+                                    <strong>{{ application.opportunity.title }}</strong>
+                                    <div class="text-muted">Status: {{ application.get_status_display }} | {{ application.applied_at }}</div>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">No applications received yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

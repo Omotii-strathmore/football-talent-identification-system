@@ -24,6 +24,15 @@
         .message-list{list-style:none;padding:0;margin:0 0 18px}
         .message-list li{margin-bottom:10px;padding:12px 14px;border-radius:14px;background:rgba(255,255,255,.08);border:1px solid var(--line)}
         .form-control, .form-select{background:rgba(255,255,255,.96)}
+        .progress-wrap{margin:8px 0 24px}
+        .step-title{font-size:.9rem;color:var(--muted);margin-bottom:8px}
+        .progress{height:10px;background:rgba(255,255,255,.14);border-radius:999px}
+        .progress-bar{background:linear-gradient(90deg,var(--accent),var(--accent2));font-weight:600}
+        .progress-fill-33{width:33%}
+        .progress-fill-50{width:50%}
+        .progress-fill-66{width:66%}
+        .progress-fill-100{width:100%}
+        .step-labels{display:flex;justify-content:space-between;margin-top:8px;font-size:.75rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
     </style>
 </head>
 <body>
@@ -36,6 +45,33 @@
                     {% endfor %}
                 </ul>
             {% endif %}
+
+            {% if current_step and total_steps %}
+                <section class="progress-wrap" aria-label="Registration and login progress">
+                    <p class="step-title">{{ step_title }}</p>
+                    <div class="progress" role="progressbar" aria-valuemin="1" aria-valuemax="{{ total_steps }}" aria-valuenow="{{ current_step }}">
+                        {% if total_steps == 2 and current_step == 1 %}
+                            <div class="progress-bar progress-fill-50"></div>
+                        {% elif total_steps == 2 and current_step == 2 %}
+                            <div class="progress-bar progress-fill-100"></div>
+                        {% elif total_steps == 3 and current_step == 1 %}
+                            <div class="progress-bar progress-fill-33"></div>
+                        {% elif total_steps == 3 and current_step == 2 %}
+                            <div class="progress-bar progress-fill-66"></div>
+                        {% else %}
+                            <div class="progress-bar progress-fill-100"></div>
+                        {% endif %}
+                    </div>
+                    <div class="step-labels">
+                        <span>Register</span>
+                        <span>Role details</span>
+                        {% if total_steps == 3 %}
+                            <span>Login</span>
+                        {% endif %}
+                    </div>
+                </section>
+            {% endif %}
+
             {% block content %}{% endblock %}
         </main>
     </div>

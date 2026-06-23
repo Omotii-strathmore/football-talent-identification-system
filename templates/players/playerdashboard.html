@@ -1,11 +1,79 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Player Dashboard</title>
-</head>
-<body>
+{% extends 'base.html' %}
 
-<h1>Scout Dashboard</h1>
+{% block title %}Player Dashboard{% endblock %}
 
-</body>
-</html>
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-hero mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3">
+            <div>
+                <h2 class="mb-1 fw-bold">Welcome to Player Dashboard, {{ first_name }}</h2>
+                {% if profile %}
+                    <p class="text-muted mb-0">{{ profile.full_name }} | {{ profile.position }} | {{ profile.location }}</p>
+                {% else %}
+                    <p class="text-muted mb-0">Welcome player.</p>
+                {% endif %}
+            </div>
+
+            {% if profile and profile.profile_photo %}
+                <img src="{{ profile.profile_photo.url }}" alt="{{ first_name }}" class="hero-avatar">
+            {% else %}
+                <div class="hero-avatar-fallback">{{ first_name|slice:':1'|upper }}</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <div class="card stat-card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-value">{{ applications_count }}</div>
+                    <p class="text-muted mb-0">Applications</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card stat-card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-value">{{ videos_count }}</div>
+                    <p class="text-muted mb-0">Uploaded Videos</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card stat-card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-value">{{ profile.position|default:'-' }}</div>
+                    <p class="text-muted mb-0">Primary Position</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card stat-card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-value">{{ profile.location|default:'-' }}</div>
+                    <p class="text-muted mb-0">Current Location</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-soft p-3 p-md-4">
+        <h4 class="section-title">Quick Actions</h4>
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <a href="{% url 'player_profile' %}" class="btn btn-outline-dark w-100">My Profile</a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'upload_video' %}" class="btn btn-success w-100">Upload Video ({{ videos_count }})</a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'view_opportunities' %}" class="btn btn-primary w-100">View Opportunities</a>
+        </div>
+        <div class="col-md-3">
+            <a href="{% url 'my_applications' %}" class="btn btn-outline-primary w-100">My Applications ({{ applications_count }})</a>
+        </div>
+    </div>
+    </div>
+</div>
+{% endblock %}

@@ -46,3 +46,20 @@ class PlayerProfile(models.Model):
 
     def __str__(self):
         return self.full_name
+
+
+class PlayerVideo(models.Model):
+    profile = models.ForeignKey(
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name='videos'
+    )
+    title = models.CharField(max_length=150)
+    video_file = models.FileField(upload_to='player_videos/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-uploaded_at']
+
+    def __str__(self):
+        return f'{self.profile.full_name} - {self.title}'

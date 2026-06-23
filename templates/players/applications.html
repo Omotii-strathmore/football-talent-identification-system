@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}My Applications{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h2 class="mb-0">My Applications</h2>
+		<a href="{% url 'view_opportunities' %}" class="btn btn-outline-primary">View Opportunities</a>
+	</div>
+
+	{% if applications %}
+		<div class="table-responsive">
+			<table class="table table-bordered table-striped">
+				<thead>
+					<tr>
+						<th>Opportunity</th>
+						<th>Organization</th>
+						<th>Status</th>
+						<th>Applied On</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for application in applications %}
+						<tr>
+							<td>{{ application.opportunity.title }}</td>
+							<td>{{ application.opportunity.organization }}</td>
+							<td>{{ application.get_status_display }}</td>
+							<td>{{ application.applied_at }}</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	{% else %}
+		<div class="alert alert-info">You have not applied for any opportunities yet.</div>
+	{% endif %}
+</div>
+{% endblock %}

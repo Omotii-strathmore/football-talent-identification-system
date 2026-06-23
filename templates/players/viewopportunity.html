@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Opportunities{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h2 class="mb-0">Available Opportunities</h2>
+		<a href="{% url 'my_applications' %}" class="btn btn-outline-primary">My Applications</a>
+	</div>
+
+	{% if opportunities %}
+		<div class="row g-3">
+			{% for opportunity in opportunities %}
+				<div class="col-md-6">
+					<div class="card h-100">
+						<div class="card-body">
+							<h5 class="card-title">{{ opportunity.title }}</h5>
+							<p class="text-muted mb-1"><strong>Organization:</strong> {{ opportunity.organization }}</p>
+							<p class="text-muted mb-1"><strong>Location:</strong> {{ opportunity.location }}</p>
+							<p class="text-muted mb-2"><strong>Deadline:</strong> {{ opportunity.deadline }}</p>
+							<p class="card-text">{{ opportunity.description }}</p>
+
+							{% if opportunity.id in applied_ids %}
+								<button class="btn btn-success" disabled>Already Applied</button>
+							{% else %}
+								<form method="post" action="{% url 'apply_opportunity' opportunity.id %}">
+									{% csrf_token %}
+									<div class="mb-2">
+										{{ application_form.motivation }}
+									</div>
+									<button type="submit" class="btn btn-primary">Apply</button>
+								</form>
+							{% endif %}
+						</div>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+	{% else %}
+		<div class="alert alert-info">No opportunities posted yet.</div>
+	{% endif %}
+</div>
+{% endblock %}

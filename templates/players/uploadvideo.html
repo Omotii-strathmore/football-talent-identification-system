@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Upload Player Videos{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Upload Performance Videos</h2>
+        <a href="{% url 'player_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary mt-2">Upload Video</button>
+            </form>
+        </div>
+    </div>
+
+    <h4>My Uploaded Videos</h4>
+    {% if videos %}
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Uploaded At</th>
+                        <th>File</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for video in videos %}
+                        <tr>
+                            <td>{{ video.title }}</td>
+                            <td>{{ video.uploaded_at }}</td>
+                            <td><a href="{{ video.video_file.url }}" target="_blank">View Video</a></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <div class="alert alert-info">No videos uploaded yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

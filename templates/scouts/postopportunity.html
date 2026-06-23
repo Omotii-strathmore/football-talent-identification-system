@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Post Opportunity{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+	<div class="d-flex justify-content-between align-items-center mb-3">
+		<h2 class="mb-0">Post Opportunity</h2>
+		<a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+	</div>
+
+	{% if not is_verified %}
+		<div class="alert alert-warning">
+			Your account is currently pending verification.
+		</div>
+	{% endif %}
+
+	<div class="card mb-4">
+		<div class="card-body">
+			<form method="post" novalidate>
+				{% csrf_token %}
+				{{ form|crispy }}
+				{% if is_verified %}
+					<button type="submit" class="btn btn-primary mt-2">Publish Opportunity</button>
+				{% else %}
+					<button type="button" class="btn btn-secondary mt-2" disabled>Publish Opportunity (Awaiting Verification)</button>
+				{% endif %}
+			</form>
+		</div>
+	</div>
+
+	<h4>Your Posted Opportunities</h4>
+	{% if posted_opportunities %}
+		<div class="table-responsive">
+			<table class="table table-bordered table-striped">
+				<thead>
+					<tr>
+						<th>Title</th>
+						<th>Organization</th>
+						<th>Deadline</th>
+						<th>Applications</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for opportunity in posted_opportunities %}
+						<tr>
+							<td>{{ opportunity.title }}</td>
+							<td>{{ opportunity.organization }}</td>
+							<td>{{ opportunity.deadline }}</td>
+							<td>{{ opportunity.applications.count }}</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	{% else %}
+		<div class="alert alert-info">You have not posted any opportunities yet.</div>
+	{% endif %}
+</div>
+{% endblock %}
