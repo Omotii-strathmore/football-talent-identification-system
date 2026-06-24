@@ -33,6 +33,56 @@
         <a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
     </div>
 
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-2 align-items-end">
+                <div class="col-md-3">
+                    <label for="filter_by" class="form-label mb-1">Filter By</label>
+                    <select id="filter_by" name="filter_by" class="form-select" onchange="this.form.submit()">
+                        <option value="">Select option</option>
+                        <option value="position" {% if filter_by == 'position' %}selected{% endif %}>Football Position</option>
+                        <option value="location" {% if filter_by == 'location' %}selected{% endif %}>Location</option>
+                        <option value="age" {% if filter_by == 'age' %}selected{% endif %}>Age</option>
+                    </select>
+                </div>
+
+                <div class="col-md-5">
+                    <label for="filter_value" class="form-label mb-1">Value</label>
+
+                    {% if filter_by == 'position' %}
+                        <select id="filter_value" name="filter_value" class="form-select">
+                            <option value="">Select position</option>
+                            {% for value, label in positions %}
+                                <option value="{{ value }}" {% if filter_value == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    {% elif filter_by == 'location' %}
+                        <select id="filter_value" name="filter_value" class="form-select">
+                            <option value="">Select location</option>
+                            {% for location in locations %}
+                                <option value="{{ location }}" {% if filter_value == location %}selected{% endif %}>{{ location }}</option>
+                            {% endfor %}
+                        </select>
+                    {% elif filter_by == 'age' %}
+                        <select id="filter_value" name="filter_value" class="form-select">
+                            <option value="">Select age</option>
+                            {% for age in ages %}
+                                <option value="{{ age }}" {% if filter_value == age|stringformat:'s' %}selected{% endif %}>{{ age }}</option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <input id="filter_value" name="filter_value" class="form-control" value="" placeholder="Choose filter option first" disabled>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Apply Filter</button>
+                    <a href="{% url 'scout_player_directory' %}" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {% if profiles %}
         <div class="row g-3">
             {% for profile in profiles %}

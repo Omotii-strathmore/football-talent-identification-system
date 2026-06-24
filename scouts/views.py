@@ -46,10 +46,40 @@ def player_directory(request):
 
     profiles = PlayerProfile.objects.select_related('user').prefetch_related('videos').all()
 
+    filter_by = request.GET.get('filter_by', '').strip().lower()
+    filter_value = request.GET.get('filter_value', '').strip()
+
+    if filter_by == 'position' and filter_value:
+        profiles = profiles.filter(position=filter_value)
+    elif filter_by == 'location' and filter_value:
+        profiles = profiles.filter(location__icontains=filter_value)
+    elif filter_by == 'age' and filter_value:
+        try:
+            profiles = profiles.filter(age=int(filter_value))
+        except ValueError:
+            messages.error(request, 'Age filter must be a valid number.')
+
+    all_locations = (
+        PlayerProfile.objects.exclude(location='')
+        .values_list('location', flat=True)
+        .distinct()
+        .order_by('location')
+    )
+    all_ages = (
+        PlayerProfile.objects.values_list('age', flat=True)
+        .distinct()
+        .order_by('age')
+    )
+
     return render(
         request,
         'scouts/playerdirectory.html',
         {
             'profiles': profiles,
+            'filter_by': filter_by,
+            'filter_value': filter_value,
+            'positions': PlayerProfile.POSITION_CHOICES,
+            'locations': all_locations,
+            'ages': all_ages,
         }
     )

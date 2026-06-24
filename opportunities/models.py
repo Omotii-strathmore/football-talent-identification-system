@@ -11,6 +11,7 @@ class Opportunity(models.Model):
 	title = models.CharField(max_length=150)
 	organization = models.CharField(max_length=150)
 	description = models.TextField()
+	poster_image = models.ImageField(upload_to='opportunity_posters/', blank=True, null=True)
 	location = models.CharField(max_length=120)
 	deadline = models.DateField()
 	is_active = models.BooleanField(default=True)

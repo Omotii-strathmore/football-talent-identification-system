@@ -7,7 +7,10 @@
 <div class="container mt-4">
 	<div class="d-flex justify-content-between align-items-center mb-3">
 		<h2 class="mb-0">Post Opportunity</h2>
-		<a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+		<div class="d-flex gap-2">
+			<a href="{% url 'manage_posted_opportunities' %}" class="btn btn-outline-primary">Manage Applications</a>
+			<a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+		</div>
 	</div>
 
 	{% if not is_verified %}
@@ -18,7 +21,7 @@
 
 	<div class="card mb-4">
 		<div class="card-body">
-			<form method="post" novalidate>
+			<form method="post" enctype="multipart/form-data" novalidate>
 				{% csrf_token %}
 				{{ form|crispy }}
 				{% if is_verified %}
@@ -50,6 +53,13 @@
 							<td>{{ opportunity.deadline }}</td>
 							<td>{{ opportunity.applications.count }}</td>
 						</tr>
+						{% if opportunity.poster_image %}
+						<tr>
+							<td colspan="4">
+								<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" style="max-width: 240px; border-radius: 10px;">
+							</td>
+						</tr>
+						{% endif %}
 					{% endfor %}
 				</tbody>
 			</table>

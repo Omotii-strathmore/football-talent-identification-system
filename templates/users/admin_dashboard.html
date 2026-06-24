@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-hero mb-4">
+        <h2 class="fw-bold mb-1">Admin Dashboard</h2>
+        <p class="text-muted mb-0">Monitor system activity and manage users and scout verification.</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-6 col-lg-3">
+            <a href="{% url 'admin_users' %}" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="stat-value">{{ total_users }}</div>
+                        <p class="text-muted mb-0">Total Users</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="{% url 'admin_users' %}?role=player" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="stat-value">{{ total_players }}</div>
+                        <p class="text-muted mb-0">Players</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="{% url 'admin_users' %}?role=scout" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="stat-value">{{ total_scouts }}</div>
+                        <p class="text-muted mb-0">Scouts</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="{% url 'admin_verifications' %}" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="stat-value">{{ pending_verifications }}</div>
+                        <p class="text-muted mb-0">Pending Verifications</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="panel-soft p-3 p-md-4">
+        <h4 class="section-title">Admin Actions</h4>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <a href="{% url 'admin_verifications' %}" class="btn btn-primary w-100">Review Verification Docs</a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'admin_users' %}" class="btn btn-outline-dark w-100">Manage Accounts</a>
+            </div>
+            <div class="col-md-4">
+                <a href="{% url 'admin_reports' %}" class="btn btn-outline-primary w-100">System Reports</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-md-6">
+            <a href="{% url 'admin_reports' %}" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="stat-value">{{ opportunities_count }}</div>
+                        <p class="text-muted mb-0">Opportunities Posted</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-6">
+            <a href="{% url 'admin_reports' %}" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="stat-value">{{ applications_count }}</div>
+                        <p class="text-muted mb-0">Applications Submitted</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

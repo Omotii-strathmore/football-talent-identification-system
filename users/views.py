@@ -1,13 +1,19 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.shortcuts import get_object_or_404, render, redirect
 
+from opportunities.models import Application, Opportunity
+from players.models import PlayerProfile, PlayerVideo
 from players.forms import PlayerOnboardingForm
-from players.models import PlayerProfile
 from scouts.forms import ScoutOnboardingForm
 from scouts.models import Scout
-from .forms import RegistrationForm, LoginForm
+from .forms import AdminUserCreateForm, AdminUserUpdateForm, RegistrationForm, LoginForm
 from .models import User
+
+
+def _is_staff_user(user):
+    return user.is_authenticated and user.is_staff
 
 def home(request):
     return render(request, 'users/home.html')
@@ -128,6 +134,10 @@ def login_view(request):
 
             if user:
 
+                if user.is_staff:
+                    login(request, user)
+                    return redirect('admin_dashboard')
+
                 # Ensure role-specific profile exists before allowing dashboard access.
                 if user.role == 'player' and not hasattr(user, 'player_profile'):
                     request.session['pending_user_id'] = user.id
@@ -165,3 +175,186 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'You have been logged out.')
     return redirect('home')
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_dashboard_view(request):
+    total_users = User.objects.count()
+    total_players = User.objects.filter(role='player').count()
+    total_scouts = User.objects.filter(role='scout').count()
+    pending_verifications = Scout.objects.filter(verified=False).count()
+    opportunities_count = Opportunity.objects.count()
+    applications_count = Application.objects.count()
+
+    return render(
+        request,
+        'users/admin_dashboard.html',
+        {
+            'total_users': total_users,
+            'total_players': total_players,
+            'total_scouts': total_scouts,
+            'pending_verifications': pending_verifications,
+            'opportunities_count': opportunities_count,
+            'applications_count': applications_count,
+        },
+    )
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_verifications_view(request):
+    scouts = Scout.objects.select_related('user').all().order_by('verified', 'organization')
+    return render(
+        request,
+        'users/admin_verifications.html',
+        {'scouts': scouts},
+    )
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_approve_scout_view(request, scout_id):
+    if request.method != 'POST':
+        return redirect('admin_verifications')
+
+    scout = get_object_or_404(Scout, id=scout_id)
+    scout.verified = True
+    scout.save(update_fields=['verified'])
+    messages.success(request, f'Scout {scout.user.full_name} has been approved.')
+    return redirect('admin_verifications')
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_reject_scout_view(request, scout_id):
+    if request.method != 'POST':
+        return redirect('admin_verifications')
+
+    scout = get_object_or_404(Scout, id=scout_id)
+    scout.verified = False
+    scout.save(update_fields=['verified'])
+    messages.info(request, f'Scout {scout.user.full_name} marked as not verified.')
+    return redirect('admin_verifications')
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_users_view(request):
+    role_filter = request.GET.get('role', '').strip().lower()
+    users = User.objects.all().order_by('full_name')
+
+    if role_filter in {'player', 'scout'}:
+        users = users.filter(role=role_filter)
+
+    create_form = AdminUserCreateForm()
+    edit_id = request.GET.get('edit')
+    edit_user = None
+    edit_form = None
+
+    if edit_id:
+        edit_user = User.objects.filter(id=edit_id).first()
+        if edit_user:
+            edit_form = AdminUserUpdateForm(instance=edit_user)
+
+    return render(
+        request,
+        'users/admin_users.html',
+        {
+            'users': users,
+            'role_filter': role_filter,
+            'create_form': create_form,
+            'edit_form': edit_form,
+            'edit_user': edit_user,
+        },
+    )
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_create_user_view(request):
+    if request.method != 'POST':
+        return redirect('admin_users')
+
+    form = AdminUserCreateForm(request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'User created successfully.')
+        return redirect('admin_users')
+
+    users = User.objects.all().order_by('full_name')
+    return render(
+        request,
+        'users/admin_users.html',
+        {
+            'users': users,
+            'create_form': form,
+            'edit_form': None,
+            'edit_user': None,
+        },
+    )
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_update_user_view(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+
+    if request.method != 'POST':
+        return redirect('admin_users')
+
+    form = AdminUserUpdateForm(request.POST, instance=target_user)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'User updated successfully.')
+        return redirect('admin_users')
+
+    users = User.objects.all().order_by('full_name')
+    return render(
+        request,
+        'users/admin_users.html',
+        {
+            'users': users,
+            'create_form': AdminUserCreateForm(),
+            'edit_form': form,
+            'edit_user': target_user,
+        },
+    )
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_delete_user_view(request, user_id):
+    if request.method != 'POST':
+        return redirect('admin_users')
+
+    target_user = get_object_or_404(User, id=user_id)
+
+    if target_user.id == request.user.id:
+        messages.error(request, 'You cannot delete your own admin account.')
+        return redirect('admin_users')
+
+    target_user.delete()
+    messages.success(request, 'User deleted successfully.')
+    return redirect('admin_users')
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_reports_view(request):
+    reports = {
+        'players_total': PlayerProfile.objects.count(),
+        'scouts_total': Scout.objects.count(),
+        'verified_scouts': Scout.objects.filter(verified=True).count(),
+        'unverified_scouts': Scout.objects.filter(verified=False).count(),
+        'opportunities_total': Opportunity.objects.count(),
+        'active_opportunities': Opportunity.objects.filter(is_active=True).count(),
+        'applications_total': Application.objects.count(),
+        'videos_total': PlayerVideo.objects.count(),
+    }
+
+    return render(
+        request,
+        'users/admin_reports.html',
+        {'reports': reports},
+    )

@@ -6,7 +6,7 @@ from .models import Application, Opportunity
 class OpportunityForm(forms.ModelForm):
     class Meta:
         model = Opportunity
-        fields = ['title', 'organization', 'description', 'location', 'deadline']
+        fields = ['title', 'organization', 'description', 'poster_image', 'location', 'deadline']
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Opportunity title'}),
             'organization': forms.TextInput(attrs={'placeholder': 'Club or organization name'}),

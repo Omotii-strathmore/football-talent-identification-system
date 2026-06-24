@@ -82,7 +82,7 @@ def post_opportunity(request):
 	if request.method == 'POST':
 		if not is_verified:
 			return redirect('post_opportunity')
-		form = OpportunityForm(request.POST)
+		form = OpportunityForm(request.POST, request.FILES)
 		if form.is_valid():
 			opportunity = form.save(commit=False)
 			opportunity.scout = request.user
@@ -102,3 +102,54 @@ def post_opportunity(request):
 			'is_verified': is_verified,
 		},
 	)
+
+
+@login_required
+def manage_posted_opportunities(request):
+	if request.user.role != 'scout':
+		messages.error(request, 'Only scouts can manage posted opportunities.')
+		return redirect('player_dashboard')
+
+	opportunities = (
+		Opportunity.objects.filter(scout=request.user)
+		.prefetch_related('applications__player')
+	)
+
+	return render(
+		request,
+		'scouts/manage_opportunities.html',
+		{'opportunities': opportunities},
+	)
+
+
+@login_required
+def update_application_status(request, application_id, status):
+	if request.user.role != 'scout':
+		messages.error(request, 'Only scouts can update application status.')
+		return redirect('player_dashboard')
+
+	if request.method != 'POST':
+		return redirect('manage_posted_opportunities')
+
+	valid_statuses = {'shortlisted', 'rejected', 'pending'}
+	if status not in valid_statuses:
+		messages.error(request, 'Invalid status update requested.')
+		return redirect('manage_posted_opportunities')
+
+	application = get_object_or_404(
+		Application.objects.select_related('opportunity', 'player'),
+		id=application_id,
+		opportunity__scout=request.user,
+	)
+
+	application.status = status
+	application.save(update_fields=['status'])
+
+	if status == 'shortlisted':
+		messages.success(request, f'{application.player.full_name} has been approved (shortlisted).')
+	elif status == 'rejected':
+		messages.info(request, f'{application.player.full_name} has been rejected.')
+	else:
+		messages.info(request, f'{application.player.full_name} status reset to pending.')
+
+	return redirect('manage_posted_opportunities')
