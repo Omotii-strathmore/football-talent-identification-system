@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Public Opportunities{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Available Opportunities</h2>
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">Back to Home</a>
+    </div>
+
+    <p class="text-muted mb-4">Browse currently active opportunities posted by verified scouts. This page is view-only. Sign in as a player to apply.</p>
+
+    {% if opportunities %}
+        <div class="row g-3">
+            {% for opportunity in opportunities %}
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        {% if opportunity.poster_image %}
+                            <img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="card-img-top" style="height:220px;object-fit:cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ opportunity.title }}</h5>
+                            <p class="text-muted mb-1"><strong>Organization:</strong> {{ opportunity.organization }}</p>
+                            <p class="text-muted mb-1"><strong>Location:</strong> {{ opportunity.location }}</p>
+                            <p class="text-muted mb-2"><strong>Deadline:</strong> {{ opportunity.deadline }}</p>
+                            <p class="card-text">{{ opportunity.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">No opportunities posted yet.</div>
+    {% endif %}
+</div>
+{% endblock %}

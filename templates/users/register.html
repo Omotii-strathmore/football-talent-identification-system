@@ -4,15 +4,110 @@
 {% block title %}Create account | Talanta Soka{% endblock %}
 
 {% block content %}
+	<style>
+		#hint_id_password {
+			color: #ff4d4f !important;
+		}
+	</style>
+
 	<p class="eyebrow">Register</p>
+	<div class="d-flex justify-content-end mb-2">
+		<a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Home</a>
+	</div>
 	<h1 class="title">Create player or scout account</h1>
 	<p class="lead">Enter your full name, email, password, and choose the role that matches your account. After signup, you will be sent to the correct page automatically.</p>
 
 	<form method="post" novalidate>
 		{% csrf_token %}
-		{{ form|crispy }}
+		{{ form.non_field_errors }}
+		{{ form.full_name|as_crispy_field }}
+		{{ form.email|as_crispy_field }}
+		{{ form.role|as_crispy_field }}
+		{{ form.password|as_crispy_field }}
+		<div id="password-requirements" class="auth-note mt-2" aria-live="polite">
+			<div class="fw-semibold mb-1">Password requirements</div>
+			<p id="password-requirements-message" class="mb-1 text-muted">Start typing to see what is missing.</p>
+			<ul id="password-missing-list" class="mb-0 ps-3"></ul>
+		</div>
+		<div class="form-check mt-1 mb-2">
+			<input class="form-check-input" type="checkbox" id="toggle-register-passwords">
+			<label class="form-check-label" for="toggle-register-passwords">Show passwords</label>
+		</div>
+		{{ form.confirm_password|as_crispy_field }}
 		<button type="submit" class="btn btn-brand mt-3">Create account</button>
 	</form>
 
 	<p class="auth-note mt-3">Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+	<p class="auth-note mt-3"><a href="{% url 'home' %}">Back to home</a></p>
+
+	<script>
+		(function () {
+			const toggle = document.getElementById('toggle-register-passwords');
+			const passwordInput = document.getElementById('id_password');
+			const confirmInput = document.getElementById('id_confirm_password');
+			const missingList = document.getElementById('password-missing-list');
+			const requirementsMessage = document.getElementById('password-requirements-message');
+
+			if (!passwordInput || !confirmInput || !missingList || !requirementsMessage) {
+				return;
+			}
+
+			function updateRequirements() {
+				const pwd = passwordInput.value;
+				const confirm = confirmInput.value;
+				const missing = [];
+
+				if (pwd.length === 0) {
+					requirementsMessage.textContent = 'Start typing to see what is missing.';
+					requirementsMessage.className = 'mb-1 text-muted';
+					missingList.innerHTML = '';
+					return;
+				}
+
+				if (pwd.length < 8) {
+					missing.push('At least 8 characters');
+				}
+				if (!/[A-Z]/.test(pwd)) {
+					missing.push('At least one uppercase letter');
+				}
+				if (!/[a-z]/.test(pwd)) {
+					missing.push('At least one lowercase letter');
+				}
+				if (!/\d/.test(pwd)) {
+					missing.push('At least one number');
+				}
+				if (!/[^A-Za-z0-9]/.test(pwd)) {
+					missing.push('At least one special character');
+				}
+				if (confirm.length > 0 && pwd !== confirm) {
+					missing.push('Passwords must match');
+				}
+
+				if (missing.length === 0) {
+					requirementsMessage.textContent = 'Password looks strong.';
+					requirementsMessage.className = 'mb-1 text-success';
+					missingList.innerHTML = '';
+					return;
+				}
+
+				requirementsMessage.textContent = 'Still missing:';
+				requirementsMessage.className = 'mb-1 text-danger';
+				missingList.innerHTML = missing.map(function (item) {
+					return '<li class="text-danger">' + item + '</li>';
+				}).join('');
+			}
+
+			if (toggle) {
+				toggle.addEventListener('change', function () {
+					const inputType = this.checked ? 'text' : 'password';
+					passwordInput.type = inputType;
+					confirmInput.type = inputType;
+				});
+			}
+
+			passwordInput.addEventListener('input', updateRequirements);
+			confirmInput.addEventListener('input', updateRequirements);
+			updateRequirements();
+		})();
+	</script>
 {% endblock %}

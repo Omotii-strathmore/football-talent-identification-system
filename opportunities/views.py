@@ -6,6 +6,15 @@ from .forms import ApplicationForm, OpportunityForm
 from .models import Application, Opportunity
 
 
+def public_opportunities(request):
+	opportunities = Opportunity.objects.filter(is_active=True)
+	return render(
+		request,
+		'opportunities/public_opportunities.html',
+		{'opportunities': opportunities},
+	)
+
+
 @login_required
 def view_opportunities(request):
 	if request.user.role != 'player':
@@ -120,6 +129,26 @@ def manage_posted_opportunities(request):
 		'scouts/manage_opportunities.html',
 		{'opportunities': opportunities},
 	)
+
+
+@login_required
+def delete_posted_opportunity(request, opportunity_id):
+	if request.user.role != 'scout':
+		messages.error(request, 'Only scouts can delete posted opportunities.')
+		return redirect('player_dashboard')
+
+	if request.method != 'POST':
+		return redirect('manage_posted_opportunities')
+
+	opportunity = get_object_or_404(Opportunity, id=opportunity_id, scout=request.user)
+	title = opportunity.title
+
+	if opportunity.poster_image:
+		opportunity.poster_image.delete(save=False)
+	opportunity.delete()
+
+	messages.success(request, f'Opportunity "{title}" deleted successfully.')
+	return redirect('manage_posted_opportunities')
 
 
 @login_required

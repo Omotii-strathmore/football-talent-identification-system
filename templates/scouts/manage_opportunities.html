@@ -18,11 +18,17 @@
                             <h5 class="mb-1">{{ opportunity.title }}</h5>
                             <p class="text-muted mb-0">{{ opportunity.organization }} | {{ opportunity.location }} | Deadline: {{ opportunity.deadline }}</p>
                         </div>
-                        {% if opportunity.is_active %}
-                            <span class="badge bg-success">Active</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Closed</span>
-                        {% endif %}
+                        <div class="d-flex align-items-center gap-2">
+                            {% if opportunity.is_active %}
+                                <span class="badge bg-success">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Closed</span>
+                            {% endif %}
+                            <form method="post" action="{% url 'delete_posted_opportunity' opportunity.id %}" onsubmit="return confirm('Delete this posted opportunity? This will also remove its applications.');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete Opportunity</button>
+                            </form>
+                        </div>
                     </div>
 
                     {% if opportunity.applications.all %}

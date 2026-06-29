@@ -8,7 +8,7 @@ from players.models import PlayerProfile, PlayerVideo
 from players.forms import PlayerOnboardingForm
 from scouts.forms import ScoutOnboardingForm
 from scouts.models import Scout
-from .forms import AdminUserCreateForm, AdminUserUpdateForm, RegistrationForm, LoginForm
+from .forms import AdminUserUpdateForm, RegistrationForm, LoginForm
 from .models import User
 
 
@@ -247,7 +247,6 @@ def admin_users_view(request):
     if role_filter in {'player', 'scout'}:
         users = users.filter(role=role_filter)
 
-    create_form = AdminUserCreateForm()
     edit_id = request.GET.get('edit')
     edit_user = None
     edit_form = None
@@ -263,34 +262,8 @@ def admin_users_view(request):
         {
             'users': users,
             'role_filter': role_filter,
-            'create_form': create_form,
             'edit_form': edit_form,
             'edit_user': edit_user,
-        },
-    )
-
-
-@login_required
-@user_passes_test(_is_staff_user, login_url='login')
-def admin_create_user_view(request):
-    if request.method != 'POST':
-        return redirect('admin_users')
-
-    form = AdminUserCreateForm(request.POST)
-    if form.is_valid():
-        form.save()
-        messages.success(request, 'User created successfully.')
-        return redirect('admin_users')
-
-    users = User.objects.all().order_by('full_name')
-    return render(
-        request,
-        'users/admin_users.html',
-        {
-            'users': users,
-            'create_form': form,
-            'edit_form': None,
-            'edit_user': None,
         },
     )
 
@@ -315,7 +288,6 @@ def admin_update_user_view(request, user_id):
         'users/admin_users.html',
         {
             'users': users,
-            'create_form': AdminUserCreateForm(),
             'edit_form': form,
             'edit_user': target_user,
         },

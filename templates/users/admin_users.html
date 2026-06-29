@@ -16,20 +16,7 @@
     {% endif %}
 
     <div class="row g-3 mb-4">
-        <div class="col-lg-6">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5>Create User</h5>
-                    <form method="post" action="{% url 'admin_create_user' %}">
-                        {% csrf_token %}
-                        {{ create_form.as_p }}
-                        <button type="submit" class="btn btn-primary">Create User</button>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-6">
+        <div class="col-lg-12">
             <div class="card h-100">
                 <div class="card-body">
                     <h5>Edit User</h5>

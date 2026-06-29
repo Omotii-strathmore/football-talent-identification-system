@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Edit Scout Details{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Edit Scout Details</h2>
+        <a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            {% if scout_profile.profile_photo %}
+                <div class="mb-3">
+                    <img src="{{ scout_profile.profile_photo.url }}" alt="Scout profile photo" class="hero-avatar">
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

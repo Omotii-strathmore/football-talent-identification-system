@@ -46,6 +46,8 @@
                 </ul>
             {% endif %}
 
+            {% block top_right_link %}{% endblock %}
+
             {% if current_step and total_steps %}
                 <section class="progress-wrap" aria-label="Registration and login progress">
                     <p class="step-title">{{ step_title }}</p>

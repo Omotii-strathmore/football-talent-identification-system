@@ -23,6 +23,14 @@
         font-weight: 700;
         border: 2px solid #e2e8f0;
     }
+
+    .player-video {
+        width: 100%;
+        max-height: 260px;
+        border-radius: 10px;
+        background: #000;
+        border: 1px solid #e2e8f0;
+    }
 </style>
 {% endblock %}
 
@@ -33,51 +41,61 @@
         <a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
     </div>
 
+    {% if recommended_position and not is_general_scout %}
+        <div class="alert alert-info py-2">
+            Showing recommended players for your specialization by default: <strong>{{ recommended_position }}</strong>.
+            Select another position to browse different players.
+        </div>
+    {% endif %}
+
     <div class="card mb-4">
         <div class="card-body">
             <form method="get" class="row g-2 align-items-end">
                 <div class="col-md-3">
-                    <label for="filter_by" class="form-label mb-1">Filter By</label>
-                    <select id="filter_by" name="filter_by" class="form-select" onchange="this.form.submit()">
-                        <option value="">Select option</option>
-                        <option value="position" {% if filter_by == 'position' %}selected{% endif %}>Football Position</option>
-                        <option value="location" {% if filter_by == 'location' %}selected{% endif %}>Location</option>
-                        <option value="age" {% if filter_by == 'age' %}selected{% endif %}>Age</option>
+                    <label for="position" class="form-label mb-1">Position</label>
+                    <select id="position" name="position" class="form-select">
+                        <option value="">All positions</option>
+                        {% for value, label in positions %}
+                            <option value="{{ value }}" {% if selected_position == value %}selected{% endif %}>
+                                {{ label }}{% if recommended_position == value %} (recommended){% endif %}
+                            </option>
+                        {% endfor %}
                     </select>
                 </div>
 
-                <div class="col-md-5">
-                    <label for="filter_value" class="form-label mb-1">Value</label>
-
-                    {% if filter_by == 'position' %}
-                        <select id="filter_value" name="filter_value" class="form-select">
-                            <option value="">Select position</option>
-                            {% for value, label in positions %}
-                                <option value="{{ value }}" {% if filter_value == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    {% elif filter_by == 'location' %}
-                        <select id="filter_value" name="filter_value" class="form-select">
-                            <option value="">Select location</option>
-                            {% for location in locations %}
-                                <option value="{{ location }}" {% if filter_value == location %}selected{% endif %}>{{ location }}</option>
-                            {% endfor %}
-                        </select>
-                    {% elif filter_by == 'age' %}
-                        <select id="filter_value" name="filter_value" class="form-select">
-                            <option value="">Select age</option>
-                            {% for age in ages %}
-                                <option value="{{ age }}" {% if filter_value == age|stringformat:'s' %}selected{% endif %}>{{ age }}</option>
-                            {% endfor %}
-                        </select>
-                    {% else %}
-                        <input id="filter_value" name="filter_value" class="form-control" value="" placeholder="Choose filter option first" disabled>
-                    {% endif %}
+                <div class="col-md-3">
+                    <label for="location" class="form-label mb-1">Location</label>
+                    <select id="location" name="location" class="form-select">
+                        <option value="">All locations</option>
+                        {% for location in locations %}
+                            <option value="{{ location }}" {% if selected_location == location %}selected{% endif %}>{{ location }}</option>
+                        {% endfor %}
+                    </select>
                 </div>
 
-                <div class="col-md-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">Apply Filter</button>
-                    <a href="{% url 'scout_player_directory' %}" class="btn btn-outline-secondary">Reset</a>
+                <div class="col-md-2">
+                    <label for="age" class="form-label mb-1">Exact age</label>
+                    <select id="age" name="age" class="form-select">
+                        <option value="">Any age</option>
+                        {% for age in ages %}
+                            <option value="{{ age }}" {% if selected_age == age|stringformat:'s' %}selected{% endif %}>{{ age }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label for="age_range" class="form-label mb-1">Age range</label>
+                    <select id="age_range" name="age_range" class="form-select">
+                        <option value="">Any range</option>
+                        {% for value, label in age_ranges %}
+                            <option value="{{ value }}" {% if selected_age_range == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm">Apply Filter</button>
+                    <a href="{% url 'scout_player_directory' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
                 </div>
             </form>
         </div>
@@ -105,19 +123,54 @@
 
                             <p class="mb-2">{{ profile.bio|default:'No bio provided.' }}</p>
 
-                            <h6 class="mt-3">Uploaded Videos</h6>
-                            {% if profile.videos.all %}
-                                <ul class="mb-0">
-                                    {% for video in profile.videos.all %}
-                                        <li>
-                                            <a href="{{ video.video_file.url }}" target="_blank">{{ video.title }}</a>
-                                            <span class="text-muted">({{ video.uploaded_at }})</span>
-                                        </li>
-                                    {% endfor %}
-                                </ul>
-                            {% else %}
-                                <p class="text-muted mb-0">No videos uploaded.</p>
-                            {% endif %}
+                            <div class="mt-3">
+                                <button
+                                    class="btn btn-outline-primary btn-sm"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#videos-{{ profile.id }}"
+                                    aria-expanded="false"
+                                    aria-controls="videos-{{ profile.id }}"
+                                >
+                                    View videos
+                                </button>
+                            </div>
+
+                            <div class="collapse mt-3" id="videos-{{ profile.id }}">
+                                <h6 class="mb-2">Uploaded Videos</h6>
+                                {% if profile.videos.all %}
+                                    <ul class="mb-0">
+                                        {% for video in profile.videos.all %}
+                                            <li>
+                                                <p class="mb-1"><strong>{{ video.title }}</strong> <span class="text-muted">({{ video.uploaded_at }})</span></p>
+                                                <video class="player-video mb-2" controls preload="metadata">
+                                                    <source src="{{ video.video_file.url }}">
+                                                    Your browser does not support embedded video playback.
+                                                </video>
+                                                <div class="mb-2">
+                                                    <a href="{{ video.video_file.url }}" target="_blank" class="small">Open video in new tab</a>
+                                                </div>
+                                            </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <p class="text-muted mb-0">No videos uploaded.</p>
+                                {% endif %}
+                            </div>
+
+                            <h6 class="mt-3">Scout Feedback (optional)</h6>
+                            <form method="post" class="mt-2">
+                                {% csrf_token %}
+                                <input type="hidden" name="profile_id" value="{{ profile.id }}">
+                                <input type="hidden" name="current_query" value="{{ request.GET.urlencode }}">
+                                <textarea
+                                    name="comment"
+                                    rows="3"
+                                    class="form-control"
+                                    placeholder="Add feedback or comments on this player's profile/videos..."
+                                >{% if profile.current_scout_feedback %}{{ profile.current_scout_feedback.0.comment }}{% endif %}</textarea>
+                                <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Save Feedback</button>
+                            </form>
                         </div>
                     </div>
                 </div>

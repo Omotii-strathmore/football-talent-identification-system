@@ -75,5 +75,27 @@
         </div>
     </div>
     </div>
+
+    <div class="panel-soft p-3 p-md-4 mt-4">
+        <h4 class="section-title">Scout Feedback</h4>
+        {% if feedback_entries %}
+            <div class="list-group list-group-flush">
+                {% for feedback in feedback_entries %}
+                    <div class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <div>
+                                <strong>{{ feedback.scout.full_name }}</strong>
+                                <span class="text-muted">({{ feedback.scout.scout_profile.organization|default:'Scout' }})</span>
+                            </div>
+                            <small class="text-muted">{{ feedback.updated_at|date:'M d, Y H:i' }}</small>
+                        </div>
+                        <p class="mb-0 mt-1">{{ feedback.comment }}</p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted mb-0">No scout feedback yet. Feedback will appear here once scouts comment on your profile or videos.</p>
+        {% endif %}
+    </div>
 </div>
 {% endblock %}

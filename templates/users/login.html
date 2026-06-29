@@ -4,6 +4,9 @@
 {% block title %}Login | Talanta Soka{% endblock %}
 
 {% block content %}
+    <div class="d-flex justify-content-end mb-2">
+        <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Home</a>
+    </div>
     <p class="eyebrow">Login</p>
     <h1 class="title">Welcome back</h1>
     <p class="lead">Sign in with your existing account. If your role profile is not complete yet, you will be sent to finish registration first.</p>
@@ -11,8 +14,26 @@
     <form method="post" novalidate>
         {% csrf_token %}
         {{ form|crispy }}
+        <div class="form-check mt-2">
+            <input class="form-check-input" type="checkbox" id="toggle-login-password">
+            <label class="form-check-label" for="toggle-login-password">Show password</label>
+        </div>
         <button type="submit" class="btn btn-brand mt-3">Login</button>
     </form>
 
     <p class="auth-note mt-3">Need a new account? <a href="{% url 'register' %}">Create one here</a>.</p>
+    <p class="auth-note mt-3"><a href="{% url 'home' %}">Back to home</a></p>
+
+    <script>
+        (function () {
+            const toggle = document.getElementById('toggle-login-password');
+            const passwordInput = document.getElementById('id_password');
+            if (!toggle || !passwordInput) {
+                return;
+            }
+            toggle.addEventListener('change', function () {
+                passwordInput.type = this.checked ? 'text' : 'password';
+            });
+        })();
+    </script>
 {% endblock %}

@@ -29,6 +29,7 @@
                         <th>Title</th>
                         <th>Uploaded At</th>
                         <th>File</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -37,6 +38,12 @@
                             <td>{{ video.title }}</td>
                             <td>{{ video.uploaded_at }}</td>
                             <td><a href="{{ video.video_file.url }}" target="_blank">View Video</a></td>
+                            <td>
+                                <form method="post" action="{% url 'delete_video' video.id %}" onsubmit="return confirm('Delete this video?');">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                </form>
+                            </td>
                         </tr>
                     {% endfor %}
                 </tbody>
