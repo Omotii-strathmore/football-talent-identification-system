@@ -1,7 +1,11 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
+
+import csv
 
 from opportunities.models import Application, Opportunity
 from players.models import PlayerProfile, PlayerVideo
@@ -114,6 +118,7 @@ def complete_profile_view(request):
             'current_step': 2,
             'total_steps': 2,
             'step_title': template_title,
+            'kenya_counties': PlayerOnboardingForm.KENYA_COUNTIES if user.role == 'player' else [],
         }
     )
 
@@ -314,6 +319,195 @@ def admin_delete_user_view(request, user_id):
 @login_required
 @user_passes_test(_is_staff_user, login_url='login')
 def admin_reports_view(request):
+
+    report_type = request.GET.get('report', '').strip().lower()
+    if report_type:
+        timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+        response = HttpResponse(content_type='text/csv')
+        writer = csv.writer(response)
+
+        if report_type == 'summary':
+            response['Content-Disposition'] = f'attachment; filename="system_summary_report_{timestamp}.csv"'
+            writer.writerow(['Metric', 'Value'])
+            writer.writerow(['Player Profiles', PlayerProfile.objects.count()])
+            writer.writerow(['Scout Profiles', Scout.objects.count()])
+            writer.writerow(['Verified Scouts', Scout.objects.filter(verified=True).count()])
+            writer.writerow(['Unverified Scouts', Scout.objects.filter(verified=False).count()])
+            writer.writerow(['Total Opportunities', Opportunity.objects.count()])
+            writer.writerow(['Active Opportunities', Opportunity.objects.filter(is_active=True).count()])
+            writer.writerow(['Total Applications', Application.objects.count()])
+            writer.writerow(['Uploaded Player Videos', PlayerVideo.objects.count()])
+            return response
+
+        if report_type == 'users':
+            response['Content-Disposition'] = f'attachment; filename="users_report_{timestamp}.csv"'
+            writer.writerow(['ID', 'Full Name', 'Email', 'Role', 'Is Staff', 'Is Active'])
+            for user in User.objects.all().order_by('id'):
+                writer.writerow([
+                    user.id,
+                    user.full_name,
+                    user.email,
+                    user.role,
+                    user.is_staff,
+                    user.is_active,
+                ])
+            return response
+
+        if report_type == 'scouts':
+            response['Content-Disposition'] = f'attachment; filename="scouts_report_{timestamp}.csv"'
+            writer.writerow(['Scout ID', 'Name', 'Email', 'Organization', 'Specialization', 'Verified'])
+            for scout in Scout.objects.select_related('user').all().order_by('id'):
+                writer.writerow([
+                    scout.id,
+                    scout.user.full_name,
+                    scout.user.email,
+                    scout.organization,
+                    scout.specialization,
+                    scout.verified,
+                ])
+            return response
+
+        if report_type == 'opportunities':
+            response['Content-Disposition'] = f'attachment; filename="opportunities_report_{timestamp}.csv"'
+            writer.writerow([
+                'Opportunity ID',
+                'Title',
+                'Organization',
+                'Location',
+                'Deadline',
+                'Active',
+                'Max Applications',
+                'Applications Count',
+                'Scout Name',
+                'Scout Email',
+            ])
+            queryset = Opportunity.objects.select_related('scout').all().order_by('id')
+            for opportunity in queryset:
+                writer.writerow([
+                    opportunity.id,
+                    opportunity.title,
+                    opportunity.organization,
+                    opportunity.location,
+                    opportunity.deadline,
+                    opportunity.is_active,
+                    opportunity.max_applications,
+                    opportunity.applications.count(),
+                    opportunity.scout.full_name,
+                    opportunity.scout.email,
+                ])
+            return response
+
+        if report_type == 'applications':
+            response['Content-Disposition'] = f'attachment; filename="applications_report_{timestamp}.csv"'
+            writer.writerow([
+                'Application ID',
+                'Opportunity Title',
+                'Player Name',
+                'Player Email',
+                'Status',
+                'Applied At',
+            ])
+            queryset = Application.objects.select_related('opportunity', 'player').all().order_by('id')
+            for application in queryset:
+                writer.writerow([
+                    application.id,
+                    application.opportunity.title,
+                    application.player.full_name,
+                    application.player.email,
+                    application.status,
+                    timezone.localtime(application.applied_at).strftime('%Y-%m-%d %H:%M:%S'),
+                ])
+            return response
+
+        if report_type == 'diagram_based':
+            response['Content-Disposition'] = f'attachment; filename="kweyu_drnjeri_diagram_based_report_{timestamp}.csv"'
+            writer.writerow([
+                'Diagram Section',
+                'Actor/Module',
+                'Input',
+                'Process',
+                'Output',
+                'Metric Value',
+            ])
+
+            # Conceptual/use-case aligned actor flows from the project document.
+            writer.writerow([
+                'Actor Flow',
+                'Player',
+                'Registration/Profile Data',
+                'Create and maintain player profile',
+                'Scouting-ready player profiles',
+                PlayerProfile.objects.count(),
+            ])
+            writer.writerow([
+                'Actor Flow',
+                'Player',
+                'Performance Videos',
+                'Upload and manage video evidence',
+                'Player videos visible to scouts',
+                PlayerVideo.objects.count(),
+            ])
+            writer.writerow([
+                'Actor Flow',
+                'Player',
+                'Opportunity Application Data',
+                'Apply to trials/tournaments',
+                'Submitted applications',
+                Application.objects.count(),
+            ])
+
+            writer.writerow([
+                'Actor Flow',
+                'Scout/Coach',
+                'Opportunity Details',
+                'Post and manage opportunities',
+                'Published opportunities',
+                Opportunity.objects.count(),
+            ])
+            writer.writerow([
+                'Actor Flow',
+                'Scout/Coach',
+                'Verification Documents',
+                'Verification workflow and scouting access',
+                'Verified scout accounts',
+                Scout.objects.filter(verified=True).count(),
+            ])
+
+            writer.writerow([
+                'Actor Flow',
+                'Admin',
+                'User and Verification Data',
+                'Monitor system and approve/reject scouts',
+                'Pending scout verifications',
+                Scout.objects.filter(verified=False).count(),
+            ])
+            writer.writerow([
+                'Actor Flow',
+                'Admin',
+                'System Operational Data',
+                'Generate decision-support reports',
+                'Total platform users',
+                User.objects.count(),
+            ])
+
+            writer.writerow([
+                'System Output',
+                'Reporting',
+                'Player + Scout + Opportunity + Application Data',
+                'Aggregate and analyze by module',
+                'Decision-support report entries',
+                (
+                    PlayerProfile.objects.count()
+                    + Scout.objects.count()
+                    + Opportunity.objects.count()
+                    + Application.objects.count()
+                ),
+            ])
+            return response
+
+        messages.error(request, 'Invalid report type selected.')
+        return redirect('admin_reports')
+
     reports = {
         'players_total': PlayerProfile.objects.count(),
         'scouts_total': Scout.objects.count(),

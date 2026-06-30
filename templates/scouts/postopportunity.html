@@ -33,8 +33,14 @@
 		</div>
 	</div>
 
-	<h4>Your Posted Opportunities</h4>
-	{% if posted_opportunities %}
+	<div class="d-flex gap-2 mb-3">
+		<a href="{% url 'post_opportunity' %}?view=available" class="btn btn-sm {% if selected_view == 'available' %}btn-primary{% else %}btn-outline-primary{% endif %}">Available</a>
+		<a href="{% url 'post_opportunity' %}?view=history" class="btn btn-sm {% if selected_view == 'history' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">History</a>
+	</div>
+
+	{% if selected_view == 'available' %}
+	<h4>Available Opportunities</h4>
+		{% if available_opportunities %}
 		<div class="table-responsive">
 			<table class="table table-bordered table-striped">
 				<thead>
@@ -42,20 +48,22 @@
 						<th>Title</th>
 						<th>Organization</th>
 						<th>Deadline</th>
+						<th>Application Limit</th>
 						<th>Applications</th>
 					</tr>
 				</thead>
 				<tbody>
-					{% for opportunity in posted_opportunities %}
+					{% for opportunity in available_opportunities %}
 						<tr>
 							<td>{{ opportunity.title }}</td>
 							<td>{{ opportunity.organization }}</td>
 							<td>{{ opportunity.deadline }}</td>
+							<td>{{ opportunity.max_applications|default:'Not set' }}</td>
 							<td>{{ opportunity.applications.count }}</td>
 						</tr>
 						{% if opportunity.poster_image %}
 						<tr>
-							<td colspan="4">
+							<td colspan="5">
 								<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" style="max-width: 240px; border-radius: 10px;">
 							</td>
 						</tr>
@@ -64,8 +72,46 @@
 				</tbody>
 			</table>
 		</div>
+		{% else %}
+			<div class="alert alert-info">No active opportunities posted right now.</div>
+		{% endif %}
 	{% else %}
-		<div class="alert alert-info">You have not posted any opportunities yet.</div>
+		<h4>Opportunities History</h4>
+		{% if history_opportunities %}
+		<div class="table-responsive">
+			<table class="table table-bordered table-striped">
+				<thead>
+					<tr>
+						<th>Title</th>
+						<th>Organization</th>
+						<th>Deadline</th>
+						<th>Application Limit</th>
+						<th>Applications</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for opportunity in history_opportunities %}
+						<tr>
+							<td>{{ opportunity.title }}</td>
+							<td>{{ opportunity.organization }}</td>
+							<td>{{ opportunity.deadline }}</td>
+							<td>{{ opportunity.max_applications|default:'Not set' }}</td>
+							<td>{{ opportunity.applications.count }}</td>
+						</tr>
+						{% if opportunity.poster_image %}
+						<tr>
+							<td colspan="5">
+								<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" style="max-width: 240px; border-radius: 10px;">
+							</td>
+						</tr>
+						{% endif %}
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+		{% else %}
+			<div class="alert alert-light border">No expired opportunities in history yet.</div>
+		{% endif %}
 	{% endif %}
 </div>
 {% endblock %}

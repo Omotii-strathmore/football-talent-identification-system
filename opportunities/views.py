@@ -1,12 +1,19 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from .forms import ApplicationForm, OpportunityForm
 from .models import Application, Opportunity
 
 
+def _auto_expire_passed_deadline_opportunities():
+	today = timezone.localdate()
+	Opportunity.objects.filter(is_active=True, deadline__lt=today).update(is_active=False)
+
+
 def public_opportunities(request):
+	_auto_expire_passed_deadline_opportunities()
 	opportunities = Opportunity.objects.filter(is_active=True)
 	return render(
 		request,
@@ -21,7 +28,13 @@ def view_opportunities(request):
 		messages.error(request, 'Only players can view and apply for opportunities.')
 		return redirect('scout_dashboard')
 
-	opportunities = Opportunity.objects.filter(is_active=True)
+	_auto_expire_passed_deadline_opportunities()
+	selected_view = request.GET.get('view', 'available').strip().lower()
+	if selected_view not in {'available', 'history'}:
+		selected_view = 'available'
+	today = timezone.localdate()
+	available_opportunities = Opportunity.objects.filter(is_active=True).order_by('deadline', '-created_at')
+	history_opportunities = Opportunity.objects.filter(is_active=False).order_by('-updated_at', '-created_at')
 	applied_ids = set(
 		Application.objects.filter(player=request.user).values_list('opportunity_id', flat=True)
 	)
@@ -30,9 +43,12 @@ def view_opportunities(request):
 		request,
 		'players/viewopportunity.html',
 		{
-			'opportunities': opportunities,
+			'available_opportunities': available_opportunities,
+			'history_opportunities': history_opportunities,
+			'selected_view': selected_view,
 			'applied_ids': applied_ids,
 			'application_form': ApplicationForm(),
+			'today': today,
 		},
 	)
 
@@ -43,7 +59,12 @@ def apply_opportunity(request, opportunity_id):
 		messages.error(request, 'Only players can apply for opportunities.')
 		return redirect('scout_dashboard')
 
-	opportunity = get_object_or_404(Opportunity, id=opportunity_id, is_active=True)
+	_auto_expire_passed_deadline_opportunities()
+	opportunity = get_object_or_404(Opportunity, id=opportunity_id)
+	today = timezone.localdate()
+	if (not opportunity.is_active) or (opportunity.deadline < today):
+		messages.error(request, 'This opportunity is expired. You can view it but cannot apply.')
+		return redirect('view_opportunities')
 
 	existing = Application.objects.filter(opportunity=opportunity, player=request.user).exists()
 	if existing:
@@ -84,6 +105,10 @@ def post_opportunity(request):
 		messages.error(request, 'Only scouts can post opportunities.')
 		return redirect('player_dashboard')
 
+	_auto_expire_passed_deadline_opportunities()
+	selected_view = request.GET.get('view', 'available').strip().lower()
+	if selected_view not in {'available', 'history'}:
+		selected_view = 'available'
 	is_verified = getattr(request.user.scout_profile, 'verified', False)
 	if not is_verified:
 		messages.warning(request, 'Your scout account is pending verification. Posting is disabled until approved by admin.')
@@ -91,7 +116,7 @@ def post_opportunity(request):
 	if request.method == 'POST':
 		if not is_verified:
 			return redirect('post_opportunity')
-		form = OpportunityForm(request.POST, request.FILES)
+		form = OpportunityForm(request.POST, request.FILES, scout=request.user)
 		if form.is_valid():
 			opportunity = form.save(commit=False)
 			opportunity.scout = request.user
@@ -99,15 +124,18 @@ def post_opportunity(request):
 			messages.success(request, 'Opportunity posted successfully.')
 			return redirect('post_opportunity')
 	else:
-		form = OpportunityForm()
+		form = OpportunityForm(scout=request.user)
 
-	posted_opportunities = Opportunity.objects.filter(scout=request.user)
+	available_opportunities = Opportunity.objects.filter(scout=request.user, is_active=True).order_by('deadline', '-created_at')
+	history_opportunities = Opportunity.objects.filter(scout=request.user, is_active=False).order_by('-updated_at', '-created_at')
 	return render(
 		request,
 		'scouts/postopportunity.html',
 		{
 			'form': form,
-			'posted_opportunities': posted_opportunities,
+			'available_opportunities': available_opportunities,
+			'history_opportunities': history_opportunities,
+			'selected_view': selected_view,
 			'is_verified': is_verified,
 		},
 	)
@@ -119,6 +147,7 @@ def manage_posted_opportunities(request):
 		messages.error(request, 'Only scouts can manage posted opportunities.')
 		return redirect('player_dashboard')
 
+	_auto_expire_passed_deadline_opportunities()
 	opportunities = (
 		Opportunity.objects.filter(scout=request.user)
 		.prefetch_related('applications__player')
@@ -127,8 +156,46 @@ def manage_posted_opportunities(request):
 	return render(
 		request,
 		'scouts/manage_opportunities.html',
-		{'opportunities': opportunities},
+		{'opportunities': opportunities, 'today': timezone.localdate()},
 	)
+
+
+@login_required
+def close_opportunity_early(request, opportunity_id):
+	if request.user.role != 'scout':
+		messages.error(request, 'Only scouts can update opportunity status.')
+		return redirect('player_dashboard')
+
+	if request.method != 'POST':
+		return redirect('manage_posted_opportunities')
+
+	opportunity = get_object_or_404(Opportunity, id=opportunity_id, scout=request.user)
+	today = timezone.localdate()
+
+	if not opportunity.is_active:
+		messages.info(request, 'Opportunity is already closed.')
+		return redirect('manage_posted_opportunities')
+
+	if opportunity.deadline < today:
+		messages.info(request, 'This opportunity has already expired automatically after deadline.')
+		return redirect('manage_posted_opportunities')
+
+	if not opportunity.max_applications:
+		messages.warning(request, 'Set an application limit when posting if you want to close before deadline.')
+		return redirect('manage_posted_opportunities')
+
+	applications_count = opportunity.applications.count()
+	if applications_count < opportunity.max_applications:
+		messages.warning(
+			request,
+			f'Cannot close early yet. Applications: {applications_count}/{opportunity.max_applications}.',
+		)
+		return redirect('manage_posted_opportunities')
+
+	opportunity.is_active = False
+	opportunity.save(update_fields=['is_active', 'updated_at'])
+	messages.success(request, f'Opportunity "{opportunity.title}" closed early successfully.')
+	return redirect('manage_posted_opportunities')
 
 
 @login_required

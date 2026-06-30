@@ -6,13 +6,19 @@
 {% block content %}
 <div class="container mt-4">
 	<div class="d-flex justify-content-between align-items-center mb-3">
-		<h2 class="mb-0">Available Opportunities</h2>
+		<h2 class="mb-0">Opportunities</h2>
 		<a href="{% url 'my_applications' %}" class="btn btn-outline-primary">My Applications</a>
 	</div>
 
-	{% if opportunities %}
+	<div class="d-flex gap-2 mb-3">
+		<a href="{% url 'view_opportunities' %}?view=available" class="btn btn-sm {% if selected_view == 'available' %}btn-primary{% else %}btn-outline-primary{% endif %}">Available</a>
+		<a href="{% url 'view_opportunities' %}?view=history" class="btn btn-sm {% if selected_view == 'history' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">History</a>
+	</div>
+
+	{% if selected_view == 'available' %}
+		{% if available_opportunities %}
 		<div class="row g-3">
-			{% for opportunity in opportunities %}
+			{% for opportunity in available_opportunities %}
 				<div class="col-md-6">
 					<div class="card h-100">
 						{% if opportunity.poster_image %}
@@ -20,6 +26,7 @@
 						{% endif %}
 						<div class="card-body">
 							<h5 class="card-title">{{ opportunity.title }}</h5>
+							<p class="mb-1"><span class="badge bg-success">Active</span></p>
 							<p class="text-muted mb-1"><strong>Organization:</strong> {{ opportunity.organization }}</p>
 							<p class="text-muted mb-1"><strong>Location:</strong> {{ opportunity.location }}</p>
 							<p class="text-muted mb-2"><strong>Deadline:</strong> {{ opportunity.deadline }}</p>
@@ -41,8 +48,35 @@
 				</div>
 			{% endfor %}
 		</div>
+		{% else %}
+			<div class="alert alert-info">No active opportunities available right now.</div>
+		{% endif %}
 	{% else %}
-		<div class="alert alert-info">No opportunities posted yet.</div>
+		<h3 class="mb-3">Opportunities History</h3>
+		{% if history_opportunities %}
+		<div class="row g-3">
+			{% for opportunity in history_opportunities %}
+				<div class="col-md-6">
+					<div class="card h-100 border-secondary">
+						{% if opportunity.poster_image %}
+							<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="card-img-top" style="height:220px;object-fit:cover;">
+						{% endif %}
+						<div class="card-body">
+							<h5 class="card-title">{{ opportunity.title }}</h5>
+							<p class="mb-1"><span class="badge bg-secondary">Expired</span></p>
+							<p class="text-muted mb-1"><strong>Organization:</strong> {{ opportunity.organization }}</p>
+							<p class="text-muted mb-1"><strong>Location:</strong> {{ opportunity.location }}</p>
+							<p class="text-muted mb-2"><strong>Deadline:</strong> {{ opportunity.deadline }}</p>
+							<p class="card-text">{{ opportunity.description }}</p>
+							<button class="btn btn-outline-secondary" disabled>History - View Only</button>
+						</div>
+					</div>
+				</div>
+			{% endfor %}
+		</div>
+		{% else %}
+			<div class="alert alert-light border">No expired opportunities in history yet.</div>
+		{% endif %}
 	{% endif %}
 </div>
 {% endblock %}

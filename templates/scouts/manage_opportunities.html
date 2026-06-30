@@ -17,13 +17,33 @@
                         <div>
                             <h5 class="mb-1">{{ opportunity.title }}</h5>
                             <p class="text-muted mb-0">{{ opportunity.organization }} | {{ opportunity.location }} | Deadline: {{ opportunity.deadline }}</p>
+                            <p class="text-muted mb-0">
+                                Applications: {{ opportunity.applications.count }}
+                                {% if opportunity.max_applications %}
+                                    / {{ opportunity.max_applications }}
+                                {% endif %}
+                            </p>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            {% if opportunity.is_active %}
-                                <span class="badge bg-success">Active</span>
+                            {% if not opportunity.is_active %}
+                                {% if opportunity.deadline < today %}
+                                    <span class="badge bg-secondary">Expired</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Closed Early</span>
+                                {% endif %}
                             {% else %}
-                                <span class="badge bg-secondary">Closed</span>
+                                <span class="badge bg-success">Active</span>
                             {% endif %}
+
+                            {% if opportunity.is_active and opportunity.deadline >= today and opportunity.max_applications and opportunity.applications.count >= opportunity.max_applications %}
+                                <form method="post" action="{% url 'close_opportunity_early' opportunity.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-warning">Close Early</button>
+                                </form>
+                            {% elif opportunity.is_active %}
+                                <button type="button" class="btn btn-sm btn-outline-warning" disabled title="Enabled once application limit is reached before deadline">Close Early</button>
+                            {% endif %}
+
                             <form method="post" action="{% url 'delete_posted_opportunity' opportunity.id %}" onsubmit="return confirm('Delete this posted opportunity? This will also remove its applications.');">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete Opportunity</button>

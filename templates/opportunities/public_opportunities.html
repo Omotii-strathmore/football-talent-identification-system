@@ -1,37 +1,181 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Public Opportunities{% endblock %}
 
+{% block extra_css %}
+<style>
+    body {
+        background-image: url("{% static 'homephoto.jpeg' %}") !important;
+        background-size: cover !important;
+        background-position: center !important;
+        background-repeat: no-repeat !important;
+        background-attachment: fixed !important;
+    }
+
+    .container.mt-4 {
+        max-width: 100% !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        margin-top: 0 !important;
+    }
+
+    .trials-shell {
+        min-height: calc(100vh - 56px);
+        overflow: hidden;
+        background: transparent;
+        position: relative;
+    }
+
+    .trials-shell::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(140deg, rgba(4, 14, 28, 0.56), rgba(4, 14, 28, 0.40));
+    }
+
+    .trials-page {
+        position: relative;
+        z-index: 1;
+        padding: 28px 6vw;
+    }
+
+    .trials-heading {
+        color: #f8fafc;
+        font-weight: 800;
+        margin-bottom: 8px;
+    }
+
+    .trials-subtext {
+        color: #dbe7f3;
+        max-width: 860px;
+    }
+
+    .trials-cta {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin: 10px 0 22px;
+    }
+
+    .trials-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 12px;
+    }
+
+    .trial-card {
+        border: 1px solid rgba(255, 255, 255, 0.32);
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        color: #f8fafc;
+        overflow: hidden;
+        backdrop-filter: blur(6px);
+    }
+
+    .trial-summary-btn {
+        width: 100%;
+        text-align: left;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        padding: 12px;
+    }
+
+    .trial-summary-title {
+        font-size: 0.98rem;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+
+    .trial-summary-meta {
+        font-size: 0.82rem;
+        color: #dbe7f3;
+    }
+
+    .trial-summary-note {
+        margin-top: 8px;
+        font-size: 0.76rem;
+        color: #fef3c7;
+        letter-spacing: 0.01em;
+    }
+
+    .trial-details {
+        border-top: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(2, 10, 20, 0.58);
+        padding: 12px;
+        font-size: 0.88rem;
+        color: #e7edf5;
+    }
+
+    .trial-details p {
+        margin-bottom: 6px;
+    }
+
+    .trial-poster {
+        width: 100%;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
+
+    .empty-note {
+        background: rgba(255, 255, 255, 0.2);
+        color: #f8fafc;
+        border: 1px solid rgba(255, 255, 255, 0.28);
+        border-radius: 12px;
+        padding: 12px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Available Opportunities</h2>
-        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">Back to Home</a>
-    </div>
+<section class="trials-shell">
+    <div class="trials-page">
+            <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
+                <h2 class="trials-heading mb-0">Available Trials & Tournaments</h2>
+                <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Back to Home</a>
+            </div>
 
-    <p class="text-muted mb-4">Browse currently active opportunities posted by verified scouts. This page is view-only. Sign in as a player to apply.</p>
+            <p class="trials-subtext mb-2">Tap any card to read full details. This page is view-only, and you can apply after signing in.</p>
+            <div class="trials-cta">
+                <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Sign In</a>
+            </div>
 
-    {% if opportunities %}
-        <div class="row g-3">
-            {% for opportunity in opportunities %}
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        {% if opportunity.poster_image %}
-                            <img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="card-img-top" style="height:220px;object-fit:cover;">
-                        {% endif %}
-                        <div class="card-body">
-                            <h5 class="card-title">{{ opportunity.title }}</h5>
-                            <p class="text-muted mb-1"><strong>Organization:</strong> {{ opportunity.organization }}</p>
-                            <p class="text-muted mb-1"><strong>Location:</strong> {{ opportunity.location }}</p>
-                            <p class="text-muted mb-2"><strong>Deadline:</strong> {{ opportunity.deadline }}</p>
-                            <p class="card-text">{{ opportunity.description }}</p>
+            {% if opportunities %}
+                <div class="trials-grid">
+                    {% for opportunity in opportunities %}
+                        <div class="trial-card">
+                            <button
+                                class="trial-summary-btn"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#trial-{{ opportunity.id }}"
+                                aria-expanded="false"
+                                aria-controls="trial-{{ opportunity.id }}"
+                            >
+                                <div class="trial-summary-title">{{ opportunity.title }}</div>
+                                <div class="trial-summary-meta">{{ opportunity.organization }} | {{ opportunity.location }}</div>
+                                <div class="trial-summary-meta">Deadline: {{ opportunity.deadline }}</div>
+                                <div class="trial-summary-note">Tap to read full requirements and plan your next step.</div>
+                            </button>
+
+                            <div id="trial-{{ opportunity.id }}" class="collapse trial-details">
+                                {% if opportunity.poster_image %}
+                                    <img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="trial-poster">
+                                {% endif %}
+                                <p><strong>Organization:</strong> {{ opportunity.organization }}</p>
+                                <p><strong>Location:</strong> {{ opportunity.location }}</p>
+                                <p><strong>Deadline:</strong> {{ opportunity.deadline }}</p>
+                                <p class="mb-0">{{ opportunity.description }}</p>
+                            </div>
                         </div>
-                    </div>
+                    {% endfor %}
                 </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <div class="alert alert-info">No opportunities posted yet.</div>
-    {% endif %}
-</div>
+            {% else %}
+                <div class="empty-note">No trials or tournaments posted yet. Check back soon.</div>
+            {% endif %}
+    </div>
+</section>
 {% endblock %}

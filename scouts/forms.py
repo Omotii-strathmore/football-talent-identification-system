@@ -18,6 +18,12 @@ class ScoutOnboardingForm(forms.ModelForm):
 		widget=forms.Select(attrs={'class': 'form-select'}),
 		help_text='Select one specialization.',
 	)
+	profile_photo = forms.ImageField(
+		required=False,
+		label='Photo',
+		help_text='Optional. Add a clear profile photo.',
+		widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+	)
 
 	class Meta:
 		model = Scout

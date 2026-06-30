@@ -77,5 +77,26 @@
             </div>
         </div>
     </div>
+
+    <div class="panel-soft p-3 p-md-4 mt-4">
+        <h4 class="section-title mb-3">Generate Reports</h4>
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-8 col-lg-6">
+                <label for="report" class="form-label mb-1">Select Report Type</label>
+                <select id="report" name="report" class="form-select" required>
+                    <option value="" selected disabled>Choose report to generate...</option>
+                    <option value="summary">Summary Report (CSV)</option>
+                    <option value="users">Users Report (CSV)</option>
+                    <option value="scouts">Scouts Report (CSV)</option>
+                    <option value="opportunities">Opportunities Report (CSV)</option>
+                    <option value="applications">Applications Report (CSV)</option>
+                </select>
+            </div>
+            <div class="col-md-4 col-lg-3">
+                <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+            </div>
+        </form>
+        <p class="text-muted mb-0 mt-2">Pick one option and click Generate Report to download the selected CSV.</p>
+    </div>
 </div>
 {% endblock %}

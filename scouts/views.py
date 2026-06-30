@@ -1,13 +1,12 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Prefetch
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 
 from opportunities.models import Application, Opportunity
-from players.models import PlayerProfile
+from players.models import PlayerProfile, PlayerVideo
 from scouts.forms import ScoutEditDetailsForm
-from scouts.models import ScoutPlayerFeedback
+from scouts.models import ScoutVideoFeedback
 
 
 def _recommended_position_from_specialization(specialization):
@@ -63,21 +62,21 @@ def player_directory(request):
         return redirect('player_dashboard')
 
     if request.method == 'POST':
-        profile_id = request.POST.get('profile_id')
+        video_id = request.POST.get('video_id')
         comment = request.POST.get('comment', '').strip()
         current_query = request.POST.get('current_query', '').strip()
 
-        if not profile_id:
-            messages.error(request, 'Could not identify the selected player.')
+        if not video_id:
+            messages.error(request, 'Could not identify the selected video.')
         else:
-            profile = get_object_or_404(PlayerProfile, id=profile_id)
+            video = get_object_or_404(PlayerVideo.objects.select_related('profile'), id=video_id)
             if comment:
-                ScoutPlayerFeedback.objects.update_or_create(
+                ScoutVideoFeedback.objects.update_or_create(
                     scout=request.user,
-                    profile=profile,
+                    video=video,
                     defaults={'comment': comment},
                 )
-                messages.success(request, f'Feedback saved for {profile.full_name}.')
+                messages.success(request, f'Feedback saved for video "{video.title}".')
             else:
                 messages.info(request, 'Feedback box was empty. Nothing was saved.')
 
@@ -90,14 +89,9 @@ def player_directory(request):
     is_general_scout = scout_specialization == 'general'
     recommended_position = None if is_general_scout else _recommended_position_from_specialization(scout_specialization)
 
-    feedback_prefetch = Prefetch(
-        'feedback_entries',
-        queryset=ScoutPlayerFeedback.objects.filter(scout=request.user),
-        to_attr='current_scout_feedback',
-    )
     profiles = (
         PlayerProfile.objects.select_related('user')
-        .prefetch_related('videos', feedback_prefetch)
+        .prefetch_related('videos')
         .all()
     )
 
@@ -152,6 +146,19 @@ def player_directory(request):
         label = f'{start_age}-{end_age}'
         age_ranges.append((label, label))
         start_age = end_age + 1
+
+    profiles = list(profiles)
+    profile_ids = [profile.id for profile in profiles]
+    feedback_map = {
+        entry.video_id: entry
+        for entry in ScoutVideoFeedback.objects.filter(
+            scout=request.user,
+            video__profile_id__in=profile_ids,
+        )
+    }
+    for profile in profiles:
+        for video in profile.videos.all():
+            video.current_scout_feedback = feedback_map.get(video.id)
 
     return render(
         request,

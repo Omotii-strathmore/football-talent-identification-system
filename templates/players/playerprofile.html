@@ -1,56 +1,177 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
+{% block title %}Player Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-hero {
+        background: linear-gradient(120deg, #0f172a, #1e293b);
+        color: #f8fafc;
+        border-radius: 22px;
+        padding: 24px;
+    }
+
+    .profile-hero .text-muted {
+        color: #cbd5e1 !important;
+    }
+
+    .profile-photo-lg {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid rgba(255, 255, 255, 0.35);
+    }
+
+    .profile-photo-fallback {
+        width: 110px;
+        height: 110px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+        background: linear-gradient(135deg, #fde68a, #93c5fd);
+        border: 3px solid rgba(255, 255, 255, 0.35);
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 12px;
+    }
+
+    .profile-item {
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 14px;
+        background: #fff;
+        padding: 14px;
+    }
+
+    .profile-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+
+    .profile-value {
+        font-weight: 700;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .bio-card {
+        border: 1px solid rgba(148, 163, 184, 0.24);
+        border-radius: 14px;
+        background: #fff;
+        padding: 16px;
+    }
+
+    .video-list {
+        margin: 0;
+        padding-left: 1rem;
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="profile-container">
-
-    <!-- PROFILE HEADER -->
-    <div class="profile-header">
-        <h2>{{ profile.full_name }}'s Profile</h2>
-
-        {% if profile.profile_photo %}
-            <img src="{{ profile.profile_photo.url }}" alt="Profile Photo" class="profile-img">
-        {% else %}
-            <p>No profile photo uploaded</p>
-        {% endif %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">My Profile</h2>
+        <a href="{% url 'player_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
     </div>
 
-    <!-- VIEW MODE -->
-    {% if not edit_mode %}
-
-        <div class="profile-details">
-
-            <p><strong>Full Name:</strong> {{ profile.full_name }}</p>
-            <p><strong>Age:</strong> {{ profile.age }}</p>
-            <p><strong>Position:</strong> {{ profile.position }}</p>
-            <p><strong>Location:</strong> {{ profile.location }}</p>
-            <p><strong>Bio:</strong></p>
-            <p>{{ profile.bio|default:"No bio provided" }}</p>
-
+    <div class="profile-hero mb-4">
+        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+            <div>
+                <h3 class="fw-bold mb-1">{{ profile.full_name }}</h3>
+                <p class="text-muted mb-0">Manage your profile details, county, and bio to improve visibility to scouts.</p>
+            </div>
+            {% if profile.profile_photo %}
+                <img src="{{ profile.profile_photo.url }}" alt="{{ profile.full_name }}" class="profile-photo-lg">
+            {% else %}
+                <div class="profile-photo-fallback">{{ profile.full_name|slice:':1'|upper }}</div>
+            {% endif %}
         </div>
-
-        <!-- EDIT BUTTON -->
-        <a href="?edit=true" class="btn btn-primary">Edit Profile</a>
-
-    {% else %}
-
-    <!-- EDIT MODE -->
-    <div class="edit-form">
-
-        <h3>Edit Profile</h3>
-
-        <form method="POST" enctype="multipart/form-data">
-            {% csrf_token %}
-
-            {{ form.as_p }}
-
-            <button type="submit" class="btn btn-success">Save Changes</button>
-            <a href="{% url 'player_profile' %}" class="btn btn-secondary">Cancel</a>
-
-        </form>
-
     </div>
 
-    {% endif %}
+    {% if not edit_mode %}
+        <div class="panel-soft p-3 p-md-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="section-title mb-0">Profile Details</h4>
+                <a href="?edit=true" class="btn btn-primary btn-sm">Edit Profile</a>
+            </div>
 
+            <div class="profile-grid mb-3">
+                <div class="profile-item">
+                    <p class="profile-label">Full Name</p>
+                    <p class="profile-value">{{ profile.full_name }}</p>
+                </div>
+                <div class="profile-item">
+                    <p class="profile-label">Age</p>
+                    <p class="profile-value">{{ profile.age }}</p>
+                </div>
+                <div class="profile-item">
+                    <p class="profile-label">Position</p>
+                    <p class="profile-value">{{ profile.position }}</p>
+                </div>
+                <div class="profile-item">
+                    <p class="profile-label">Location</p>
+                    <p class="profile-value">{{ profile.location }}</p>
+                </div>
+            </div>
+
+            <div class="bio-card mb-3">
+                <p class="profile-label">Bio</p>
+                <p class="mb-0">{{ profile.bio|default:'No bio provided yet.' }}</p>
+            </div>
+
+            <div class="bio-card mb-3">
+                <p class="profile-label">Communication Options</p>
+                <div class="alert alert-info py-2 mb-2">
+                    With your consent, Interested scouts could reach out directly.
+                </div>
+                {% if profile.consent_to_share_contact %}
+                    <p class="mb-1"><strong>Email:</strong> {{ profile.contact_email|default:'Not provided' }}</p>
+                    <p class="mb-0"><strong>Contact:</strong> {{ profile.contact_phone|default:'Not provided' }}</p>
+                {% else %}
+                    <p class="mb-0 text-muted">You have not shared communication options with scouts yet.</p>
+                {% endif %}
+            </div>
+
+            <div class="bio-card">
+                <p class="profile-label">Uploaded Videos</p>
+                {% if videos %}
+                    <ul class="video-list mb-0">
+                        {% for video in videos %}
+                            <li>{{ video.title }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="mb-0 text-muted">No videos uploaded yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="panel-soft p-3 p-md-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4 class="section-title mb-0">Edit Profile</h4>
+                <a href="{% url 'player_profile' %}" class="btn btn-outline-secondary btn-sm">Cancel</a>
+            </div>
+
+            <div class="alert alert-info py-2">
+                Communication options are optional. If you consent to share them, Interested scouts could reach out.
+            </div>
+
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-success">Save Changes</button>
+            </form>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}

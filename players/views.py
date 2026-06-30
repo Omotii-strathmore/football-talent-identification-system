@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from opportunities.models import Application
 from players.forms import PlayerProfileForm, PlayerVideoForm
 from players.models import PlayerProfile, PlayerVideo
-from scouts.models import ScoutPlayerFeedback
+from scouts.models import ScoutVideoFeedback
 
 @login_required
 def dashboard(request):
@@ -18,10 +18,10 @@ def dashboard(request):
     videos_count = profile.videos.count() if profile else 0
     first_name = (request.user.full_name or 'Player').split()[0]
     feedback_entries = (
-        ScoutPlayerFeedback.objects.select_related('scout', 'scout__scout_profile')
-        .filter(profile=profile)
+        ScoutVideoFeedback.objects.select_related('scout', 'scout__scout_profile', 'video')
+        .filter(video__profile=profile)
         if profile
-        else ScoutPlayerFeedback.objects.none()
+        else ScoutVideoFeedback.objects.none()
     )
 
     return render(

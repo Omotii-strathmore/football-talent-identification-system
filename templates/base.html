@@ -152,7 +152,7 @@
                     {% elif user.is_authenticated and user.role == 'scout' %}
                         <a class="nav-link" href="{% url 'scout_player_directory' %}">View Players</a>
                     {% else %}
-                        <a class="nav-link" href="{% url 'login' %}">Profile</a>
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
                     {% endif %}
                 </li>
 

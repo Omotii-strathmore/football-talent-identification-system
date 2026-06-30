@@ -14,6 +14,7 @@ class Opportunity(models.Model):
 	poster_image = models.ImageField(upload_to='opportunity_posters/', blank=True, null=True)
 	location = models.CharField(max_length=120)
 	deadline = models.DateField()
+	max_applications = models.PositiveIntegerField(blank=True, null=True)
 	is_active = models.BooleanField(default=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)

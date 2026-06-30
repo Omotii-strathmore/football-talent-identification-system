@@ -12,6 +12,11 @@ urlpatterns = [
 	path('manage/', views.manage_posted_opportunities, name='manage_posted_opportunities'),
 	path('manage/<int:opportunity_id>/delete/', views.delete_posted_opportunity, name='delete_posted_opportunity'),
 	path(
+		'manage/<int:opportunity_id>/close-early/',
+		views.close_opportunity_early,
+		name='close_opportunity_early',
+	),
+	path(
 		'applications/<int:application_id>/status/<str:status>/',
 		views.update_application_status,
 		name='update_application_status',

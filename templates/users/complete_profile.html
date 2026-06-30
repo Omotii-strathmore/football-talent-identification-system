@@ -4,10 +4,28 @@
 {% block title %}Complete profile | Talanta Soka{% endblock %}
 
 {% block content %}
+    <style>
+        .scout-photo-preview-wrap {
+            margin-bottom: 12px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .scout-photo-preview {
+            width: 84px;
+            height: 84px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, .28);
+        }
+    </style>
+
     <p class="eyebrow">Complete Profile</p>
     {% if role == 'player' %}
         <h1 class="title">Player registration</h1>
         <p class="lead">Step 2: provide your age, football position, and location to complete your player registration.</p>
+        <p class="auth-note">Optional communication details let scouts contact you directly about opportunities. Only share details you are comfortable with, and tick consent to allow scout outreach.</p>
     {% else %}
         <h1 class="title">Scout registration</h1>
         <p class="lead">Step 2: provide your organization, specialization, and verification document. Use the specialization dropdown to select one option.</p>
@@ -15,9 +33,55 @@
 
     <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
+        {% if role == 'scout' %}
+            <div id="scout-photo-preview-wrap" class="scout-photo-preview-wrap">
+                <img id="scout-photo-preview" class="scout-photo-preview" alt="Selected scout photo preview">
+                <span class="auth-note">Photo preview</span>
+            </div>
+        {% endif %}
+
         {{ form|crispy }}
+
+        {% if role == 'player' %}
+            <datalist id="kenya-counties">
+                {% for county in kenya_counties %}
+                    <option value="{{ county }}"></option>
+                {% endfor %}
+            </datalist>
+        {% endif %}
+
         <button type="submit" class="btn btn-brand mt-3">Finish setup</button>
     </form>
 
     <p class="auth-note mt-3">After this step you will go straight to your dashboard.</p>
+
+    {% if role == 'scout' %}
+        <script>
+            (function () {
+                const input = document.getElementById('id_profile_photo');
+                const wrap = document.getElementById('scout-photo-preview-wrap');
+                const preview = document.getElementById('scout-photo-preview');
+
+                if (!input || !wrap || !preview) {
+                    return;
+                }
+
+                input.addEventListener('change', function () {
+                    const file = this.files && this.files[0];
+                    if (!file) {
+                        wrap.style.display = 'none';
+                        preview.removeAttribute('src');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        preview.src = e.target.result;
+                        wrap.style.display = 'flex';
+                    };
+                    reader.readAsDataURL(file);
+                });
+            })();
+        </script>
+    {% endif %}
 {% endblock %}

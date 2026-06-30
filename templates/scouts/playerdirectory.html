@@ -123,6 +123,21 @@
 
                             <p class="mb-2">{{ profile.bio|default:'No bio provided.' }}</p>
 
+                            {% if profile.consent_to_share_contact %}
+                                <div class="alert alert-success py-2 mb-2">
+                                    <strong>Communication options:</strong>
+                                    {% if profile.contact_email %}
+                                        <div>Email: {{ profile.contact_email }}</div>
+                                    {% endif %}
+                                    {% if profile.contact_phone %}
+                                        <div>Contact: {{ profile.contact_phone }}</div>
+                                    {% endif %}
+                                    {% if not profile.contact_email and not profile.contact_phone %}
+                                        <div class="text-muted">Player gave consent but has not added contact details yet.</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+
                             <div class="mt-3">
                                 <button
                                     class="btn btn-outline-primary btn-sm"
@@ -150,6 +165,20 @@
                                                 <div class="mb-2">
                                                     <a href="{{ video.video_file.url }}" target="_blank" class="small">Open video in new tab</a>
                                                 </div>
+
+                                                <h6 class="mt-2">Scout Feedback (optional)</h6>
+                                                <form method="post" class="mt-2 mb-3">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="video_id" value="{{ video.id }}">
+                                                    <input type="hidden" name="current_query" value="{{ request.GET.urlencode }}">
+                                                    <textarea
+                                                        name="comment"
+                                                        rows="3"
+                                                        class="form-control"
+                                                        placeholder="Add feedback for this specific video..."
+                                                    >{% if video.current_scout_feedback %}{{ video.current_scout_feedback.comment }}{% endif %}</textarea>
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Save Video Feedback</button>
+                                                </form>
                                             </li>
                                         {% endfor %}
                                     </ul>
@@ -157,20 +186,6 @@
                                     <p class="text-muted mb-0">No videos uploaded.</p>
                                 {% endif %}
                             </div>
-
-                            <h6 class="mt-3">Scout Feedback (optional)</h6>
-                            <form method="post" class="mt-2">
-                                {% csrf_token %}
-                                <input type="hidden" name="profile_id" value="{{ profile.id }}">
-                                <input type="hidden" name="current_query" value="{{ request.GET.urlencode }}">
-                                <textarea
-                                    name="comment"
-                                    rows="3"
-                                    class="form-control"
-                                    placeholder="Add feedback or comments on this player's profile/videos..."
-                                >{% if profile.current_scout_feedback %}{{ profile.current_scout_feedback.0.comment }}{% endif %}</textarea>
-                                <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Save Feedback</button>
-                            </form>
                         </div>
                     </div>
                 </div>

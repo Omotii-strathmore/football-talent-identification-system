@@ -36,6 +36,23 @@ class PlayerProfile(models.Model):
         help_text="Tell scouts about yourself"
     )
 
+    contact_email = models.EmailField(
+        blank=True,
+        null=True,
+        help_text='Optional email scouts can use to contact you.'
+    )
+
+    contact_phone = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text='Optional phone number scouts can use to contact you.'
+    )
+
+    consent_to_share_contact = models.BooleanField(
+        default=False,
+        help_text='Allow scouts to view your communication options.'
+    )
+
     created_at = models.DateTimeField(
         auto_now_add=True
     )

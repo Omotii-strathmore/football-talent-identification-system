@@ -89,12 +89,13 @@
                             </div>
                             <small class="text-muted">{{ feedback.updated_at|date:'M d, Y H:i' }}</small>
                         </div>
+                        <p class="text-muted mb-1 mt-1">Video: {{ feedback.video.title }}</p>
                         <p class="mb-0 mt-1">{{ feedback.comment }}</p>
                     </div>
                 {% endfor %}
             </div>
         {% else %}
-            <p class="text-muted mb-0">No scout feedback yet. Feedback will appear here once scouts comment on your profile or videos.</p>
+            <p class="text-muted mb-0">No scout feedback yet. Feedback will appear here once scouts comment on your videos.</p>
         {% endif %}
     </div>
 </div>

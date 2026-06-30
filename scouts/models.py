@@ -1,6 +1,6 @@
 from django.db import models
 from users.models import User
-from players.models import PlayerProfile
+from players.models import PlayerProfile, PlayerVideo
 
 class Scout(models.Model):
 
@@ -56,3 +56,31 @@ class ScoutPlayerFeedback(models.Model):
 
     def __str__(self):
         return f'{self.scout.full_name} feedback for {self.profile.full_name}'
+
+
+class ScoutVideoFeedback(models.Model):
+    scout = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='video_feedback_entries',
+    )
+    video = models.ForeignKey(
+        PlayerVideo,
+        on_delete=models.CASCADE,
+        related_name='video_feedback_entries',
+    )
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['scout', 'video'],
+                name='unique_scout_video_feedback',
+            )
+        ]
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'{self.scout.full_name} feedback for {self.video.title}'
