@@ -14,11 +14,20 @@ def _auto_expire_passed_deadline_opportunities():
 
 def public_opportunities(request):
 	_auto_expire_passed_deadline_opportunities()
-	opportunities = Opportunity.objects.filter(is_active=True)
+	selected_view = request.GET.get('view', 'available').strip().lower()
+	if selected_view not in {'available', 'history'}:
+		selected_view = 'available'
+
+	available_opportunities = Opportunity.objects.filter(is_active=True).order_by('deadline', '-created_at')
+	history_opportunities = Opportunity.objects.filter(is_active=False).order_by('-updated_at', '-created_at')
 	return render(
 		request,
 		'opportunities/public_opportunities.html',
-		{'opportunities': opportunities},
+		{
+			'available_opportunities': available_opportunities,
+			'history_opportunities': history_opportunities,
+			'selected_view': selected_view,
+		},
 	)
 
 

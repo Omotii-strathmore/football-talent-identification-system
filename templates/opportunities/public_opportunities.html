@@ -58,6 +58,12 @@
         margin: 10px 0 22px;
     }
 
+    .trials-switch {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
     .trials-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
@@ -134,18 +140,24 @@
 <section class="trials-shell">
     <div class="trials-page">
             <div class="d-flex justify-content-between align-items-center mb-1 flex-wrap gap-2">
-                <h2 class="trials-heading mb-0">Available Trials & Tournaments</h2>
+                <h2 class="trials-heading mb-0">Trials & Tournaments</h2>
                 <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Back to Home</a>
             </div>
 
-            <p class="trials-subtext mb-2">Tap any card to read full details. This page is view-only, and you can apply after signing in.</p>
+            <p class="trials-subtext mb-2">Choose Available or History to browse trials and tournaments. This page is view-only.</p>
             <div class="trials-cta">
                 <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Sign In</a>
             </div>
 
-            {% if opportunities %}
+            <div class="trials-switch">
+                <a href="{% url 'public_opportunities' %}?view=available" class="btn btn-sm {% if selected_view == 'available' %}btn-light text-dark{% else %}btn-outline-light{% endif %}">Available</a>
+                <a href="{% url 'public_opportunities' %}?view=history" class="btn btn-sm {% if selected_view == 'history' %}btn-secondary{% else %}btn-outline-secondary text-light{% endif %}">History</a>
+            </div>
+
+            {% if selected_view == 'available' %}
+            {% if available_opportunities %}
                 <div class="trials-grid">
-                    {% for opportunity in opportunities %}
+                    {% for opportunity in available_opportunities %}
                         <div class="trial-card">
                             <button
                                 class="trial-summary-btn"
@@ -174,7 +186,43 @@
                     {% endfor %}
                 </div>
             {% else %}
-                <div class="empty-note">No trials or tournaments posted yet. Check back soon.</div>
+                <div class="empty-note">No available trials or tournaments right now. Check back soon.</div>
+            {% endif %}
+            {% else %}
+            {% if history_opportunities %}
+                <div class="trials-grid">
+                    {% for opportunity in history_opportunities %}
+                        <div class="trial-card">
+                            <button
+                                class="trial-summary-btn"
+                                type="button"
+                                data-bs-toggle="collapse"
+                                data-bs-target="#trial-history-{{ opportunity.id }}"
+                                aria-expanded="false"
+                                aria-controls="trial-history-{{ opportunity.id }}"
+                            >
+                                <div class="trial-summary-title">{{ opportunity.title }}</div>
+                                <div class="trial-summary-meta">{{ opportunity.organization }} | {{ opportunity.location }}</div>
+                                <div class="trial-summary-meta">Deadline: {{ opportunity.deadline }}</div>
+                                <div class="trial-summary-note">History entry: view details only.</div>
+                            </button>
+
+                            <div id="trial-history-{{ opportunity.id }}" class="collapse trial-details">
+                                {% if opportunity.poster_image %}
+                                    <img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="trial-poster">
+                                {% endif %}
+                                <p><strong>Status:</strong> Expired</p>
+                                <p><strong>Organization:</strong> {{ opportunity.organization }}</p>
+                                <p><strong>Location:</strong> {{ opportunity.location }}</p>
+                                <p><strong>Deadline:</strong> {{ opportunity.deadline }}</p>
+                                <p class="mb-0">{{ opportunity.description }}</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-note">No history records yet for trials or tournaments.</div>
+            {% endif %}
             {% endif %}
     </div>
 </section>
