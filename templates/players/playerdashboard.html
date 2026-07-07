@@ -113,28 +113,28 @@
 
                     {% if feedback.player_reaction %}
                         <div class="small text-muted mb-2">
-                            <strong>Your reaction:</strong> {{ feedback.get_player_reaction_display }}
+                            <strong>Your reaction:</strong> {{ feedback.player_reaction }}
                         </div>
                     {% endif %}
 
                     <form method="post" class="mt-2">
                         {% csrf_token %}
                         <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
-                        <div class="row g-2">
-                            <div class="col-md-8">
-                                <textarea name="player_reply" rows="2" class="form-control" placeholder="Reply...">{{ feedback.player_reply }}</textarea>
-                            </div>
-                            <div class="col-md-4">
-                                <select name="player_reaction" class="form-select">
-                                    <option value="" {% if not feedback.player_reaction %}selected{% endif %}>Select reaction</option>
-                                    <option value="👍🏾" {% if feedback.player_reaction == '👍🏾' %}selected{% endif %}>👍🏾</option>
-                                    <option value="🙏🏾" {% if feedback.player_reaction == '🙏🏾' %}selected{% endif %}>🙏🏾</option>
-                                    <option value="💯" {% if feedback.player_reaction == '💯' %}selected{% endif %}>💯</option>
-                                    <option value="😂" {% if feedback.player_reaction == '😂' %}selected{% endif %}>😂</option>
-                                </select>
-                                <button type="submit" class="btn btn-primary btn-sm mt-2 w-100">Save response</button>
-                            </div>
+                        <div class="mb-2 text-muted small">
+                            {% if feedback.player_reply %}
+                                Tap the box below to edit your saved reply.
+                            {% else %}
+                                Tap an emoji to react, or send a quick reply.
+                            {% endif %}
                         </div>
+                        <div class="d-flex flex-wrap gap-2 mb-2">
+                            <button type="submit" name="player_reaction" value="👍🏾" class="btn btn-outline-secondary btn-sm">👍🏾</button>
+                            <button type="submit" name="player_reaction" value="🙏🏾" class="btn btn-outline-secondary btn-sm">🙏🏾</button>
+                            <button type="submit" name="player_reaction" value="💯" class="btn btn-outline-secondary btn-sm">💯</button>
+                            <button type="submit" name="player_reaction" value="😂" class="btn btn-outline-secondary btn-sm">😂</button>
+                        </div>
+                        <textarea name="player_reply" rows="2" class="form-control" placeholder="Write a quick reply...">{{ feedback.player_reply }}</textarea>
+                        <button type="submit" class="btn btn-primary btn-sm mt-2">Save reply</button>
                     </form>
                 </div>
             {% endfor %}

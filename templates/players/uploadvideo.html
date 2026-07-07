@@ -22,32 +22,68 @@
 
     <h4>My Uploaded Videos</h4>
     {% if videos %}
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Uploaded At</th>
-                        <th>File</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for video in videos %}
-                        <tr>
-                            <td>{{ video.title }}</td>
-                            <td>{{ video.uploaded_at }}</td>
-                            <td><a href="{{ video.video_file.url }}" target="_blank">View Video</a></td>
-                            <td>
+        <div class="row g-3">
+            {% for video in videos %}
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start gap-2">
+                                <div>
+                                    <h5 class="card-title mb-1">{{ video.title }}</h5>
+                                    <p class="text-muted small mb-2">Uploaded {{ video.uploaded_at }}</p>
+                                </div>
                                 <form method="post" action="{% url 'delete_video' video.id %}" onsubmit="return confirm('Delete this video?');">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                                 </form>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </div>
+
+                            <video class="w-100 mb-3" controls preload="metadata" style="max-height:220px; border-radius:10px; background:#000;">
+                                <source src="{{ video.video_file.url }}">
+                                Your browser does not support embedded video playback.
+                            </video>
+
+                            <a href="{{ video.video_file.url }}" target="_blank" class="small">Open video in new tab</a>
+
+                            {% with feedbacks=video.video_feedback_entries.all %}
+                                {% if feedbacks %}
+                                    <div class="mt-3">
+                                        <h6 class="mb-2">Scout Feedback</h6>
+                                        {% for feedback in feedbacks %}
+                                            <div class="border rounded p-2 mb-2 small">
+                                                <div class="d-flex justify-content-between align-items-start gap-2">
+                                                    <strong>{{ feedback.scout.full_name }}</strong>
+                                                    <span class="text-muted">{{ feedback.updated_at|date:'M d, Y H:i' }}</span>
+                                                </div>
+                                                <p class="mb-1 mt-1">{{ feedback.comment }}</p>
+                                                {% if feedback.player_reply %}
+                                                    <div class="text-muted"><strong>Your reply:</strong> {{ feedback.player_reply }}</div>
+                                                {% endif %}
+                                                {% if feedback.player_reaction %}
+                                                    <div class="text-muted"><strong>Your reaction:</strong> {{ feedback.player_reaction }}</div>
+                                                {% endif %}
+
+                                                <form method="post" class="mt-2">
+                                                    {% csrf_token %}
+                                                    <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
+                                                    <div class="d-flex flex-wrap gap-2 mb-2">
+                                                        <button type="submit" name="player_reaction" value="👍🏾" class="btn btn-outline-secondary btn-sm">👍🏾</button>
+                                                        <button type="submit" name="player_reaction" value="🙏🏾" class="btn btn-outline-secondary btn-sm">🙏🏾</button>
+                                                        <button type="submit" name="player_reaction" value="💯" class="btn btn-outline-secondary btn-sm">💯</button>
+                                                        <button type="submit" name="player_reaction" value="😂" class="btn btn-outline-secondary btn-sm">😂</button>
+                                                    </div>
+                                                    <textarea name="player_reply" rows="2" class="form-control" placeholder="Edit your reply...">{{ feedback.player_reply }}</textarea>
+                                                    <button type="submit" class="btn btn-primary btn-sm mt-2">Save reply</button>
+                                                </form>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     {% else %}
         <div class="alert alert-info">No videos uploaded yet.</div>

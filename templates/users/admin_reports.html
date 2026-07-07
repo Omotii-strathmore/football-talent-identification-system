@@ -169,7 +169,9 @@
     <div class="card mt-4">
         <div class="card-body">
             <h5 class="mb-3">{{ chart_title }}</h5>
-            <canvas id="reportChart" height="140"></canvas>
+            <div class="d-flex justify-content-center">
+                <canvas id="reportChart" height="220" style="max-width: 360px; width: 100%;"></canvas>
+            </div>
         </div>
     </div>
     {{ chart_labels|json_script:"chart-labels" }}
@@ -180,13 +182,35 @@
         const values = JSON.parse(document.getElementById('chart-values').textContent);
         const chartCanvas = document.getElementById('reportChart');
         const chartType = '{{ chart_type|default:"bar" }}';
+        const percentageLabelsPlugin = {
+            id: 'percentageLabels',
+            beforeDraw(chart) {
+                if (chart.config.type !== 'pie') {
+                    return;
+                }
+                const { ctx } = chart;
+                const total = chart.data.datasets[0].data.reduce((sum, value) => sum + Number(value || 0), 0) || 1;
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#111';
+                ctx.font = 'bold 11px sans-serif';
+                chart.getDatasetMeta(0).data.forEach((element, index) => {
+                    const { x, y } = element.getProps(['x', 'y']);
+                    const value = Number(chart.data.datasets[0].data[index] || 0);
+                    const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                    ctx.fillText(`${percent}%`, x, y);
+                });
+                ctx.restore();
+            }
+        };
         if (chartCanvas) {
             new Chart(chartCanvas, {
                 type: chartType,
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Player Count',
+                        label: 'Count',
                         data: values,
                         backgroundColor: ['#0d6efd', '#198754', '#fd7e14', '#dc3545', '#6f42c1', '#20c997']
                     }]
@@ -194,9 +218,10 @@
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: chartType === 'pie' }
                     }
-                }
+                },
+                plugins: chartType === 'pie' ? [percentageLabelsPlugin] : []
             });
         }
     </script>

@@ -26,23 +26,6 @@ def dashboard(request):
         else ScoutVideoFeedback.objects.none()
     )
 
-    if request.method == 'POST':
-        feedback_id = request.POST.get('feedback_id')
-        if feedback_id:
-            feedback = get_object_or_404(ScoutVideoFeedback, id=feedback_id, video__profile=profile)
-            reply = request.POST.get('player_reply', '').strip()
-            reaction = request.POST.get('player_reaction', '').strip()
-            feedback.player_reply = reply
-            feedback.player_reaction = reaction
-            feedback.is_seen = True
-            feedback.seen_at = timezone.now()
-            feedback.save(update_fields=['player_reply', 'player_reaction', 'is_seen', 'seen_at', 'updated_at'])
-            if reply or reaction:
-                messages.success(request, 'Your reply has been sent to the scout.')
-            else:
-                messages.info(request, 'Feedback marked as seen.')
-            return redirect('player_dashboard')
-
     unread_feedback_count = feedback_entries.filter(is_seen=False).count() if profile else 0
     videos = profile.videos.all() if profile else []
 
@@ -57,8 +40,6 @@ def dashboard(request):
             'first_name': first_name,
             'applications_count': applications_count,
             'videos_count': videos_count,
-            'feedback_entries': feedback_entries,
-            'unread_feedback_count': unread_feedback_count,
             'videos': videos,
         }
     )
@@ -110,6 +91,26 @@ def upload_video(request):
         return redirect('register')
 
     if request.method == 'POST':
+        feedback_id = request.POST.get('feedback_id')
+        if feedback_id:
+            feedback = get_object_or_404(ScoutVideoFeedback, id=feedback_id, video__profile=profile)
+            reply = request.POST.get('player_reply', '').strip()
+            reaction = request.POST.get('player_reaction', '').strip()
+            feedback.player_reply = reply
+            feedback.player_reaction = reaction
+            feedback.is_seen = True
+            feedback.seen_at = timezone.now()
+            feedback.save(update_fields=['player_reply', 'player_reaction', 'is_seen', 'seen_at', 'updated_at'])
+            if reply and reaction:
+                messages.success(request, 'Your reply and reaction were saved.')
+            elif reply:
+                messages.success(request, 'Your reply was saved.')
+            elif reaction:
+                messages.success(request, 'Your reaction was saved.')
+            else:
+                messages.info(request, 'Feedback marked as seen.')
+            return redirect('upload_video')
+
         form = PlayerVideoForm(request.POST, request.FILES)
         if form.is_valid():
             video = form.save(commit=False)
@@ -120,12 +121,14 @@ def upload_video(request):
     else:
         form = PlayerVideoForm()
 
+    videos = profile.videos.all()
+
     return render(
         request,
         'players/uploadvideo.html',
         {
             'form': form,
-            'videos': profile.videos.all(),
+            'videos': videos,
         },
     )
 

@@ -1,3 +1,5 @@
+from collections import Counter
+
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -351,6 +353,48 @@ def _get_filtered_player_queryset(start_date=None, end_date=None, position_value
     return queryset
 
 
+def _build_chart_data_for_report(report_type, report_rows):
+    if report_type == 'summary':
+        chart_labels = [row[0] for row in report_rows if row]
+        chart_values = [row[1] for row in report_rows if row and len(row) > 1]
+        chart_title = 'Summary Metrics'
+    elif report_type == 'players':
+        position_counts = Counter(row[1] for row in report_rows if row and len(row) > 1)
+        chart_labels = [label for label, _ in sorted(position_counts.items())]
+        chart_values = [position_counts[label] for label in chart_labels]
+        chart_title = 'Players by Position'
+    elif report_type == 'users':
+        role_counts = Counter(row[2] for row in report_rows if row and len(row) > 2)
+        chart_labels = [label for label, _ in sorted(role_counts.items())]
+        chart_values = [role_counts[label] for label in chart_labels]
+        chart_title = 'Users by Role'
+    elif report_type == 'scouts':
+        verified_counts = Counter('Verified' if row[4] else 'Unverified' for row in report_rows if row and len(row) > 4)
+        chart_labels = [label for label, _ in sorted(verified_counts.items())]
+        chart_values = [verified_counts[label] for label in chart_labels]
+        chart_title = 'Scouts by Verification'
+    elif report_type == 'opportunities':
+        status_counts = Counter('Active' if row[4] else 'Inactive' for row in report_rows if row and len(row) > 4)
+        chart_labels = [label for label, _ in sorted(status_counts.items())]
+        chart_values = [status_counts[label] for label in chart_labels]
+        chart_title = 'Opportunities by Status'
+    elif report_type == 'applications':
+        status_counts = Counter(row[3] for row in report_rows if row and len(row) > 3)
+        chart_labels = [label for label, _ in sorted(status_counts.items())]
+        chart_values = [status_counts[label] for label in chart_labels]
+        chart_title = 'Applications by Status'
+    else:
+        chart_labels = []
+        chart_values = []
+        chart_title = 'Report Overview'
+
+    if not chart_labels and not chart_values:
+        chart_labels = ['No data']
+        chart_values = [0]
+
+    return chart_labels, chart_values, chart_title
+
+
 @login_required
 @user_passes_test(_is_staff_user, login_url='login')
 def admin_reports_view(request):
@@ -363,13 +407,6 @@ def admin_reports_view(request):
     chart_type = request.GET.get('chart_type', 'bar').strip().lower()
 
     players_queryset = _get_filtered_player_queryset(start_date, end_date, position_value)
-    chart_queryset = players_queryset
-    chart_data = list(chart_queryset.values('position').annotate(count=Count('id')).order_by('position'))
-    if not chart_data:
-        chart_data = [{'position': 'No data', 'count': 0}]
-
-    chart_labels = [item['position'] for item in chart_data]
-    chart_values = [item['count'] for item in chart_data]
 
     report_headers = []
     report_rows = []
@@ -417,6 +454,8 @@ def admin_reports_view(request):
             for application in Application.objects.select_related('opportunity', 'player').all().order_by('id')
         ]
 
+    chart_labels, chart_values, chart_title = _build_chart_data_for_report(report_type, report_rows)
+
     if report_type and action == 'generate':
         timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
         if export_format == 'pdf':
@@ -448,14 +487,19 @@ def admin_reports_view(request):
             story.append(Paragraph(f'Chart: {chart_type.title()} view', styles['Heading2']))
             if chart_labels and chart_values:
                 if chart_type == 'pie':
+                    total_value = sum(chart_values)
+                    percent_labels = [
+                        f'{label} ({(value / total_value * 100):.0f}%)' if total_value else label
+                        for label, value in zip(chart_labels, chart_values)
+                    ]
                     pie_chart = Pie()
-                    pie_chart.width = 2.2 * inch
-                    pie_chart.height = 2.2 * inch
+                    pie_chart.width = 1.6 * inch
+                    pie_chart.height = 1.6 * inch
                     pie_chart.data = chart_values
-                    pie_chart.labels = chart_labels
+                    pie_chart.labels = percent_labels
                     pie_chart.slices.strokeColor = colors.white
                     pie_chart.slices.strokeWidth = 0.5
-                    drawing = Drawing(300, 220)
+                    drawing = Drawing(240, 220)
                     drawing.add(pie_chart)
                     story.append(drawing)
                 else:
@@ -516,7 +560,7 @@ def admin_reports_view(request):
             'end_date': end_date,
             'position_filter': position_value,
             'chart_type': chart_type,
-            'chart_title': 'Players by Position',
+            'chart_title': chart_title,
             'chart_labels': chart_labels,
             'chart_values': chart_values,
             'report_headers': report_headers,
