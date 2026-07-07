@@ -48,18 +48,16 @@
 
             {% block top_right_link %}{% endblock %}
 
-            {% if current_step and total_steps %}
+            {% if current_step and total_steps and request.path != '/login/' %}
                 <section class="progress-wrap" aria-label="Registration and login progress">
                     <p class="step-title">{{ step_title }}</p>
                     <div class="progress" role="progressbar" aria-valuemin="1" aria-valuemax="{{ total_steps }}" aria-valuenow="{{ current_step }}">
-                        {% if total_steps == 2 and current_step == 1 %}
-                            <div class="progress-bar progress-fill-50"></div>
-                        {% elif total_steps == 2 and current_step == 2 %}
-                            <div class="progress-bar progress-fill-100"></div>
-                        {% elif total_steps == 3 and current_step == 1 %}
+                        {% if total_steps == 3 and current_step == 1 %}
                             <div class="progress-bar progress-fill-33"></div>
                         {% elif total_steps == 3 and current_step == 2 %}
                             <div class="progress-bar progress-fill-66"></div>
+                        {% elif total_steps == 3 and current_step == 3 %}
+                            <div class="progress-bar progress-fill-100"></div>
                         {% else %}
                             <div class="progress-bar progress-fill-100"></div>
                         {% endif %}
@@ -67,9 +65,7 @@
                     <div class="step-labels">
                         <span>Register</span>
                         <span>Role details</span>
-                        {% if total_steps == 3 %}
-                            <span>Login</span>
-                        {% endif %}
+                        <span>Login</span>
                     </div>
                 </section>
             {% endif %}

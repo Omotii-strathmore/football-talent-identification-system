@@ -74,7 +74,11 @@ def player_directory(request):
                 ScoutVideoFeedback.objects.update_or_create(
                     scout=request.user,
                     video=video,
-                    defaults={'comment': comment},
+                    defaults={
+                        'comment': comment,
+                        'is_seen': False,
+                        'seen_at': None,
+                    },
                 )
                 messages.success(request, f'Feedback saved for video "{video.title}".')
             else:

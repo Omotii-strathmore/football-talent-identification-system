@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
+from django.utils import timezone
 
 from opportunities.models import Application
 from players.forms import PlayerProfileForm, PlayerVideoForm
@@ -20,9 +21,33 @@ def dashboard(request):
     feedback_entries = (
         ScoutVideoFeedback.objects.select_related('scout', 'scout__scout_profile', 'video')
         .filter(video__profile=profile)
+        .order_by('-updated_at')
         if profile
         else ScoutVideoFeedback.objects.none()
     )
+
+    if request.method == 'POST':
+        feedback_id = request.POST.get('feedback_id')
+        if feedback_id:
+            feedback = get_object_or_404(ScoutVideoFeedback, id=feedback_id, video__profile=profile)
+            reply = request.POST.get('player_reply', '').strip()
+            reaction = request.POST.get('player_reaction', '').strip()
+            feedback.player_reply = reply
+            feedback.player_reaction = reaction
+            feedback.is_seen = True
+            feedback.seen_at = timezone.now()
+            feedback.save(update_fields=['player_reply', 'player_reaction', 'is_seen', 'seen_at', 'updated_at'])
+            if reply or reaction:
+                messages.success(request, 'Your reply has been sent to the scout.')
+            else:
+                messages.info(request, 'Feedback marked as seen.')
+            return redirect('player_dashboard')
+
+    unread_feedback_count = feedback_entries.filter(is_seen=False).count() if profile else 0
+    videos = profile.videos.all() if profile else []
+
+    if unread_feedback_count:
+        messages.info(request, f'You have {unread_feedback_count} unread scout feedback item(s).')
 
     return render(
         request,
@@ -33,6 +58,8 @@ def dashboard(request):
             'applications_count': applications_count,
             'videos_count': videos_count,
             'feedback_entries': feedback_entries,
+            'unread_feedback_count': unread_feedback_count,
+            'videos': videos,
         }
     )
 

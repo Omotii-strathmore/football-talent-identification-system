@@ -1,3 +1,4 @@
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from users.models import User
 from players.models import PlayerProfile, PlayerVideo
@@ -15,7 +16,8 @@ class Scout(models.Model):
   specialization = models.CharField(max_length=120)
 
   verification_document = models.FileField(
-      upload_to='scout_verification_docs/'
+      upload_to='scout_verification_docs/',
+      validators=[FileExtensionValidator(['pdf', 'doc', 'docx'])]
   )
 
   profile_photo = models.ImageField(
@@ -59,6 +61,13 @@ class ScoutPlayerFeedback(models.Model):
 
 
 class ScoutVideoFeedback(models.Model):
+    REACTION_CHOICES = [
+        ('', 'No reaction'),
+        ('acknowledged', 'Acknowledged'),
+        ('interested', 'Interested'),
+        ('noted', 'Noted'),
+    ]
+
     scout = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -70,6 +79,15 @@ class ScoutVideoFeedback(models.Model):
         related_name='video_feedback_entries',
     )
     comment = models.TextField()
+    player_reply = models.TextField(blank=True, default='')
+    player_reaction = models.CharField(
+        max_length=20,
+        choices=REACTION_CHOICES,
+        blank=True,
+        default='',
+    )
+    is_seen = models.BooleanField(default=False)
+    seen_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

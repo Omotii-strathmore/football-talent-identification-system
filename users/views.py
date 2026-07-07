@@ -1,17 +1,30 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 
 import csv
+from io import BytesIO
 
 from opportunities.models import Application, Opportunity
 from players.models import PlayerProfile, PlayerVideo
 from players.forms import PlayerOnboardingForm
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics.shapes import Drawing
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from scouts.forms import ScoutOnboardingForm
 from scouts.models import Scout
+
+REPORTLAB_AVAILABLE = True
+
 from .forms import AdminUserUpdateForm, RegistrationForm, LoginForm
 from .models import User
 
@@ -33,6 +46,7 @@ def register_view(request):
 
             user = form.save()
             request.session['pending_user_id'] = user.id
+            messages.success(request, 'User registration was successful. Please complete your profile in the next step.')
             return redirect('complete_profile')
 
     else:
@@ -45,8 +59,8 @@ def register_view(request):
         {
             'form': form,
             'current_step': 1,
-            'total_steps': 2,
-            'step_title': 'Step 1 of 2: Account details',
+            'total_steps': 3,
+            'step_title': 'Step 1 of 3: Basic registration',
         }
     )
 
@@ -67,10 +81,10 @@ def complete_profile_view(request):
 
     if user.role == 'player':
         form_class = PlayerOnboardingForm
-        template_title = 'Step 2 of 2: Player profile'
+        template_title = 'Step 2 of 3: Player profile'
     else:
         form_class = ScoutOnboardingForm
-        template_title = 'Step 2 of 2: Scout profile'
+        template_title = 'Step 2 of 3: Scout profile'
 
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES)
@@ -98,14 +112,9 @@ def complete_profile_view(request):
                 )
 
             request.session.pop('pending_user_id', None)
-            login(request, user)
-
-            if user.role == 'player':
-                messages.success(request, 'Registration complete. Welcome to your player dashboard.')
-                return redirect('player_dashboard')
-
-            messages.success(request, 'Registration complete. Your scout account is pending verification.')
-            return redirect('scout_dashboard')
+            role_label = 'Player' if user.role == 'player' else 'Scout'
+            messages.success(request, f'{role_label} registration completed successfully. Please sign in to continue.')
+            return redirect('login')
     else:
         form = form_class()
 
@@ -116,7 +125,7 @@ def complete_profile_view(request):
             'form': form,
             'role': user.role,
             'current_step': 2,
-            'total_steps': 2,
+            'total_steps': 3,
             'step_title': template_title,
             'kenya_counties': PlayerOnboardingForm.KENYA_COUNTIES if user.role == 'player' else [],
         }
@@ -155,6 +164,7 @@ def login_view(request):
                     return redirect('complete_profile')
 
                 login(request, user)
+                messages.success(request, 'Login successful. Welcome back!')
 
                 if user.role == 'player':
                     return redirect('player_dashboard')
@@ -316,197 +326,169 @@ def admin_delete_user_view(request, user_id):
     return redirect('admin_users')
 
 
+def _normalize_position_filter(position_value):
+    if not position_value or position_value == 'all':
+        return None
+    normalized = position_value.strip()
+    if normalized.lower() == 'striker':
+        return 'Forward'
+    return normalized
+
+
+def _get_filtered_player_queryset(start_date=None, end_date=None, position_value=None):
+    queryset = PlayerProfile.objects.select_related('user').all()
+
+    if start_date:
+        queryset = queryset.filter(created_at__date__gte=start_date)
+
+    if end_date:
+        queryset = queryset.filter(created_at__date__lte=end_date)
+
+    normalized_position = _normalize_position_filter(position_value)
+    if normalized_position:
+        queryset = queryset.filter(position=normalized_position)
+
+    return queryset
+
+
 @login_required
 @user_passes_test(_is_staff_user, login_url='login')
 def admin_reports_view(request):
-
     report_type = request.GET.get('report', '').strip().lower()
-    if report_type:
+    action = request.GET.get('action', 'preview').strip().lower()
+    export_format = request.GET.get('format', 'csv').strip().lower()
+    start_date = request.GET.get('start_date', '').strip()
+    end_date = request.GET.get('end_date', '').strip()
+    position_value = request.GET.get('position', 'all').strip()
+    chart_type = request.GET.get('chart_type', 'bar').strip().lower()
+
+    players_queryset = _get_filtered_player_queryset(start_date, end_date, position_value)
+    chart_queryset = players_queryset
+    chart_data = list(chart_queryset.values('position').annotate(count=Count('id')).order_by('position'))
+    if not chart_data:
+        chart_data = [{'position': 'No data', 'count': 0}]
+
+    chart_labels = [item['position'] for item in chart_data]
+    chart_values = [item['count'] for item in chart_data]
+
+    report_headers = []
+    report_rows = []
+
+    if report_type == 'summary':
+        report_headers = ['Metric', 'Value']
+        report_rows = [
+            ['Player Profiles', players_queryset.count()],
+            ['Scout Profiles', Scout.objects.count()],
+            ['Verified Scouts', Scout.objects.filter(verified=True).count()],
+            ['Unverified Scouts', Scout.objects.filter(verified=False).count()],
+            ['Total Opportunities', Opportunity.objects.count()],
+            ['Active Opportunities', Opportunity.objects.filter(is_active=True).count()],
+            ['Total Applications', Application.objects.count()],
+            ['Uploaded Player Videos', PlayerVideo.objects.count()],
+        ]
+    elif report_type == 'players':
+        report_headers = ['Player Name', 'Position', 'Location', 'Created At']
+        report_rows = [
+            [player.full_name, player.position, player.location, timezone.localtime(player.created_at).strftime('%Y-%m-%d')]
+            for player in players_queryset.order_by('full_name')
+        ]
+    elif report_type == 'users':
+        report_headers = ['Full Name', 'Email', 'Role', 'Is Staff', 'Is Active']
+        report_rows = [
+            [user.full_name, user.email, user.role, user.is_staff, user.is_active]
+            for user in User.objects.all().order_by('full_name')
+        ]
+    elif report_type == 'scouts':
+        report_headers = ['Name', 'Email', 'Organization', 'Specialization', 'Verified']
+        report_rows = [
+            [scout.user.full_name, scout.user.email, scout.organization, scout.specialization, scout.verified]
+            for scout in Scout.objects.select_related('user').all().order_by('organization')
+        ]
+    elif report_type == 'opportunities':
+        report_headers = ['Title', 'Organization', 'Location', 'Deadline', 'Active', 'Applications Count']
+        report_rows = [
+            [opportunity.title, opportunity.organization, opportunity.location, opportunity.deadline, opportunity.is_active, opportunity.applications.count()]
+            for opportunity in Opportunity.objects.select_related('scout').all().order_by('title')
+        ]
+    elif report_type == 'applications':
+        report_headers = ['Opportunity Title', 'Player Name', 'Player Email', 'Status', 'Applied At']
+        report_rows = [
+            [application.opportunity.title, application.player.full_name, application.player.email, application.status, timezone.localtime(application.applied_at).strftime('%Y-%m-%d %H:%M:%S')]
+            for application in Application.objects.select_related('opportunity', 'player').all().order_by('id')
+        ]
+
+    if report_type and action == 'generate':
         timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
+        if export_format == 'pdf':
+            if not REPORTLAB_AVAILABLE:
+                messages.error(request, 'PDF export is unavailable because reportlab is not installed in the active environment.')
+                return redirect('admin_reports')
+
+            buffer = BytesIO()
+            doc = SimpleDocTemplate(buffer, pagesize=letter, title=f'{report_type.title()} Report')
+            styles = getSampleStyleSheet()
+            story = []
+            story.append(Paragraph('Talanta FC Admin Report', styles['Title']))
+            story.append(Spacer(1, 12))
+            story.append(Paragraph(f'Report Type: {report_type.title()}', styles['Heading2']))
+            story.append(Paragraph(f'Filters: start date {start_date or "all"}, end date {end_date or "all"}, position {position_value or "all"}', styles['BodyText']))
+            story.append(Spacer(1, 12))
+
+            data = [report_headers] + report_rows
+            table = Table(data, repeatRows=1)
+            table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.white]),
+            ]))
+            story.append(table)
+            story.append(Spacer(1, 12))
+            story.append(Paragraph(f'Chart: {chart_type.title()} view', styles['Heading2']))
+            if chart_labels and chart_values:
+                if chart_type == 'pie':
+                    pie_chart = Pie()
+                    pie_chart.width = 2.2 * inch
+                    pie_chart.height = 2.2 * inch
+                    pie_chart.data = chart_values
+                    pie_chart.labels = chart_labels
+                    pie_chart.slices.strokeColor = colors.white
+                    pie_chart.slices.strokeWidth = 0.5
+                    drawing = Drawing(300, 220)
+                    drawing.add(pie_chart)
+                    story.append(drawing)
+                else:
+                    bar_chart = VerticalBarChart()
+                    bar_chart.width = 3.2 * inch
+                    bar_chart.height = 2.2 * inch
+                    bar_chart.x = 0.5 * inch
+                    bar_chart.y = 0.2 * inch
+                    bar_chart.data = [chart_values]
+                    bar_chart.categoryAxis.categoryNames = chart_labels
+                    bar_chart.valueAxis.valueMin = 0
+                    bar_chart.valueAxis.valueMax = max(chart_values) + 1 if chart_values else 1
+                    bar_chart.bars[0].fillColor = colors.HexColor('#198754')
+                    drawing = Drawing(320, 220)
+                    drawing.add(bar_chart)
+                    story.append(drawing)
+            doc.build(story)
+            pdf_value = buffer.getvalue()
+            response = HttpResponse(pdf_value, content_type='application/pdf')
+            response['Content-Disposition'] = f'attachment; filename="{report_type}_report_{timestamp}.pdf"'
+            return response
+
         response = HttpResponse(content_type='text/csv')
         writer = csv.writer(response)
-
-        if report_type == 'summary':
-            response['Content-Disposition'] = f'attachment; filename="system_summary_report_{timestamp}.csv"'
-            writer.writerow(['Metric', 'Value'])
-            writer.writerow(['Player Profiles', PlayerProfile.objects.count()])
-            writer.writerow(['Scout Profiles', Scout.objects.count()])
-            writer.writerow(['Verified Scouts', Scout.objects.filter(verified=True).count()])
-            writer.writerow(['Unverified Scouts', Scout.objects.filter(verified=False).count()])
-            writer.writerow(['Total Opportunities', Opportunity.objects.count()])
-            writer.writerow(['Active Opportunities', Opportunity.objects.filter(is_active=True).count()])
-            writer.writerow(['Total Applications', Application.objects.count()])
-            writer.writerow(['Uploaded Player Videos', PlayerVideo.objects.count()])
-            return response
-
-        if report_type == 'users':
-            response['Content-Disposition'] = f'attachment; filename="users_report_{timestamp}.csv"'
-            writer.writerow(['ID', 'Full Name', 'Email', 'Role', 'Is Staff', 'Is Active'])
-            for user in User.objects.all().order_by('id'):
-                writer.writerow([
-                    user.id,
-                    user.full_name,
-                    user.email,
-                    user.role,
-                    user.is_staff,
-                    user.is_active,
-                ])
-            return response
-
-        if report_type == 'scouts':
-            response['Content-Disposition'] = f'attachment; filename="scouts_report_{timestamp}.csv"'
-            writer.writerow(['Scout ID', 'Name', 'Email', 'Organization', 'Specialization', 'Verified'])
-            for scout in Scout.objects.select_related('user').all().order_by('id'):
-                writer.writerow([
-                    scout.id,
-                    scout.user.full_name,
-                    scout.user.email,
-                    scout.organization,
-                    scout.specialization,
-                    scout.verified,
-                ])
-            return response
-
-        if report_type == 'opportunities':
-            response['Content-Disposition'] = f'attachment; filename="opportunities_report_{timestamp}.csv"'
-            writer.writerow([
-                'Opportunity ID',
-                'Title',
-                'Organization',
-                'Location',
-                'Deadline',
-                'Active',
-                'Max Applications',
-                'Applications Count',
-                'Scout Name',
-                'Scout Email',
-            ])
-            queryset = Opportunity.objects.select_related('scout').all().order_by('id')
-            for opportunity in queryset:
-                writer.writerow([
-                    opportunity.id,
-                    opportunity.title,
-                    opportunity.organization,
-                    opportunity.location,
-                    opportunity.deadline,
-                    opportunity.is_active,
-                    opportunity.max_applications,
-                    opportunity.applications.count(),
-                    opportunity.scout.full_name,
-                    opportunity.scout.email,
-                ])
-            return response
-
-        if report_type == 'applications':
-            response['Content-Disposition'] = f'attachment; filename="applications_report_{timestamp}.csv"'
-            writer.writerow([
-                'Application ID',
-                'Opportunity Title',
-                'Player Name',
-                'Player Email',
-                'Status',
-                'Applied At',
-            ])
-            queryset = Application.objects.select_related('opportunity', 'player').all().order_by('id')
-            for application in queryset:
-                writer.writerow([
-                    application.id,
-                    application.opportunity.title,
-                    application.player.full_name,
-                    application.player.email,
-                    application.status,
-                    timezone.localtime(application.applied_at).strftime('%Y-%m-%d %H:%M:%S'),
-                ])
-            return response
-
-        if report_type == 'diagram_based':
-            response['Content-Disposition'] = f'attachment; filename="kweyu_drnjeri_diagram_based_report_{timestamp}.csv"'
-            writer.writerow([
-                'Diagram Section',
-                'Actor/Module',
-                'Input',
-                'Process',
-                'Output',
-                'Metric Value',
-            ])
-
-            # Conceptual/use-case aligned actor flows from the project document.
-            writer.writerow([
-                'Actor Flow',
-                'Player',
-                'Registration/Profile Data',
-                'Create and maintain player profile',
-                'Scouting-ready player profiles',
-                PlayerProfile.objects.count(),
-            ])
-            writer.writerow([
-                'Actor Flow',
-                'Player',
-                'Performance Videos',
-                'Upload and manage video evidence',
-                'Player videos visible to scouts',
-                PlayerVideo.objects.count(),
-            ])
-            writer.writerow([
-                'Actor Flow',
-                'Player',
-                'Opportunity Application Data',
-                'Apply to trials/tournaments',
-                'Submitted applications',
-                Application.objects.count(),
-            ])
-
-            writer.writerow([
-                'Actor Flow',
-                'Scout/Coach',
-                'Opportunity Details',
-                'Post and manage opportunities',
-                'Published opportunities',
-                Opportunity.objects.count(),
-            ])
-            writer.writerow([
-                'Actor Flow',
-                'Scout/Coach',
-                'Verification Documents',
-                'Verification workflow and scouting access',
-                'Verified scout accounts',
-                Scout.objects.filter(verified=True).count(),
-            ])
-
-            writer.writerow([
-                'Actor Flow',
-                'Admin',
-                'User and Verification Data',
-                'Monitor system and approve/reject scouts',
-                'Pending scout verifications',
-                Scout.objects.filter(verified=False).count(),
-            ])
-            writer.writerow([
-                'Actor Flow',
-                'Admin',
-                'System Operational Data',
-                'Generate decision-support reports',
-                'Total platform users',
-                User.objects.count(),
-            ])
-
-            writer.writerow([
-                'System Output',
-                'Reporting',
-                'Player + Scout + Opportunity + Application Data',
-                'Aggregate and analyze by module',
-                'Decision-support report entries',
-                (
-                    PlayerProfile.objects.count()
-                    + Scout.objects.count()
-                    + Opportunity.objects.count()
-                    + Application.objects.count()
-                ),
-            ])
-            return response
-
-        messages.error(request, 'Invalid report type selected.')
-        return redirect('admin_reports')
+        response['Content-Disposition'] = f'attachment; filename="{report_type}_report_{timestamp}.csv"'
+        writer.writerow(report_headers)
+        for row in report_rows:
+            writer.writerow(row)
+        writer.writerow([])
+        writer.writerow(['Chart Type', chart_type.title()])
+        writer.writerow(['Chart Labels', '|'.join(chart_labels)])
+        writer.writerow(['Chart Values', '|'.join(str(value) for value in chart_values)])
+        return response
 
     reports = {
         'players_total': PlayerProfile.objects.count(),
@@ -519,8 +501,25 @@ def admin_reports_view(request):
         'videos_total': PlayerVideo.objects.count(),
     }
 
+    preview_mode = 'chart' if action == 'chart' else 'preview'
+
     return render(
         request,
         'users/admin_reports.html',
-        {'reports': reports},
+        {
+            'reports': reports,
+            'report_type': report_type,
+            'action': action,
+            'preview_mode': preview_mode,
+            'export_format': export_format,
+            'start_date': start_date,
+            'end_date': end_date,
+            'position_filter': position_value,
+            'chart_type': chart_type,
+            'chart_title': 'Players by Position',
+            'chart_labels': chart_labels,
+            'chart_values': chart_values,
+            'report_headers': report_headers,
+            'report_rows': report_rows,
+        },
     )

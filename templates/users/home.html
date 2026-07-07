@@ -253,6 +253,35 @@
             color:var(--muted);
         }
 
+        .home-toast {
+            position:fixed;
+            top:18px;
+            right:18px;
+            z-index:1200;
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            pointer-events:none;
+        }
+
+        .home-toast .toast-card {
+            min-width:260px;
+            max-width:320px;
+            padding:14px 16px;
+            border-radius:8px;
+            background:rgba(245,196,0,.95);
+            color:#111;
+            box-shadow:0 14px 30px rgba(0,0,0,.2);
+            font-size:.95rem;
+            font-weight:600;
+            animation:fadeIn .25s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity:0; transform:translateY(-6px); }
+            to { opacity:1; transform:translateY(0); }
+        }
+
         .offers {
             padding:24px 6vw 70px;
             background:var(--off);
@@ -336,6 +365,12 @@
     </style>
 </head>
 <body>
+    <div id="home-toast" class="home-toast" aria-live="polite"></div>
+    {% if messages %}
+        <script>
+            window.__homeMessages = [{% for message in messages %}"{{ message|escapejs }}"{% if not forloop.last %},{% endif %}{% endfor %}];
+        </script>
+    {% endif %}
     <nav>
         <div class="logo">Talanta <span>Soka</span></div>
         <ul class="links">
@@ -410,5 +445,21 @@
             <p>Email: support@talantasoka.co.ke</p>
         </div>
     </footer>
+    <script>
+        (function () {
+            const messages = window.__homeMessages || [];
+            const container = document.getElementById('home-toast');
+            if (!container || !messages.length) {
+                return;
+            }
+            messages.forEach(function (message) {
+                const card = document.createElement('div');
+                card.className = 'toast-card';
+                card.textContent = message;
+                container.appendChild(card);
+                setTimeout(function () { card.remove(); }, 4000);
+            });
+        })();
+    </script>
 </body>
 </html>

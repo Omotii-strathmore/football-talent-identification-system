@@ -175,10 +175,27 @@
                                                         name="comment"
                                                         rows="3"
                                                         class="form-control"
-                                                        placeholder="Add feedback for this specific video..."
+                                                        placeholder="Add or edit feedback for this specific video..."
                                                     >{% if video.current_scout_feedback %}{{ video.current_scout_feedback.comment }}{% endif %}</textarea>
-                                                    <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Save Video Feedback</button>
+                                                    <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Save feedback</button>
                                                 </form>
+                                                {% if video.current_scout_feedback %}
+                                                    <div class="border rounded p-2 mt-2 small">
+                                                        <div class="mb-1">
+                                                            {% if video.current_scout_feedback.is_seen %}
+                                                                <span class="badge bg-success">Seen by player</span>
+                                                            {% else %}
+                                                                <span class="badge bg-warning text-dark">Unread by player</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        {% if video.current_scout_feedback.player_reply %}
+                                                            <div class="mb-1"><strong>Player reply:</strong> {{ video.current_scout_feedback.player_reply }}</div>
+                                                        {% endif %}
+                                                        {% if video.current_scout_feedback.player_reaction %}
+                                                            <div class="mb-1"><strong>Player reaction:</strong> {{ video.current_scout_feedback.player_reaction }}</div>
+                                                        {% endif %}
+                                                    </div>
+                                                {% endif %}
                                             </li>
                                         {% endfor %}
                                     </ul>

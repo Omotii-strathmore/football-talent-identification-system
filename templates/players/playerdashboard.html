@@ -76,27 +76,71 @@
     </div>
     </div>
 
+    {% if feedback_entries %}
     <div class="panel-soft p-3 p-md-4 mt-4">
-        <h4 class="section-title">Scout Feedback</h4>
-        {% if feedback_entries %}
-            <div class="list-group list-group-flush">
-                {% for feedback in feedback_entries %}
-                    <div class="list-group-item px-0">
-                        <div class="d-flex justify-content-between align-items-start gap-2">
-                            <div>
-                                <strong>{{ feedback.scout.full_name }}</strong>
-                                <span class="text-muted">({{ feedback.scout.scout_profile.organization|default:'Scout' }})</span>
-                            </div>
-                            <small class="text-muted">{{ feedback.updated_at|date:'M d, Y H:i' }}</small>
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <h4 class="section-title mb-0">Scout Feedback</h4>
+            {% if unread_feedback_count %}
+                <span class="badge bg-warning text-dark">{{ unread_feedback_count }} unread</span>
+            {% endif %}
+        </div>
+
+        <div class="list-group list-group-flush">
+            {% for feedback in feedback_entries %}
+                <div class="list-group-item px-0">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <strong>{{ feedback.scout.full_name }}</strong>
+                            <span class="text-muted">({{ feedback.scout.scout_profile.organization|default:'Scout' }})</span>
                         </div>
-                        <p class="text-muted mb-1 mt-1">Video: {{ feedback.video.title }}</p>
-                        <p class="mb-0 mt-1">{{ feedback.comment }}</p>
+                        <div class="text-end">
+                            <small class="text-muted d-block">{{ feedback.updated_at|date:'M d, Y H:i' }}</small>
+                            {% if feedback.is_seen %}
+                                <span class="badge bg-success">Seen</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Unread</span>
+                            {% endif %}
+                        </div>
                     </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <p class="text-muted mb-0">No scout feedback yet. Feedback will appear here once scouts comment on your videos.</p>
-        {% endif %}
+                    <p class="text-muted mb-1 mt-1">Video: {{ feedback.video.title }}</p>
+                    <p class="mb-2 mt-1">{{ feedback.comment }}</p>
+
+                    {% if feedback.player_reply %}
+                        <div class="alert alert-light border py-2 mb-2">
+                            <strong>Your reply:</strong> {{ feedback.player_reply }}
+                        </div>
+                    {% endif %}
+
+                    {% if feedback.player_reaction %}
+                        <div class="small text-muted mb-2">
+                            <strong>Your reaction:</strong> {{ feedback.get_player_reaction_display }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" class="mt-2">
+                        {% csrf_token %}
+                        <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
+                        <div class="row g-2">
+                            <div class="col-md-8">
+                                <textarea name="player_reply" rows="2" class="form-control" placeholder="Reply...">{{ feedback.player_reply }}</textarea>
+                            </div>
+                            <div class="col-md-4">
+                                <select name="player_reaction" class="form-select">
+                                    <option value="" {% if not feedback.player_reaction %}selected{% endif %}>Select reaction</option>
+                                    <option value="👍🏾" {% if feedback.player_reaction == '👍🏾' %}selected{% endif %}>👍🏾</option>
+                                    <option value="🙏🏾" {% if feedback.player_reaction == '🙏🏾' %}selected{% endif %}>🙏🏾</option>
+                                    <option value="💯" {% if feedback.player_reaction == '💯' %}selected{% endif %}>💯</option>
+                                    <option value="😂" {% if feedback.player_reaction == '😂' %}selected{% endif %}>😂</option>
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm mt-2 w-100">Save response</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
     </div>
+    {% endif %}
+
 </div>
 {% endblock %}

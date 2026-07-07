@@ -145,11 +145,23 @@
             <div class="bio-card">
                 <p class="profile-label">Uploaded Videos</p>
                 {% if videos %}
-                    <ul class="video-list mb-0">
+                    <div class="row g-3">
                         {% for video in videos %}
-                            <li>{{ video.title }}</li>
+                            <div class="col-md-6">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h6 class="card-title mb-1">{{ video.title }}</h6>
+                                        <p class="text-muted small mb-2">Uploaded {{ video.uploaded_at|date:'M d, Y H:i' }}</p>
+                                        <video class="player-video mb-2" controls preload="metadata">
+                                            <source src="{{ video.video_file.url }}">
+                                            Your browser does not support embedded video playback.
+                                        </video>
+                                        <a href="{{ video.video_file.url }}" target="_blank" class="small">Open video in new tab</a>
+                                    </div>
+                                </div>
+                            </div>
                         {% endfor %}
-                    </ul>
+                    </div>
                 {% else %}
                     <p class="mb-0 text-muted">No videos uploaded yet.</p>
                 {% endif %}

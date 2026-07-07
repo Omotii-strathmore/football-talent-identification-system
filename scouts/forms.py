@@ -1,4 +1,5 @@
 from django import forms
+from django.core.validators import FileExtensionValidator
 
 from scouts.models import Scout
 
@@ -23,6 +24,13 @@ class ScoutOnboardingForm(forms.ModelForm):
 		label='Photo',
 		help_text='Optional. Add a clear profile photo.',
 		widget=forms.ClearableFileInput(attrs={'accept': 'image/*'}),
+	)
+	verification_document = forms.FileField(
+		required=True,
+		label='Verification Document',
+		help_text='Upload a PDF or Word document to verify your scout profile.',
+		validators=[FileExtensionValidator(['pdf', 'doc', 'docx'])],
+		widget=forms.ClearableFileInput(attrs={'accept': '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
 	)
 
 	class Meta:

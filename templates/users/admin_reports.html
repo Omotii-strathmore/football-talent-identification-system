@@ -79,24 +79,127 @@
     </div>
 
     <div class="panel-soft p-3 p-md-4 mt-4">
-        <h4 class="section-title mb-3">Generate Reports</h4>
-        <form method="get" class="row g-2 align-items-end">
-            <div class="col-md-8 col-lg-6">
+        <h4 class="section-title mb-3">Report Preview & Export</h4>
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-6 col-lg-3">
                 <label for="report" class="form-label mb-1">Select Report Type</label>
                 <select id="report" name="report" class="form-select" required>
-                    <option value="" selected disabled>Choose report to generate...</option>
-                    <option value="summary">Summary Report (CSV)</option>
-                    <option value="users">Users Report (CSV)</option>
-                    <option value="scouts">Scouts Report (CSV)</option>
-                    <option value="opportunities">Opportunities Report (CSV)</option>
-                    <option value="applications">Applications Report (CSV)</option>
+                    <option value="" {% if not report_type %}selected disabled{% endif %}>Choose report to generate...</option>
+                    <option value="summary" {% if report_type == 'summary' %}selected{% endif %}>Summary Report</option>
+                    <option value="players" {% if report_type == 'players' %}selected{% endif %}>Players Report</option>
+                    <option value="users" {% if report_type == 'users' %}selected{% endif %}>Users Report</option>
+                    <option value="scouts" {% if report_type == 'scouts' %}selected{% endif %}>Scouts Report</option>
+                    <option value="opportunities" {% if report_type == 'opportunities' %}selected{% endif %}>Opportunities Report</option>
+                    <option value="applications" {% if report_type == 'applications' %}selected{% endif %}>Applications Report</option>
                 </select>
             </div>
-            <div class="col-md-4 col-lg-3">
-                <button type="submit" class="btn btn-primary w-100">Generate Report</button>
+            <div class="col-md-6 col-lg-2">
+                <label for="start_date" class="form-label mb-1">Start Date</label>
+                <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <label for="end_date" class="form-label mb-1">End Date</label>
+                <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <label for="position" class="form-label mb-1">Player Position</label>
+                <select id="position" name="position" class="form-select">
+                    <option value="all" {% if position_filter == 'all' or not position_filter %}selected{% endif %}>All players</option>
+                    <option value="Goalkeeper" {% if position_filter == 'Goalkeeper' %}selected{% endif %}>Goalkeeper</option>
+                    <option value="Defender" {% if position_filter == 'Defender' %}selected{% endif %}>Defender</option>
+                    <option value="Midfielder" {% if position_filter == 'Midfielder' %}selected{% endif %}>Midfielder</option>
+                    <option value="Forward" {% if position_filter == 'Forward' %}selected{% endif %}>Forward</option>
+                    <option value="Striker" {% if position_filter == 'Striker' %}selected{% endif %}>Striker</option>
+                </select>
+            </div>
+            <div class="col-md-6 col-lg-2">
+                <label for="format" class="form-label mb-1">Export Format</label>
+                <select id="format" name="format" class="form-select">
+                    <option value="csv" {% if export_format == 'csv' or not export_format %}selected{% endif %}>CSV</option>
+                    <option value="pdf" {% if export_format == 'pdf' %}selected{% endif %}>PDF</option>
+                </select>
+            </div>
+            <div class="col-md-6 col-lg-1">
+                <label for="chart_type" class="form-label mb-1">Chart</label>
+                <select id="chart_type" name="chart_type" class="form-select">
+                    <option value="bar" {% if chart_type == 'bar' or not chart_type %}selected{% endif %}>Bar</option>
+                    <option value="pie" {% if chart_type == 'pie' %}selected{% endif %}>Pie</option>
+                </select>
+            </div>
+            <div class="col-12 col-lg-2 d-flex flex-column gap-2">
+                <button type="submit" name="action" value="preview" class="btn btn-outline-primary w-100">Preview Table</button>
+                <button type="submit" name="action" value="chart" class="btn btn-outline-info w-100">View Chart</button>
+                <button type="submit" name="action" value="generate" class="btn btn-primary w-100">Generate Report</button>
             </div>
         </form>
-        <p class="text-muted mb-0 mt-2">Pick one option and click Generate Report to download the selected CSV.</p>
+        <p class="text-muted mb-0 mt-2">Preview the table first, view the chart on a separate view, and then export the report as PDF or CSV.</p>
     </div>
+
+    {% if report_type and preview_mode == 'preview' and report_headers %}
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="mb-3">{{ report_type|title }} Preview</h5>
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            {% for header in report_headers %}
+                            <th>{{ header }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in report_rows %}
+                        <tr>
+                            {% for value in row %}
+                            <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="{{ report_headers|length }}" class="text-muted">No rows match the selected filters.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if report_type and preview_mode == 'chart' %}
+    <div class="card mt-4">
+        <div class="card-body">
+            <h5 class="mb-3">{{ chart_title }}</h5>
+            <canvas id="reportChart" height="140"></canvas>
+        </div>
+    </div>
+    {{ chart_labels|json_script:"chart-labels" }}
+    {{ chart_values|json_script:"chart-values" }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const labels = JSON.parse(document.getElementById('chart-labels').textContent);
+        const values = JSON.parse(document.getElementById('chart-values').textContent);
+        const chartCanvas = document.getElementById('reportChart');
+        const chartType = '{{ chart_type|default:"bar" }}';
+        if (chartCanvas) {
+            new Chart(chartCanvas, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Player Count',
+                        data: values,
+                        backgroundColor: ['#0d6efd', '#198754', '#fd7e14', '#dc3545', '#6f42c1', '#20c997']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+    </script>
+    {% endif %}
 </div>
 {% endblock %}
