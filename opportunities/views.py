@@ -170,6 +170,44 @@ def manage_posted_opportunities(request):
 
 
 @login_required
+def edit_posted_opportunity(request, opportunity_id):
+	if request.user.role != 'scout':
+		messages.error(request, 'Only scouts can edit posted opportunities.')
+		return redirect('player_dashboard')
+
+	opportunity = get_object_or_404(Opportunity, id=opportunity_id, scout=request.user)
+	today = timezone.localdate()
+
+	if request.method == 'POST':
+		was_inactive = not opportunity.is_active
+		form = OpportunityForm(request.POST, request.FILES, instance=opportunity, scout=request.user)
+		if form.is_valid():
+			updated_opportunity = form.save(commit=False)
+			reactivated = False
+			if was_inactive and updated_opportunity.deadline >= today:
+				updated_opportunity.is_active = True
+				reactivated = True
+
+			updated_opportunity.save()
+			if reactivated:
+				messages.success(request, f'Opportunity "{updated_opportunity.title}" updated and reactivated.')
+			else:
+				messages.success(request, f'Opportunity "{updated_opportunity.title}" updated successfully.')
+			return redirect('manage_posted_opportunities')
+	else:
+		form = OpportunityForm(instance=opportunity, scout=request.user)
+
+	return render(
+		request,
+		'scouts/edit_opportunity.html',
+		{
+			'form': form,
+			'opportunity': opportunity,
+		},
+	)
+
+
+@login_required
 def close_opportunity_early(request, opportunity_id):
 	if request.user.role != 'scout':
 		messages.error(request, 'Only scouts can update opportunity status.')

@@ -57,7 +57,7 @@
                                                 </div>
                                                 <p class="mb-1 mt-1">{{ feedback.comment }}</p>
                                                 {% if feedback.player_reply %}
-                                                    <div class="text-muted"><strong>Your reply:</strong> {{ feedback.player_reply }}</div>
+                                                    <div class="text-muted"><strong>Your reply:</strong><br>{{ feedback.player_reply|linebreaksbr }}</div>
                                                 {% endif %}
                                                 {% if feedback.player_reaction %}
                                                     <div class="text-muted"><strong>Your reaction:</strong> {{ feedback.player_reaction }}</div>
@@ -72,9 +72,21 @@
                                                         <button type="submit" name="player_reaction" value="💯" class="btn btn-outline-secondary btn-sm">💯</button>
                                                         <button type="submit" name="player_reaction" value="😂" class="btn btn-outline-secondary btn-sm">😂</button>
                                                     </div>
-                                                    <textarea name="player_reply" rows="2" class="form-control" placeholder="Edit your reply...">{{ feedback.player_reply }}</textarea>
+                                                    <textarea name="player_reply" rows="2" class="form-control" placeholder="Write a new reply..."></textarea>
                                                     <button type="submit" class="btn btn-primary btn-sm mt-2">Save reply</button>
                                                 </form>
+
+                                                {% if feedback.player_reply %}
+                                                    <details class="mt-2">
+                                                        <summary class="small text-primary" style="cursor:pointer;">Edit previous replies</summary>
+                                                        <form method="post" class="mt-2">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
+                                                            <textarea name="player_reply_history" rows="4" class="form-control" placeholder="Edit previous replies...">{{ feedback.player_reply }}</textarea>
+                                                            <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Update previous replies</button>
+                                                        </form>
+                                                    </details>
+                                                {% endif %}
                                             </div>
                                         {% endfor %}
                                     </div>

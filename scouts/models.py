@@ -5,30 +5,41 @@ from players.models import PlayerProfile, PlayerVideo
 
 class Scout(models.Model):
 
-  user = models.OneToOneField(
-      User,
-      on_delete=models.CASCADE,
-      related_name='scout_profile'
-  )
+    VERIFICATION_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
 
-  organization = models.CharField(max_length=100)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='scout_profile'
+    )
 
-  specialization = models.CharField(max_length=120)
+    organization = models.CharField(max_length=100)
 
-  verification_document = models.FileField(
-      upload_to='scout_verification_docs/',
-      validators=[FileExtensionValidator(['pdf', 'doc', 'docx'])]
-  )
+    specialization = models.CharField(max_length=120)
 
-  profile_photo = models.ImageField(
-      upload_to='profile_photos/',
-      blank=True,
-      null=True
-  )
+    verification_document = models.FileField(
+        upload_to='scout_verification_docs/',
+        validators=[FileExtensionValidator(['pdf', 'doc', 'docx'])]
+    )
 
-  verified = models.BooleanField(default=False)
+    profile_photo = models.ImageField(
+        upload_to='profile_photos/',
+        blank=True,
+        null=True
+    )
+
+    verified = models.BooleanField(default=False)
+    verification_status = models.CharField(
+        max_length=20,
+        choices=VERIFICATION_STATUS_CHOICES,
+        default='pending'
+    )
  
-  def __str__(self):
+    def __str__(self):
         return f'{self.organization} ({self.user.full_name})'
 
 

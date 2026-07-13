@@ -10,6 +10,7 @@ urlpatterns = [
 	path('applications/', views.my_applications, name='my_applications'),
 	path('post/', views.post_opportunity, name='post_opportunity'),
 	path('manage/', views.manage_posted_opportunities, name='manage_posted_opportunities'),
+	path('manage/<int:opportunity_id>/edit/', views.edit_posted_opportunity, name='edit_posted_opportunity'),
 	path('manage/<int:opportunity_id>/delete/', views.delete_posted_opportunity, name='delete_posted_opportunity'),
 	path(
 		'manage/<int:opportunity_id>/close-early/',

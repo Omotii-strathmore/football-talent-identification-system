@@ -200,7 +200,7 @@ def admin_dashboard_view(request):
     total_users = User.objects.count()
     total_players = User.objects.filter(role='player').count()
     total_scouts = User.objects.filter(role='scout').count()
-    pending_verifications = Scout.objects.filter(verified=False).count()
+    pending_verifications = Scout.objects.filter(verification_status='pending').count()
     opportunities_count = Opportunity.objects.count()
     applications_count = Application.objects.count()
 
@@ -237,7 +237,8 @@ def admin_approve_scout_view(request, scout_id):
 
     scout = get_object_or_404(Scout, id=scout_id)
     scout.verified = True
-    scout.save(update_fields=['verified'])
+    scout.verification_status = 'approved'
+    scout.save(update_fields=['verified', 'verification_status'])
     messages.success(request, f'Scout {scout.user.full_name} has been approved.')
     return redirect('admin_verifications')
 
@@ -250,8 +251,9 @@ def admin_reject_scout_view(request, scout_id):
 
     scout = get_object_or_404(Scout, id=scout_id)
     scout.verified = False
-    scout.save(update_fields=['verified'])
-    messages.info(request, f'Scout {scout.user.full_name} marked as not verified.')
+    scout.verification_status = 'rejected'
+    scout.save(update_fields=['verified', 'verification_status'])
+    messages.info(request, f'Scout {scout.user.full_name} has been rejected.')
     return redirect('admin_verifications')
 
 

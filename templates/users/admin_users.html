@@ -23,7 +23,39 @@
                     {% if edit_form and edit_user %}
                         <form method="post" action="{% url 'admin_update_user' edit_user.id %}">
                             {% csrf_token %}
-                            {{ edit_form.as_p }}
+                            {% for hidden in edit_form.hidden_fields %}
+                                {{ hidden }}
+                            {% endfor %}
+
+                            {% for field in edit_form.visible_fields %}
+                                <div class="mb-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {% if field.name == 'password' %}
+                                        <div class="input-group">
+                                            {{ field }}
+                                            <span class="input-group-text py-0 px-2">
+                                                <span class="form-check mb-0 d-flex align-items-center gap-1">
+                                                    <input class="form-check-input admin-show-password-radio mt-0" type="radio" id="toggle-admin-password">
+                                                    <label class="form-check-label small mb-0" for="toggle-admin-password">Show</label>
+                                                </span>
+                                            </span>
+                                        </div>
+                                    {% else %}
+                                        {{ field }}
+                                    {% endif %}
+                                    {% if field.help_text %}
+                                        <div class="form-text">{{ field.help_text }}</div>
+                                    {% endif %}
+                                    {% for error in field.errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+
+                            {% for error in edit_form.non_field_errors %}
+                                <div class="alert alert-danger py-2">{{ error }}</div>
+                            {% endfor %}
+
                             <button type="submit" class="btn btn-success">Update User</button>
                             <a href="{% url 'admin_users' %}" class="btn btn-outline-secondary">Cancel</a>
                         </form>
@@ -74,4 +106,32 @@
         <div class="alert alert-info">No users found.</div>
     {% endif %}
 </div>
+
+<style>
+    .admin-show-password-radio {
+        transform: scale(0.85);
+    }
+</style>
+
+<script>
+    (function () {
+        const toggleBtn = document.getElementById('toggle-admin-password');
+        const input = document.getElementById('id_password');
+        if (!toggleBtn || !input) {
+            return;
+        }
+
+        toggleBtn.addEventListener('mousedown', function () {
+            toggleBtn.dataset.wasChecked = toggleBtn.checked ? '1' : '0';
+        });
+
+        toggleBtn.addEventListener('click', function () {
+            if (toggleBtn.dataset.wasChecked === '1') {
+                toggleBtn.checked = false;
+            }
+
+            input.type = toggleBtn.checked ? 'text' : 'password';
+        });
+    })();
+</script>
 {% endblock %}

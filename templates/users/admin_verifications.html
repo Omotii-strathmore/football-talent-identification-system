@@ -34,8 +34,10 @@
                                 <a href="{{ scout.verification_document.url }}" target="_blank" class="btn btn-sm btn-outline-dark">View Document</a>
                             </td>
                             <td>
-                                {% if scout.verified %}
+                                {% if scout.verification_status == 'approved' %}
                                     <span class="badge bg-success">Verified</span>
+                                {% elif scout.verification_status == 'rejected' %}
+                                    <span class="badge bg-danger">Rejected</span>
                                 {% else %}
                                     <span class="badge bg-warning text-dark">Pending</span>
                                 {% endif %}

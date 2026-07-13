@@ -94,13 +94,35 @@ def upload_video(request):
         feedback_id = request.POST.get('feedback_id')
         if feedback_id:
             feedback = get_object_or_404(ScoutVideoFeedback, id=feedback_id, video__profile=profile)
+            history_text = request.POST.get('player_reply_history')
+            if history_text is not None:
+                feedback.player_reply = history_text.strip()
+                feedback.is_seen = True
+                feedback.seen_at = timezone.now()
+                feedback.save(update_fields=['player_reply', 'is_seen', 'seen_at', 'updated_at'])
+                messages.success(request, 'Previous replies updated successfully.')
+                return redirect('upload_video')
+
             reply = request.POST.get('player_reply', '').strip()
             reaction = request.POST.get('player_reaction', '').strip()
-            feedback.player_reply = reply
-            feedback.player_reaction = reaction
+            update_fields = ['is_seen', 'seen_at', 'updated_at']
+
+            if reply:
+                reply_stamp = timezone.localtime().strftime('%Y-%m-%d %H:%M')
+                reply_line = f'Player ({reply_stamp}): {reply}'
+                if feedback.player_reply:
+                    feedback.player_reply = f'{feedback.player_reply}\n{reply_line}'
+                else:
+                    feedback.player_reply = reply_line
+                update_fields.append('player_reply')
+
+            if reaction:
+                feedback.player_reaction = reaction
+                update_fields.append('player_reaction')
+
             feedback.is_seen = True
             feedback.seen_at = timezone.now()
-            feedback.save(update_fields=['player_reply', 'player_reaction', 'is_seen', 'seen_at', 'updated_at'])
+            feedback.save(update_fields=update_fields)
             if reply and reaction:
                 messages.success(request, 'Your reply and reaction were saved.')
             elif reply:
