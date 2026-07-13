@@ -11,8 +11,10 @@
                 <p class="text-muted mb-2">Organization: {{ scout_profile.organization }}</p>
                 <p class="text-muted mb-0">Specialization: {{ scout_profile.specialization }}</p>
 
-                {% if scout_profile.verified %}
+                {% if scout_profile.verification_status == 'approved' %}
                     <span class="badge bg-success mt-2">Status: Verified</span>
+                {% elif scout_profile.verification_status == 'rejected' %}
+                    <span class="badge bg-danger mt-2">Status: Rejected</span>
                 {% else %}
                     <span class="badge bg-warning text-dark mt-2">Status: Pending Verification</span>
                 {% endif %}
