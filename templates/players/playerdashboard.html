@@ -9,7 +9,7 @@
             <div>
                 <h2 class="mb-1 fw-bold">Welcome to Player Dashboard, {{ first_name }}</h2>
                 {% if profile %}
-                    <p class="text-muted mb-0">{{ profile.full_name }} | {{ profile.position }} | {{ profile.location }}</p>
+                    <p class="text-muted mb-0">{{ profile.full_name }} | {{ profile.position }}{% if profile.secondary_position %} / {{ profile.secondary_position }}{% endif %} | {{ profile.location }}</p>
                 {% else %}
                     <p class="text-muted mb-0">Welcome player.</p>
                 {% endif %}
@@ -51,8 +51,24 @@
         <div class="col-md-6 col-lg-3">
             <div class="card stat-card h-100 text-center">
                 <div class="card-body">
-                    <div class="stat-value">{{ profile.location|default:'-' }}</div>
-                    <p class="text-muted mb-0">Current Location</p>
+                    <div class="stat-value">{{ profile.secondary_position|default:'-' }}</div>
+                    <p class="text-muted mb-0">Secondary Position</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card stat-card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-value">{{ profile.height_cm|default:'-' }}</div>
+                    <p class="text-muted mb-0">Height (cm)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card stat-card h-100 text-center">
+                <div class="card-body">
+                    <div class="stat-value">{{ profile.weight_kg|default:'-' }}</div>
+                    <p class="text-muted mb-0">Weight (kg)</p>
                 </div>
             </div>
         </div>

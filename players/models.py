@@ -22,6 +22,46 @@ class PlayerProfile(models.Model):
         max_length=50,
         choices=POSITION_CHOICES
     )
+    secondary_position = models.CharField(
+        max_length=50,
+        choices=POSITION_CHOICES,
+        blank=True,
+        help_text='Secondary playing position (optional).'
+    )
+    height_cm = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text='Height in centimeters.'
+    )
+    weight_kg = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text='Weight in kilograms.'
+    )
+    current_club = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text='Current club or academy.'
+    )
+    previous_club = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text='Most recent previous club or academy.'
+    )
+    previous_club_duration = models.CharField(
+        max_length=50,
+        blank=True,
+        help_text='Duration at previous club, e.g. 7 months or 2 years.'
+    )
+    special_traits = models.CharField(
+        max_length=150,
+        blank=True,
+        help_text='Examples: Playmaker, Flair, Finesse shooter.'
+    )
+    football_experience = models.TextField(
+        blank=True,
+        help_text='Describe your football experience, clubs, and achievements.'
+    )
 
     location = models.CharField(max_length=100)
 

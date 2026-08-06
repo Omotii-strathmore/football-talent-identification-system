@@ -7,6 +7,11 @@ from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
+from datetime import timedelta
+import logging
+import random
 
 import csv
 from io import BytesIO
@@ -27,15 +32,130 @@ from scouts.models import Scout
 
 REPORTLAB_AVAILABLE = True
 
-from .forms import AdminUserUpdateForm, RegistrationForm, LoginForm
-from .models import User
+from .forms import AdminUserUpdateForm, RegistrationForm, LoginForm, OTPVerifyForm
+from .models import User, OneTimeCode
 
+logger = logging.getLogger(__name__)
 
 def _is_staff_user(user):
     return user.is_authenticated and user.is_staff
 
 def home(request):
     return render(request, 'users/home.html')
+
+
+def send_otp_to_user(user, method='email'):
+    # generate 6-digit code
+    code = f"{random.randint(0, 999999):06d}"
+    expires = timezone.now() + timedelta(minutes=15)
+    OneTimeCode.objects.create(user=user, code=code, method=method, expires_at=expires)
+
+    subject = 'Talanta Soka verification code'
+    message = (
+        f'Hello {user.full_name},\n\n'
+        f'Your Talanta Soka verification code is: {code}\n'
+        'It expires in 15 minutes.\n\n'
+        'If you did not request this, please ignore this email.'
+    )
+    sender_address = None
+    if settings.EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend' and settings.EMAIL_HOST_USER:
+        sender_address = settings.EMAIL_HOST_USER
+    sender_address = sender_address or getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'EMAIL_HOST_USER', None) or 'otp@talantasoka.com'
+    from_email = f"{getattr(settings, 'EMAIL_FROM_NAME', 'Talanta Soka')} <{sender_address}>"
+
+    if method == 'email':
+        if not user.email:
+            logger.warning('OTP email not sent because user has no email address: %s', user)
+            return False
+        if settings.EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend' and not settings.EMAIL_HOST_USER:
+            logger.warning('SMTP EMAIL_HOST_USER is not configured; cannot send OTP email.')
+            return False
+        try:
+            send_mail(subject, message, from_email, [user.email], fail_silently=False)
+            logger.info('OTP email sent to %s using backend %s', user.email, settings.EMAIL_BACKEND)
+            return True
+        except Exception:
+            logger.exception('Failed to send OTP email to %s', user.email)
+            return False
+
+    if method == 'sms':
+        try:
+            from twilio.rest import Client
+            account_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', None)
+            auth_token = getattr(settings, 'TWILIO_AUTH_TOKEN', None)
+            twilio_number = getattr(settings, 'TWILIO_FROM_NUMBER', None)
+            if account_sid and auth_token and twilio_number and getattr(user, 'contact_phone', None):
+                client = Client(account_sid, auth_token)
+                client.messages.create(body=message, from_=twilio_number, to=user.contact_phone)
+                return True
+            logger.warning('Twilio settings incomplete or user has no phone for SMS OTP: %s', user)
+            return False
+        except Exception as exc:
+            logger.exception('Failed to send OTP SMS to %s', user)
+            return False
+
+    logger.warning('Unsupported OTP delivery method requested: %s', method)
+    return False
+
+
+def verify_otp_view(request):
+    pending_user_id = request.session.get('pending_user_id')
+    pending_user_email = request.session.get('pending_user_email')
+    user = None
+
+    if pending_user_id:
+        user = User.objects.filter(id=pending_user_id).first()
+    elif pending_user_email:
+        user = User.objects.filter(email=pending_user_email, is_active=False).first()
+
+    if not user:
+        messages.error(request, 'No pending verification found. Please register or request a new code.')
+        return redirect('register')
+
+    if request.method == 'POST':
+        form = OTPVerifyForm(request.POST)
+        if form.is_valid():
+            code = form.cleaned_data['code']
+            otp = OneTimeCode.objects.filter(user=user, code=code, used=False).order_by('-created_at').first()
+            if not otp:
+                messages.error(request, 'Invalid verification code.')
+            else:
+                if otp.expires_at and otp.expires_at < timezone.now():
+                    messages.error(request, 'Verification code has expired. Request a new one.')
+                else:
+                    otp.used = True
+                    otp.save(update_fields=['used'])
+                    user.is_active = True
+                    user.save(update_fields=['is_active'])
+                    # clear pending id
+                    request.session.pop('pending_user_id', None)
+                    messages.success(request, 'Your account is verified. You may now sign in.')
+                    return redirect('login')
+    else:
+        form = OTPVerifyForm()
+
+    return render(request, 'users/verify_otp.html', {'form': form, 'user_email': user.email})
+
+
+def resend_otp_view(request):
+    pending_user_id = request.session.get('pending_user_id')
+    user = User.objects.filter(id=pending_user_id).first() if pending_user_id else None
+    if not user:
+        messages.error(request, 'No pending verification found. Please register again.')
+        return redirect('register')
+
+    method = request.POST.get('method', 'email')
+    # create and send a fresh OTP
+    success = send_otp_to_user(user, method=method)
+    if success:
+        messages.success(request, f'A new verification code was sent via {method}.')
+        if method == 'email' and settings.DEBUG and settings.EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+            messages.info(request, 'DEBUG mode: OTP is printed to the server console because SMTP is not configured.')
+    else:
+        if method == 'email':
+            messages.error(request, 'Unable to send verification code via email. Please verify SMTP settings and make sure the sender address is allowed by your provider.')
+
+    return redirect('verify_otp')
 
 
 def register_view(request):
@@ -47,8 +167,13 @@ def register_view(request):
         if form.is_valid():
 
             user = form.save()
+            # mark user inactive until verified
+            user.is_active = False
+            user.save(update_fields=['is_active'])
+
             request.session['pending_user_id'] = user.id
-            messages.success(request, 'User registration was successful. Please complete your profile in the next step.')
+            request.session['pending_user_email'] = user.email
+            messages.success(request, 'Registration successful. Please complete your role profile in step 2.')
             return redirect('complete_profile')
 
     else:
@@ -99,7 +224,13 @@ def complete_profile_view(request):
                         'full_name': user.full_name,
                         'age': form.cleaned_data['age'],
                         'position': form.cleaned_data['position'],
+                        'secondary_position': form.cleaned_data.get('secondary_position', ''),
+                        'height_cm': form.cleaned_data.get('height_cm'),
+                        'weight_kg': form.cleaned_data.get('weight_kg'),
+                        'current_club': form.cleaned_data.get('current_club', ''),
                         'location': form.cleaned_data['location'],
+                        'football_experience': form.cleaned_data.get('football_experience', ''),
+                        'special_traits': form.cleaned_data.get('special_traits', ''),
                     }
                 )
             else:
@@ -113,10 +244,18 @@ def complete_profile_view(request):
                     }
                 )
 
-            request.session.pop('pending_user_id', None)
+            request.session['pending_user_id'] = user.id
+            request.session['pending_user_email'] = user.email
+            # send OTP after role profile completion
+            sent = send_otp_to_user(user, method='email')
             role_label = 'Player' if user.role == 'player' else 'Scout'
-            messages.success(request, f'{role_label} registration completed successfully. Please sign in to continue.')
-            return redirect('login')
+            if sent:
+                messages.success(request, f'{role_label} profile completed successfully. A verification code was sent to your email.')
+                if settings.DEBUG and settings.EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+                    messages.info(request, 'DEBUG mode: OTP is printed to the server console because SMTP is not configured.')
+            else:
+                messages.warning(request, f'{role_label} profile completed successfully, but we could not send the verification email. Please verify your email settings and resend the code.')
+            return redirect('verify_otp')
     else:
         form = form_class()
 
@@ -172,6 +311,14 @@ def login_view(request):
                     return redirect('player_dashboard')
 
                 return redirect('scout_dashboard')
+
+            # If authentication failed, check for an inactive user with valid credentials.
+            inactive_user = User.objects.filter(email=form.cleaned_data['email'], is_active=False).first()
+            if inactive_user and inactive_user.check_password(form.cleaned_data['password']):
+                request.session['pending_user_id'] = inactive_user.id
+                request.session['pending_user_email'] = inactive_user.email
+                messages.info(request, 'Your account is not yet verified. Please enter the code sent to your email.')
+                return redirect('verify_otp')
 
             messages.error(request, 'Invalid email or password.')
 

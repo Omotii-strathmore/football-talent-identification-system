@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Account{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <p class="text-uppercase text-muted small mb-1">Step 3 of 3</p>
+                        <h2 class="fw-bold">Verify your account</h2>
+                        <p class="text-muted mb-0">A verification code was sent to <strong>{{ user_email }}</strong>. Enter it below to activate your account and then log in.</p>
+                    </div>
+
+                    <form method="post" class="mb-3">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            {{ form.code.label_tag }}
+                            {{ form.code }}
+                            {% if form.code.errors %}
+                                <div class="text-danger small mt-2">{{ form.code.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <button class="btn btn-primary w-100 btn-lg" type="submit">Verify code</button>
+                    </form>
+
+                    <div class="text-center text-muted mb-3">Didn't receive a code?</div>
+                    <div class="d-grid gap-2">
+                        <form method="post" action="{% url 'resend_otp' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="method" value="email">
+                            <button class="btn btn-outline-secondary" type="submit">Resend via email</button>
+                        </form>
+                        <form method="post" action="{% url 'resend_otp' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="method" value="sms">
+                            <button class="btn btn-outline-secondary" type="submit">Resend via SMS</button>
+                        </form>
+                    </div>
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'login' %}" class="text-decoration-none">Already verified? Login instead</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

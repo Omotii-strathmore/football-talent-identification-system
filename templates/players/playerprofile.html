@@ -38,29 +38,107 @@
 
     .profile-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
     }
 
     .profile-item {
-        border: 1px solid rgba(148, 163, 184, 0.24);
-        border-radius: 14px;
-        background: #fff;
-        padding: 14px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        background: #f8fafc;
+        padding: 18px 20px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    }
+
+    .detail-card {
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        background: #f8fafc;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    }
+
+    .detail-title {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+        color: #0f172a;
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .detail-label {
+        font-size: 0.8rem;
+        color: #475569;
+        margin-bottom: 4px;
+    }
+
+    .detail-value {
+        font-weight: 700;
+        color: #0f172a;
     }
 
     .profile-label {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #64748b;
-        margin-bottom: 4px;
+        letter-spacing: 0.08em;
+        color: #475569;
+        margin-bottom: 8px;
     }
 
     .profile-value {
         font-weight: 700;
         color: #0f172a;
         margin: 0;
+        font-size: 1rem;
+    }
+
+    .profile-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.5rem 0.8rem;
+        background: rgba(14, 165, 233, 0.1);
+        color: #0369a1;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-section {
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        background: #fff;
+        padding: 24px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    }
+
+    .profile-section h5 {
+        margin-bottom: 1rem;
+        letter-spacing: 0.02em;
+    }
+
+    .trait-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .trait-pill {
+        background: #f8fafc;
+        color: #0f172a;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 999px;
+        padding: 0.45rem 0.9rem;
+        font-size: 0.85rem;
     }
 
     .bio-card {
@@ -89,6 +167,92 @@
         border-radius: 10px;
         background: #000;
     }
+
+    .trait-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .trait-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.65rem;
+        font-size: 0.83rem;
+        border-radius: 999px;
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        color: #1e3a8a;
+    }
+
+    .trait-icon {
+        width: 1.35rem;
+        height: 1.35rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: #dbeafe;
+        color: #1e40af;
+        font-size: 0.85rem;
+    }
+
+    .experience-timeline {
+        position: relative;
+        padding-left: 1.8rem;
+        margin-top: 1rem;
+    }
+
+    .experience-timeline::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0.95rem;
+        width: 2px;
+        height: 100%;
+        background: rgba(59, 130, 246, 0.18);
+    }
+
+    .experience-entry {
+        position: relative;
+        margin-bottom: 1.4rem;
+        padding-left: 1rem;
+    }
+
+    .experience-entry:last-child {
+        margin-bottom: 0;
+    }
+
+    .experience-entry::before {
+        content: '';
+        position: absolute;
+        top: 0.35rem;
+        left: -0.2rem;
+        width: 0.9rem;
+        height: 0.9rem;
+        border-radius: 50%;
+        background: #3b82f6;
+        border: 3px solid #ffffff;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+    }
+
+    .experience-entry-title {
+        font-weight: 700;
+        margin-bottom: 0.25rem;
+    }
+
+    .experience-entry-subtitle {
+        color: #6b7280;
+        font-size: 0.92rem;
+        margin-bottom: 0.6rem;
+    }
+
+    .experience-entry-text {
+        line-height: 1.55;
+        color: #334155;
+    }
 </style>
 {% endblock %}
 
@@ -100,54 +264,146 @@
     </div>
 
     <div class="profile-hero mb-4">
-        <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
-            <div>
+        <div class="d-flex justify-content-between align-items-start gap-4 flex-wrap">
+            <div class="flex-fill">
                 <h3 class="fw-bold mb-1">{{ profile.full_name }}</h3>
-                <p class="text-muted mb-0">Manage your profile details, county, and bio to improve visibility to scouts.</p>
+                <p class="text-muted mb-2">Manage your playing profile, highlight your experience, and help scouts find the right fit.</p>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="profile-chip">{{ profile.position }}</span>
+                    {% if profile.secondary_position %}
+                        <span class="profile-chip">{{ profile.secondary_position }}</span>
+                    {% endif %}
+                    {% if profile.current_club %}
+                        <span class="profile-chip">{{ profile.current_club }}</span>
+                    {% endif %}
+                </div>
             </div>
-            {% if profile.profile_photo %}
-                <img src="{{ profile.profile_photo.url }}" alt="{{ profile.full_name }}" class="profile-photo-lg">
-            {% else %}
-                <div class="profile-photo-fallback">{{ profile.full_name|slice:':1'|upper }}</div>
-            {% endif %}
+            <div class="text-end">
+                {% if profile.profile_photo %}
+                    <img src="{{ profile.profile_photo.url }}" alt="{{ profile.full_name }}" class="profile-photo-lg">
+                {% else %}
+                    <div class="profile-photo-fallback">{{ profile.full_name|slice:':1'|upper }}</div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
     {% if not edit_mode %}
-        <div class="panel-soft p-3 p-md-4 mb-4">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="section-title mb-0">Profile Details</h4>
-                <a href="?edit=true" class="btn btn-primary btn-sm">Edit Profile</a>
+        <div class="profile-section mb-4">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h4 class="section-title mb-2">Profile Summary</h4>
+                    <p class="text-muted">A more complete profile helps scouts understand your strengths and football journey.</p>
+                </div>
+                <a href="?edit=true" class="btn btn-primary btn-sm align-self-start">Edit Profile</a>
             </div>
 
-            <div class="profile-grid mb-3">
-                <div class="profile-item">
-                    <p class="profile-label">Full Name</p>
-                    <p class="profile-value">{{ profile.full_name }}</p>
+            <div class="row g-3 mb-4">
+                <div class="col-lg-6">
+                    <div class="detail-card">
+                        <p class="detail-title">Demographic details</p>
+                        <div class="detail-row">
+                            <div>
+                                <p class="detail-label">Full name</p>
+                                <p class="detail-value">{{ profile.full_name }}</p>
+                            </div>
+                            <div>
+                                <p class="detail-label">Age</p>
+                                <p class="detail-value">{{ profile.age }}</p>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div>
+                                <p class="detail-label">Height</p>
+                                <p class="detail-value">{% if profile.height_cm %}{{ profile.height_cm }} cm{% else %}Not set{% endif %}</p>
+                            </div>
+                            <div>
+                                <p class="detail-label">Weight</p>
+                                <p class="detail-value">{% if profile.weight_kg %}{{ profile.weight_kg }} kg{% else %}Not set{% endif %}</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="profile-item">
-                    <p class="profile-label">Age</p>
-                    <p class="profile-value">{{ profile.age }}</p>
-                </div>
-                <div class="profile-item">
-                    <p class="profile-label">Position</p>
-                    <p class="profile-value">{{ profile.position }}</p>
-                </div>
-                <div class="profile-item">
-                    <p class="profile-label">Location</p>
-                    <p class="profile-value">{{ profile.location }}</p>
+                <div class="col-lg-6">
+                    <div class="detail-card">
+                        <p class="detail-title">Football details</p>
+                        <div class="detail-row">
+                            <div>
+                                <p class="detail-label">Primary position</p>
+                                <p class="detail-value">{{ profile.position }}</p>
+                            </div>
+                            <div>
+                                <p class="detail-label">Secondary position</p>
+                                <p class="detail-value">{{ profile.secondary_position|default:'Not set' }}</p>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div>
+                                <p class="detail-label">Current club</p>
+                                <p class="detail-value">{{ profile.current_club|default:'Not specified' }}</p>
+                            </div>
+                            <div>
+                                <p class="detail-label">Special traits</p>
+                                <div class="trait-list">
+                                    {% if trait_list %}
+                                        {% for trait in trait_list %}
+                                            <span class="trait-pill">
+                                                <span class="trait-icon">⚽</span>
+                                                {{ trait }}
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="trait-pill">
+                                            <span class="trait-icon">✨</span>
+                                            Not specified
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% if profile.previous_club or profile.previous_club_duration %}
+                            <div class="detail-row">
+                                <div>
+                                    <p class="detail-label">Previous club</p>
+                                    <p class="detail-value">{{ profile.previous_club|default:'Not specified' }}</p>
+                                </div>
+                                <div>
+                                    <p class="detail-label">Duration</p>
+                                    <p class="detail-value">{{ profile.previous_club_duration|default:'Not specified' }}</p>
+                                </div>
+                            </div>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
 
-            <div class="bio-card mb-3">
-                <p class="profile-label">Bio</p>
+            <div class="profile-section">
+                <h5>Football experience</h5>
+                <div class="experience-timeline">
+                    {% if profile.previous_club or profile.previous_club_duration %}
+                        <div class="experience-entry">
+                            <p class="experience-entry-title">{{ profile.previous_club|default:'Previous club' }}</p>
+                            <p class="experience-entry-subtitle">{{ profile.previous_club_duration|default:'Duration not provided' }}</p>
+                            <p class="experience-entry-text">{{ profile.football_experience|default:'No football experience details provided yet.'|linebreaksbr }}</p>
+                        </div>
+                    {% endif %}
+                    <div class="experience-entry">
+                        <p class="experience-entry-title">{{ profile.current_club|default:'Current club' }}</p>
+                        <p class="experience-entry-subtitle">Current club</p>
+                        <p class="experience-entry-text">{{ profile.football_experience|default:'No football experience details provided yet.'|linebreaksbr }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-section mt-4">
+                <h5>About</h5>
                 <p class="mb-0">{{ profile.bio|default:'No bio provided yet.' }}</p>
             </div>
 
-            <div class="bio-card mb-3">
-                <p class="profile-label">Communication Options</p>
-                <div class="alert alert-info py-2 mb-2">
-                    With your consent, Interested scouts could reach out directly.
+            <div class="profile-section mt-4">
+                <h5>Contact permissions</h5>
+                <div class="alert alert-info py-2 mb-3">
+                    With your consent, interested scouts could reach out directly.
                 </div>
                 {% if profile.consent_to_share_contact %}
                     <p class="mb-1"><strong>Email:</strong> {{ profile.contact_email|default:'Not provided' }}</p>
@@ -157,8 +413,8 @@
                 {% endif %}
             </div>
 
-            <div class="bio-card">
-                <p class="profile-label">Uploaded Videos</p>
+            <div class="profile-section mt-4">
+                <h5>Uploaded videos</h5>
                 {% if videos %}
                     <div class="row g-3">
                         {% for video in videos %}

@@ -13,6 +13,9 @@ urlpatterns = [
 
     path('logout/', views.logout_view, name='logout'),
 
+    path('verify-otp/', views.verify_otp_view, name='verify_otp'),
+    path('verify-otp/resend/', views.resend_otp_view, name='resend_otp'),
+
     path('management/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     path('management/verifications/', views.admin_verifications_view, name='admin_verifications'),
     path('management/verifications/<int:scout_id>/approve/', views.admin_approve_scout_view, name='admin_approve_scout'),

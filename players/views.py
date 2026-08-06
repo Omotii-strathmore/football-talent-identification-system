@@ -67,6 +67,10 @@ def profile_view(request):
     else:
         form = PlayerProfileForm(instance=profile)
 
+    trait_list = []
+    if profile.special_traits:
+        trait_list = [trait.strip() for trait in profile.special_traits.split(',') if trait.strip()]
+
     return render(
         request,
         'players/playerprofile.html',
@@ -75,6 +79,7 @@ def profile_view(request):
             'form': form,
             'edit_mode': edit_mode,
             'videos': profile.videos.all(),
+            'trait_list': trait_list,
         },
     )
 

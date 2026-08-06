@@ -49,3 +49,23 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f'{self.full_name} ({self.email})'
+
+
+class OneTimeCode(models.Model):
+    METHOD_CHOICES = [
+        ('email', 'Email'),
+        ('sms', 'SMS'),
+    ]
+
+    user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='otps')
+    code = models.CharField(max_length=10)
+    method = models.CharField(max_length=10, choices=METHOD_CHOICES, default='email')
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField(blank=True, null=True)
+    used = models.BooleanField(default=False)
+
+    class Meta:
+        indexes = [models.Index(fields=['user', 'code'])]
+
+    def __str__(self):
+        return f'OTP for {self.user.email} via {self.method} ({self.code})'

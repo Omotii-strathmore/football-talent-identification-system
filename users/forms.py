@@ -131,3 +131,21 @@ class AdminUserUpdateForm(forms.ModelForm):
 		if commit:
 			user.save()
 		return user
+
+
+class OTPVerifyForm(forms.Form):
+	code = forms.CharField(
+		max_length=10,
+		label='Verification code',
+		widget=forms.TextInput(
+			attrs={
+				'placeholder': 'Enter the code sent to you',
+				'class': 'form-control form-control-lg',
+			}
+		)
+	)
+	def clean_code(self):
+		data = self.cleaned_data['code'].strip()
+		if not data.isdigit():
+			raise forms.ValidationError('Invalid code format.')
+		return data
