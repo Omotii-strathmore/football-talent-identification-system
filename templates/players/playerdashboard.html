@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Player Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/site-tour.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -78,16 +83,16 @@
         <h4 class="section-title">Quick Actions</h4>
     <div class="row g-3 mb-4">
         <div class="col-md-3">
-            <a href="{% url 'player_profile' %}" class="btn btn-outline-dark w-100">My Profile</a>
+            <a href="{% url 'player_profile' %}" id="tour-my-profile" class="btn btn-outline-dark w-100">My Profile</a>
         </div>
         <div class="col-md-3">
-            <a href="{% url 'upload_video' %}" class="btn btn-success w-100">Upload Video ({{ videos_count }})</a>
+            <a href="{% url 'upload_video' %}" id="tour-upload-video" class="btn btn-success w-100">Upload Video ({{ videos_count }})</a>
         </div>
         <div class="col-md-3">
-            <a href="{% url 'view_opportunities' %}" class="btn btn-primary w-100">View Opportunities</a>
+            <a href="{% url 'view_opportunities' %}" id="tour-view-opportunities" class="btn btn-primary w-100">View Opportunities</a>
         </div>
         <div class="col-md-3">
-            <a href="{% url 'my_applications' %}" class="btn btn-outline-primary w-100">My Applications ({{ applications_count }})</a>
+            <a href="{% url 'my_applications' %}" id="tour-my-applications" class="btn btn-outline-primary w-100">My Applications ({{ applications_count }})</a>
         </div>
     </div>
     </div>
@@ -133,37 +138,15 @@
                         </div>
                     {% endif %}
 
-                    <form method="post" class="mt-2">
-                        {% csrf_token %}
-                        <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
-                        <div class="mb-2 text-muted small">
-                            {% if feedback.player_reply %}
-                                Tap the box below to edit your saved reply.
-                            {% else %}
-                                Tap an emoji to react, or send a quick reply.
-                            {% endif %}
+                    {% if feedback.scout_reply %}
+                        <div class="small text-muted mb-2">
+                            <strong>Scout's response:</strong><br>{{ feedback.scout_reply|linebreaksbr }}
                         </div>
-                        <div class="d-flex flex-wrap gap-2 mb-2">
-                            <button type="submit" name="player_reaction" value="👍🏾" class="btn btn-outline-secondary btn-sm">👍🏾</button>
-                            <button type="submit" name="player_reaction" value="🙏🏾" class="btn btn-outline-secondary btn-sm">🙏🏾</button>
-                            <button type="submit" name="player_reaction" value="💯" class="btn btn-outline-secondary btn-sm">💯</button>
-                            <button type="submit" name="player_reaction" value="😂" class="btn btn-outline-secondary btn-sm">😂</button>
-                        </div>
-                        <textarea name="player_reply" rows="2" class="form-control" placeholder="Write a quick reply..."></textarea>
-                        <button type="submit" class="btn btn-primary btn-sm mt-2">Save reply</button>
-                    </form>
-
-                    {% if feedback.player_reply %}
-                        <details class="mt-2">
-                            <summary class="small text-primary" style="cursor:pointer;">Edit previous replies</summary>
-                            <form method="post" class="mt-2">
-                                {% csrf_token %}
-                                <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
-                                <textarea name="player_reply_history" rows="4" class="form-control" placeholder="Edit previous replies...">{{ feedback.player_reply }}</textarea>
-                                <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Update previous replies</button>
-                            </form>
-                        </details>
                     {% endif %}
+
+                    <a href="{% url 'upload_video' %}" class="btn btn-outline-primary btn-sm">
+                        {% if feedback.player_reply %}Reply again{% else %}Reply to this feedback{% endif %}
+                    </a>
                 </div>
             {% endfor %}
         </div>
@@ -171,4 +154,37 @@
     {% endif %}
 
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/site-tour.js' %}"></script>
+<script>
+    SiteTour.create([
+        {
+            target: null,
+            title: 'Welcome to your Player Dashboard',
+            desc: 'This is your home base. This quick tour shows what each quick action does — skip anytime.'
+        },
+        {
+            target: '#tour-my-profile',
+            title: 'My Profile',
+            desc: 'View and edit your player profile: position, age, location, bio, and football experience.'
+        },
+        {
+            target: '#tour-upload-video',
+            title: 'Upload Video',
+            desc: 'Upload highlight clips, match footage, training, or skills videos for scouts to review — and reply to their feedback here.'
+        },
+        {
+            target: '#tour-view-opportunities',
+            title: 'View Opportunities',
+            desc: 'Browse open trials and tournaments posted by verified scouts, and apply directly.'
+        },
+        {
+            target: '#tour-my-applications',
+            title: 'My Applications',
+            desc: 'Track the status of every opportunity you have applied for.'
+        }
+    ], { storageKey: 'talantaSokaPlayerDashboardTourDone' });
+</script>
 {% endblock %}

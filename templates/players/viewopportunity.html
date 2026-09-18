@@ -3,16 +3,64 @@
 
 {% block title %}Opportunities{% endblock %}
 
+{% block extra_css %}
+<style>
+	.opp-switch {
+		display: inline-flex;
+		gap: 4px;
+		padding: 4px;
+		border-radius: 999px;
+		background: #e2e8f0;
+	}
+
+	.opp-switch .btn {
+		border-radius: 999px !important;
+		border: 0 !important;
+	}
+
+	.opp-card {
+		border: 1px solid rgba(148, 163, 184, 0.18);
+		transition: transform .15s ease, box-shadow .15s ease;
+	}
+
+	.opp-card:hover {
+		transform: translateY(-3px);
+		box-shadow: 0 16px 32px rgba(15, 23, 42, 0.1);
+	}
+
+	.opp-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 3px 10px;
+		border-radius: 999px;
+		font-size: 0.72rem;
+		font-weight: 700;
+	}
+
+	.opp-badge.urgent { background: #fee2e2; color: #b91c1c; }
+	.opp-badge.soon { background: #fef3c7; color: #92400e; }
+	.opp-badge.normal { background: #dcfce7; color: #166534; }
+	.opp-badge.expired { background: #e2e8f0; color: #475569; }
+
+	.opp-meta {
+		font-size: 0.86rem;
+		color: #475569;
+		margin-bottom: 2px;
+	}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-	<div class="d-flex justify-content-between align-items-center mb-3">
+	<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
 		<h2 class="mb-0">Opportunities</h2>
 		<a href="{% url 'my_applications' %}" class="btn btn-outline-primary">My Applications</a>
 	</div>
 
-	<div class="d-flex gap-2 mb-3">
-		<a href="{% url 'view_opportunities' %}?view=available" class="btn btn-sm {% if selected_view == 'available' %}btn-primary{% else %}btn-outline-primary{% endif %}">Available</a>
-		<a href="{% url 'view_opportunities' %}?view=history" class="btn btn-sm {% if selected_view == 'history' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">History</a>
+	<div class="opp-switch mb-3">
+		<a href="{% url 'view_opportunities' %}?view=available" class="btn btn-sm {% if selected_view == 'available' %}btn-primary{% else %}btn-light{% endif %}">Available</a>
+		<a href="{% url 'view_opportunities' %}?view=history" class="btn btn-sm {% if selected_view == 'history' %}btn-secondary{% else %}btn-light{% endif %}">History</a>
 	</div>
 
 	{% if selected_view == 'available' %}
@@ -20,20 +68,28 @@
 		<div class="row g-3">
 			{% for opportunity in available_opportunities %}
 				<div class="col-md-6">
-					<div class="card h-100">
+					<div class="card opp-card h-100">
 						{% if opportunity.poster_image %}
-							<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="card-img-top" style="height:220px;object-fit:cover;">
+							<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="card-img-top" style="height:200px;object-fit:cover;">
 						{% endif %}
 						<div class="card-body">
-							<h5 class="card-title">{{ opportunity.title }}</h5>
-							<p class="mb-1"><span class="badge bg-success">Active</span></p>
-							<p class="text-muted mb-1"><strong>Organization:</strong> {{ opportunity.organization }}</p>
-							<p class="text-muted mb-1"><strong>Location:</strong> {{ opportunity.location }}</p>
-							<p class="text-muted mb-2"><strong>Deadline:</strong> {{ opportunity.deadline }}</p>
+							<div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+								<h5 class="card-title mb-0">{{ opportunity.title }}</h5>
+								{% if opportunity.days_left <= 2 %}
+									<span class="opp-badge urgent">{% if opportunity.days_left <= 0 %}Closes today{% else %}{{ opportunity.days_left }}d left{% endif %}</span>
+								{% elif opportunity.days_left <= 7 %}
+									<span class="opp-badge soon">{{ opportunity.days_left }}d left</span>
+								{% else %}
+									<span class="opp-badge normal">{{ opportunity.days_left }}d left</span>
+								{% endif %}
+							</div>
+							<p class="opp-meta">🏷️ {{ opportunity.organization }}</p>
+							<p class="opp-meta">📍 {{ opportunity.location }}</p>
+							<p class="opp-meta mb-2">🗓️ Deadline: {{ opportunity.deadline }}</p>
 							<p class="card-text">{{ opportunity.description }}</p>
 
 							{% if opportunity.id in applied_ids %}
-								<button class="btn btn-success" disabled>Already Applied</button>
+								<button class="btn btn-success" disabled>✓ Already Applied</button>
 							{% else %}
 								<form method="post" action="{% url 'apply_opportunity' opportunity.id %}">
 									{% csrf_token %}
@@ -52,21 +108,22 @@
 			<div class="alert alert-info">No active opportunities available right now.</div>
 		{% endif %}
 	{% else %}
-		<h3 class="mb-3">Opportunities History</h3>
 		{% if history_opportunities %}
 		<div class="row g-3">
 			{% for opportunity in history_opportunities %}
 				<div class="col-md-6">
-					<div class="card h-100 border-secondary">
+					<div class="card opp-card h-100 border-secondary">
 						{% if opportunity.poster_image %}
-							<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="card-img-top" style="height:220px;object-fit:cover;">
+							<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="card-img-top" style="height:200px;object-fit:cover;">
 						{% endif %}
 						<div class="card-body">
-							<h5 class="card-title">{{ opportunity.title }}</h5>
-							<p class="mb-1"><span class="badge bg-secondary">Expired</span></p>
-							<p class="text-muted mb-1"><strong>Organization:</strong> {{ opportunity.organization }}</p>
-							<p class="text-muted mb-1"><strong>Location:</strong> {{ opportunity.location }}</p>
-							<p class="text-muted mb-2"><strong>Deadline:</strong> {{ opportunity.deadline }}</p>
+							<div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+								<h5 class="card-title mb-0">{{ opportunity.title }}</h5>
+								<span class="opp-badge expired">Expired</span>
+							</div>
+							<p class="opp-meta">🏷️ {{ opportunity.organization }}</p>
+							<p class="opp-meta">📍 {{ opportunity.location }}</p>
+							<p class="opp-meta mb-2">🗓️ Deadline: {{ opportunity.deadline }}</p>
 							<p class="card-text">{{ opportunity.description }}</p>
 							<button class="btn btn-outline-secondary" disabled>History - View Only</button>
 						</div>

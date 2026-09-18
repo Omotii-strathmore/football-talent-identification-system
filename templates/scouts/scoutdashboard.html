@@ -1,6 +1,11 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Scout Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/site-tour.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
@@ -57,13 +62,13 @@
             <h4 class="section-title">Quick Actions</h4>
             <div class="row g-3">
                 <div class="col-md-4">
-                    <a href="{% url 'post_opportunity' %}" class="btn btn-primary w-100">Post Opportunity</a>
+                    <a href="{% url 'post_opportunity' %}" id="tour-post-opportunity" class="btn btn-primary w-100">Post Opportunity</a>
                 </div>
                 <div class="col-md-4">
-                    <a href="{% url 'manage_posted_opportunities' %}" class="btn btn-outline-primary w-100">Manage Posted Opportunities</a>
+                    <a href="{% url 'manage_posted_opportunities' %}" id="tour-manage-opportunities" class="btn btn-outline-primary w-100">Manage Posted Opportunities</a>
                 </div>
                 <div class="col-md-4">
-                    <a href="{% url 'scout_player_directory' %}" class="btn btn-outline-dark w-100">View Player Profiles & Videos</a>
+                    <a href="{% url 'scout_player_directory' %}" id="tour-player-directory" class="btn btn-outline-dark w-100">View Player Profiles & Videos</a>
                 </div>
             </div>
     </div>
@@ -119,4 +124,32 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/site-tour.js' %}"></script>
+<script>
+    SiteTour.create([
+        {
+            target: null,
+            title: 'Welcome to your Scout Dashboard',
+            desc: 'This quick tour shows what each quick action does — skip anytime.'
+        },
+        {
+            target: '#tour-post-opportunity',
+            title: 'Post Opportunity',
+            desc: 'Publish a new trial or tournament for players to discover and apply to.'
+        },
+        {
+            target: '#tour-manage-opportunities',
+            title: 'Manage Posted Opportunities',
+            desc: 'Edit, close, or review the opportunities you have already posted and their applicants.'
+        },
+        {
+            target: '#tour-player-directory',
+            title: 'View Player Profiles & Videos',
+            desc: 'Browse player profiles and videos filtered by position, location, or age — and leave feedback on their clips.'
+        }
+    ], { storageKey: 'talantaSokaScoutDashboardTourDone' });
+</script>
 {% endblock %}

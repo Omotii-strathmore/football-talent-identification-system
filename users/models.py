@@ -57,9 +57,15 @@ class OneTimeCode(models.Model):
         ('sms', 'SMS'),
     ]
 
+    PURPOSE_CHOICES = [
+        ('verify', 'Account verification'),
+        ('reset', 'Password reset'),
+    ]
+
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='otps')
     code = models.CharField(max_length=10)
     method = models.CharField(max_length=10, choices=METHOD_CHOICES, default='email')
+    purpose = models.CharField(max_length=10, choices=PURPOSE_CHOICES, default='verify')
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(blank=True, null=True)
     used = models.BooleanField(default=False)

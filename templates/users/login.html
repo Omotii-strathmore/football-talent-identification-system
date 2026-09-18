@@ -21,8 +21,8 @@
         <button type="submit" class="btn btn-brand mt-3">Login</button>
     </form>
 
+    <p class="auth-note mt-3"><a href="{% url 'password_reset_request' %}">Forgot password?</a></p>
     <p class="auth-note mt-3">Need a new account? <a href="{% url 'register' %}">Create one here</a>.</p>
-    <p class="auth-note mt-3"><a href="{% url 'home' %}">Back to home</a></p>
 
     <script>
         (function () {

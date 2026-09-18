@@ -48,10 +48,15 @@ class PlayerProfile(models.Model):
         blank=True,
         help_text='Most recent previous club or academy.'
     )
-    previous_club_duration = models.CharField(
-        max_length=50,
+    previous_club_start_year = models.PositiveIntegerField(
         blank=True,
-        help_text='Duration at previous club, e.g. 7 months or 2 years.'
+        null=True,
+        help_text='Year you joined the previous club, e.g. 2019.'
+    )
+    previous_club_end_year = models.PositiveIntegerField(
+        blank=True,
+        null=True,
+        help_text='Year you left the previous club, e.g. 2021.'
     )
     special_traits = models.CharField(
         max_length=150,
@@ -60,7 +65,7 @@ class PlayerProfile(models.Model):
     )
     football_experience = models.TextField(
         blank=True,
-        help_text='Describe your football experience, clubs, and achievements.'
+        help_text='Briefly describe your achievements and highlights at your previous club.'
     )
 
     location = models.CharField(max_length=100)
@@ -106,12 +111,30 @@ class PlayerProfile(models.Model):
 
 
 class PlayerVideo(models.Model):
+
+    CATEGORY_CHOICES = (
+        ('highlights', 'Highlights'),
+        ('match', 'Match Footage'),
+        ('training', 'Training'),
+        ('skills', 'Skills Showcase'),
+    )
+
     profile = models.ForeignKey(
         PlayerProfile,
         on_delete=models.CASCADE,
         related_name='videos'
     )
     title = models.CharField(max_length=150)
+    category = models.CharField(
+        max_length=20,
+        choices=CATEGORY_CHOICES,
+        default='highlights',
+        help_text='Helps scouts quickly understand what this clip shows.'
+    )
+    description = models.TextField(
+        blank=True,
+        help_text='Optional: add context such as the match, opponent, or what to look out for.'
+    )
     video_file = models.FileField(upload_to='player_videos/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

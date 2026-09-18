@@ -189,10 +189,41 @@
                                                             {% endif %}
                                                         </div>
                                                         {% if video.current_scout_feedback.player_reply %}
-                                                            <div class="mb-1"><strong>Player reply:</strong> {{ video.current_scout_feedback.player_reply }}</div>
+                                                            <div class="mb-1"><strong>Player reply:</strong><br>{{ video.current_scout_feedback.player_reply|linebreaksbr }}</div>
                                                         {% endif %}
                                                         {% if video.current_scout_feedback.player_reaction %}
                                                             <div class="mb-1"><strong>Player reaction:</strong> {{ video.current_scout_feedback.player_reaction }}</div>
+                                                        {% endif %}
+                                                        {% if video.current_scout_feedback.scout_reply %}
+                                                            <div class="mb-1"><strong>Your response:</strong><br>{{ video.current_scout_feedback.scout_reply|linebreaksbr }}</div>
+                                                        {% endif %}
+
+                                                        {% if video.current_scout_feedback.player_reply %}
+                                                            <form method="post" class="mt-2">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="video_id" value="{{ video.id }}">
+                                                                <input type="hidden" name="current_query" value="{{ request.GET.urlencode }}">
+                                                                <textarea name="scout_reply" rows="2" class="form-control" placeholder="Respond to the player's reply (optional)..."></textarea>
+                                                                <button type="submit" class="btn btn-primary btn-sm mt-2">Save response</button>
+                                                            </form>
+
+                                                            {% if video.current_scout_feedback.scout_reply %}
+                                                                {% if video.current_scout_feedback.scout_reply_editable %}
+                                                                    <details class="mt-2">
+                                                                        <summary class="small text-primary" style="cursor:pointer;">Edit previous response</summary>
+                                                                        <p class="text-muted mb-1" style="font-size:0.75rem;">You can edit for {{ video.current_scout_feedback.REPLY_EDIT_WINDOW_MINUTES }} minutes after responding.</p>
+                                                                        <form method="post" class="mt-2">
+                                                                            {% csrf_token %}
+                                                                            <input type="hidden" name="video_id" value="{{ video.id }}">
+                                                                            <input type="hidden" name="current_query" value="{{ request.GET.urlencode }}">
+                                                                            <textarea name="scout_reply_history" rows="3" class="form-control">{{ video.current_scout_feedback.scout_reply }}</textarea>
+                                                                            <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Update response</button>
+                                                                        </form>
+                                                                    </details>
+                                                                {% else %}
+                                                                    <p class="text-muted mb-0 mt-1" style="font-size:0.75rem;">Edit window closed. Write a new response above instead.</p>
+                                                                {% endif %}
+                                                            {% endif %}
                                                         {% endif %}
                                                     </div>
                                                 {% endif %}

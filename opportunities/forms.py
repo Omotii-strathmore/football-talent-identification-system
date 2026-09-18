@@ -85,6 +85,7 @@ class ApplicationForm(forms.ModelForm):
             'motivation': forms.Textarea(
                 attrs={
                     'rows': 3,
+                    'class': 'form-control',
                     'placeholder': 'Optional: explain why you are a good fit for this opportunity',
                 }
             )

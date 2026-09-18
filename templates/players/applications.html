@@ -2,17 +2,81 @@
 
 {% block title %}My Applications{% endblock %}
 
+{% block extra_css %}
+<style>
+	.app-status-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 12px;
+		border-radius: 999px;
+		font-size: 0.78rem;
+		font-weight: 700;
+	}
+
+	.app-status-badge.pending { background: #fef3c7; color: #92400e; }
+	.app-status-badge.shortlisted { background: #dcfce7; color: #166534; }
+	.app-status-badge.rejected { background: #fee2e2; color: #b91c1c; }
+
+	.app-summary {
+		display: flex;
+		gap: 12px;
+		flex-wrap: wrap;
+		margin-bottom: 18px;
+	}
+
+	.app-summary-chip {
+		border-radius: 14px;
+		background: #fff;
+		border: 1px solid rgba(148, 163, 184, 0.18);
+		box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
+		padding: 12px 18px;
+		min-width: 140px;
+	}
+
+	.app-summary-chip .value {
+		font-size: 1.4rem;
+		font-weight: 800;
+		color: #0f172a;
+	}
+
+	.app-summary-chip .label {
+		font-size: 0.78rem;
+		color: #64748b;
+	}
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-	<div class="d-flex justify-content-between align-items-center mb-3">
+	<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
 		<h2 class="mb-0">My Applications</h2>
 		<a href="{% url 'view_opportunities' %}" class="btn btn-outline-primary">View Opportunities</a>
 	</div>
 
 	{% if applications %}
+		<div class="app-summary">
+			<div class="app-summary-chip">
+				<div class="value">{{ applications|length }}</div>
+				<div class="label">Total applications</div>
+			</div>
+			<div class="app-summary-chip">
+				<div class="value">{{ status_counts.pending }}</div>
+				<div class="label">Pending</div>
+			</div>
+			<div class="app-summary-chip">
+				<div class="value">{{ status_counts.shortlisted }}</div>
+				<div class="label">Shortlisted</div>
+			</div>
+			<div class="app-summary-chip">
+				<div class="value">{{ status_counts.rejected }}</div>
+				<div class="label">Rejected</div>
+			</div>
+		</div>
+
 		<div class="table-responsive">
-			<table class="table table-bordered table-striped">
-				<thead>
+			<table class="table table-hover align-middle bg-white rounded-3 overflow-hidden">
+				<thead class="table-light">
 					<tr>
 						<th>Opportunity</th>
 						<th>Organization</th>
@@ -25,15 +89,15 @@
 						<tr>
 							<td>{{ application.opportunity.title }}</td>
 							<td>{{ application.opportunity.organization }}</td>
-							<td>{{ application.get_status_display }}</td>
-							<td>{{ application.applied_at }}</td>
+							<td><span class="app-status-badge {{ application.status }}">{{ application.get_status_display }}</span></td>
+							<td>{{ application.applied_at|date:'M d, Y H:i' }}</td>
 						</tr>
 					{% endfor %}
 				</tbody>
 			</table>
 		</div>
 	{% else %}
-		<div class="alert alert-info">You have not applied for any opportunities yet.</div>
+		<div class="alert alert-info">You have not applied for any opportunities yet. <a href="{% url 'view_opportunities' %}">Browse open opportunities</a>.</div>
 	{% endif %}
 </div>
 {% endblock %}

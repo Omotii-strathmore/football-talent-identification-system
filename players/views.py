@@ -101,6 +101,9 @@ def upload_video(request):
             feedback = get_object_or_404(ScoutVideoFeedback, id=feedback_id, video__profile=profile)
             history_text = request.POST.get('player_reply_history')
             if history_text is not None:
+                if not feedback.player_reply_editable:
+                    messages.error(request, f'The {ScoutVideoFeedback.REPLY_EDIT_WINDOW_MINUTES}-minute edit window for your reply has closed. Add a new reply instead.')
+                    return redirect('upload_video')
                 feedback.player_reply = history_text.strip()
                 feedback.is_seen = True
                 feedback.seen_at = timezone.now()
@@ -119,7 +122,9 @@ def upload_video(request):
                     feedback.player_reply = f'{feedback.player_reply}\n{reply_line}'
                 else:
                     feedback.player_reply = reply_line
+                feedback.player_reply_at = timezone.now()
                 update_fields.append('player_reply')
+                update_fields.append('player_reply_at')
 
             if reaction:
                 feedback.player_reaction = reaction
@@ -149,6 +154,11 @@ def upload_video(request):
         form = PlayerVideoForm()
 
     videos = profile.videos.all()
+
+    ScoutVideoFeedback.objects.filter(video__profile=profile, is_seen=False).update(
+        is_seen=True,
+        seen_at=timezone.now(),
+    )
 
     return render(
         request,

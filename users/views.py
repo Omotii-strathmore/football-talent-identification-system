@@ -32,7 +32,14 @@ from scouts.models import Scout
 
 REPORTLAB_AVAILABLE = True
 
-from .forms import AdminUserUpdateForm, RegistrationForm, LoginForm, OTPVerifyForm
+from .forms import (
+    AdminUserUpdateForm,
+    RegistrationForm,
+    LoginForm,
+    OTPVerifyForm,
+    PasswordResetRequestForm,
+    PasswordResetConfirmForm,
+)
 from .models import User, OneTimeCode
 
 logger = logging.getLogger(__name__)
@@ -44,19 +51,28 @@ def home(request):
     return render(request, 'users/home.html')
 
 
-def send_otp_to_user(user, method='email'):
+def send_otp_to_user(user, method='email', purpose='verify'):
     # generate 6-digit code
     code = f"{random.randint(0, 999999):06d}"
     expires = timezone.now() + timedelta(minutes=15)
-    OneTimeCode.objects.create(user=user, code=code, method=method, expires_at=expires)
+    OneTimeCode.objects.create(user=user, code=code, method=method, purpose=purpose, expires_at=expires)
 
-    subject = 'Talanta Soka verification code'
-    message = (
-        f'Hello {user.full_name},\n\n'
-        f'Your Talanta Soka verification code is: {code}\n'
-        'It expires in 15 minutes.\n\n'
-        'If you did not request this, please ignore this email.'
-    )
+    if purpose == 'reset':
+        subject = 'Talanta Soka password reset code'
+        message = (
+            f'Hello {user.full_name},\n\n'
+            f'Your Talanta Soka password reset code is: {code}\n'
+            'It expires in 15 minutes.\n\n'
+            'If you did not request a password reset, please ignore this email.'
+        )
+    else:
+        subject = 'Talanta Soka verification code'
+        message = (
+            f'Hello {user.full_name},\n\n'
+            f'Your Talanta Soka verification code is: {code}\n'
+            'It expires in 15 minutes.\n\n'
+            'If you did not request this, please ignore this email.'
+        )
     sender_address = None
     if settings.EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend' and settings.EMAIL_HOST_USER:
         sender_address = settings.EMAIL_HOST_USER
@@ -158,6 +174,77 @@ def resend_otp_view(request):
     return redirect('verify_otp')
 
 
+def password_reset_request_view(request):
+    if request.method == 'POST':
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            user = User.objects.filter(email=email).first()
+            if user:
+                request.session['reset_user_id'] = user.id
+                sent = send_otp_to_user(user, method='email', purpose='reset')
+                if sent:
+                    messages.success(request, 'A password reset code was sent to your email.')
+                    if settings.DEBUG and settings.EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+                        messages.info(request, 'DEBUG mode: OTP is printed to the server console because SMTP is not configured.')
+                    return redirect('password_reset_confirm')
+                messages.error(request, 'Unable to send the reset code via email. Please verify SMTP settings and try again.')
+            else:
+                # Do not reveal whether the email exists.
+                messages.success(request, 'If that email is registered, a password reset code was sent to it.')
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(request, 'users/password_reset_request.html', {'form': form})
+
+
+def password_reset_confirm_view(request):
+    reset_user_id = request.session.get('reset_user_id')
+    user = User.objects.filter(id=reset_user_id).first() if reset_user_id else None
+
+    if not user:
+        messages.error(request, 'No pending password reset found. Please request a new code.')
+        return redirect('password_reset_request')
+
+    if request.method == 'POST':
+        form = PasswordResetConfirmForm(request.POST, user=user)
+        if form.is_valid():
+            code = form.cleaned_data['code']
+            otp = OneTimeCode.objects.filter(user=user, code=code, purpose='reset', used=False).order_by('-created_at').first()
+            if not otp:
+                messages.error(request, 'Invalid verification code.')
+            elif otp.expires_at and otp.expires_at < timezone.now():
+                messages.error(request, 'Verification code has expired. Request a new one.')
+            else:
+                otp.used = True
+                otp.save(update_fields=['used'])
+                user.set_password(form.cleaned_data['new_password'])
+                user.save(update_fields=['password'])
+                request.session.pop('reset_user_id', None)
+                messages.success(request, 'Your password has been reset. You may now sign in.')
+                return redirect('login')
+    else:
+        form = PasswordResetConfirmForm()
+
+    return render(request, 'users/password_reset_confirm.html', {'form': form, 'user_email': user.email})
+
+
+def password_reset_resend_view(request):
+    reset_user_id = request.session.get('reset_user_id')
+    user = User.objects.filter(id=reset_user_id).first() if reset_user_id else None
+    if not user:
+        messages.error(request, 'No pending password reset found. Please request a new code.')
+        return redirect('password_reset_request')
+
+    sent = send_otp_to_user(user, method='email', purpose='reset')
+    if sent:
+        messages.success(request, 'A new password reset code was sent to your email.')
+    else:
+        messages.error(request, 'Unable to send the reset code via email. Please verify SMTP settings and try again.')
+
+    return redirect('password_reset_confirm')
+
+
 def register_view(request):
 
     if request.method == 'POST':
@@ -224,13 +311,7 @@ def complete_profile_view(request):
                         'full_name': user.full_name,
                         'age': form.cleaned_data['age'],
                         'position': form.cleaned_data['position'],
-                        'secondary_position': form.cleaned_data.get('secondary_position', ''),
-                        'height_cm': form.cleaned_data.get('height_cm'),
-                        'weight_kg': form.cleaned_data.get('weight_kg'),
-                        'current_club': form.cleaned_data.get('current_club', ''),
                         'location': form.cleaned_data['location'],
-                        'football_experience': form.cleaned_data.get('football_experience', ''),
-                        'special_traits': form.cleaned_data.get('special_traits', ''),
                     }
                 )
             else:

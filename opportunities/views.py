@@ -18,8 +18,11 @@ def public_opportunities(request):
 	if selected_view not in {'available', 'history'}:
 		selected_view = 'available'
 
+	today = timezone.localdate()
 	available_opportunities = Opportunity.objects.filter(is_active=True).order_by('deadline', '-created_at')
 	history_opportunities = Opportunity.objects.filter(is_active=False).order_by('-updated_at', '-created_at')
+	for opportunity in available_opportunities:
+		opportunity.days_left = (opportunity.deadline - today).days
 	return render(
 		request,
 		'opportunities/public_opportunities.html',
@@ -44,6 +47,8 @@ def view_opportunities(request):
 	today = timezone.localdate()
 	available_opportunities = Opportunity.objects.filter(is_active=True).order_by('deadline', '-created_at')
 	history_opportunities = Opportunity.objects.filter(is_active=False).order_by('-updated_at', '-created_at')
+	for opportunity in available_opportunities:
+		opportunity.days_left = (opportunity.deadline - today).days
 	applied_ids = set(
 		Application.objects.filter(player=request.user).values_list('opportunity_id', flat=True)
 	)
@@ -101,10 +106,15 @@ def my_applications(request):
 		return redirect('scout_dashboard')
 
 	applications = Application.objects.select_related('opportunity').filter(player=request.user)
+	status_counts = {
+		'pending': applications.filter(status='pending').count(),
+		'shortlisted': applications.filter(status='shortlisted').count(),
+		'rejected': applications.filter(status='rejected').count(),
+	}
 	return render(
 		request,
 		'players/applications.html',
-		{'applications': applications},
+		{'applications': applications, 'status_counts': status_counts},
 	)
 
 

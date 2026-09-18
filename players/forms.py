@@ -29,7 +29,8 @@ class PlayerProfileForm(forms.ModelForm):
             'weight_kg',
             'current_club',
             'previous_club',
-            'previous_club_duration',
+            'previous_club_start_year',
+            'previous_club_end_year',
             'location',
             'profile_photo',
             'bio',
@@ -40,6 +41,11 @@ class PlayerProfileForm(forms.ModelForm):
             'consent_to_share_contact',
         ]
 
+        widgets = {
+            'previous_club_start_year': forms.NumberInput(attrs={'placeholder': 'From year, e.g. 2019'}),
+            'previous_club_end_year': forms.NumberInput(attrs={'placeholder': 'To year, e.g. 2021'}),
+        }
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['contact_email'].required = False
@@ -49,7 +55,8 @@ class PlayerProfileForm(forms.ModelForm):
         self.fields['weight_kg'].required = False
         self.fields['current_club'].required = False
         self.fields['previous_club'].required = False
-        self.fields['previous_club_duration'].required = False
+        self.fields['previous_club_start_year'].required = False
+        self.fields['previous_club_end_year'].required = False
         self.fields['special_traits'].required = False
         self.fields['football_experience'].required = False
         self.fields['contact_email'].help_text = 'Optional. Interested scouts could reach out using this email.'
@@ -58,16 +65,23 @@ class PlayerProfileForm(forms.ModelForm):
             'With your consent, scouts can view these details and contact you directly.'
         )
         self.fields['special_traits'].help_text = 'Enter special traits such as Playmaker, Flair, or Finesse shooter.'
-        self.fields['football_experience'].help_text = 'Share your club history, achievements, and football experience.'
+        self.fields['football_experience'].label = 'Achievements at previous club'
+        self.fields['football_experience'].help_text = 'Briefly describe what you achieved there, e.g. top scorer, captain, promotion.'
         self.fields['previous_club'].help_text = 'Enter the last club or academy you played for before your current club.'
-        self.fields['previous_club_duration'].help_text = 'Example: 7 months, 1 year, or 2 years.'
+        self.fields['previous_club_start_year'].label = 'From year'
+        self.fields['previous_club_end_year'].label = 'To year'
 
     def clean(self):
         cleaned_data = super().clean()
+
+        start_year = cleaned_data.get('previous_club_start_year')
+        end_year = cleaned_data.get('previous_club_end_year')
+        if start_year and end_year and end_year < start_year:
+            self.add_error('previous_club_end_year', 'End year cannot be before the start year.')
+
         consent = cleaned_data.get('consent_to_share_contact')
         email = (cleaned_data.get('contact_email') or '').strip()
         phone = (cleaned_data.get('contact_phone') or '').strip()
-
         if consent and not email and not phone:
             raise forms.ValidationError(
                 'Add at least one communication option (email or contact) before giving consent.'
@@ -99,15 +113,7 @@ class PlayerOnboardingForm(forms.ModelForm):
         fields = [
             'age',
             'position',
-            'secondary_position',
-            'height_cm',
-            'weight_kg',
-            'current_club',
-            'previous_club',
-            'previous_club_duration',
             'location',
-            'football_experience',
-            'special_traits',
         ]
 
         widgets = {
@@ -118,30 +124,10 @@ class PlayerOnboardingForm(forms.ModelForm):
                     'autocomplete': 'off',
                 }
             ),
-            'football_experience': forms.Textarea(
-                attrs={
-                    'rows': 3,
-                    'placeholder': 'Describe your club experience and achievements',
-                }
-            ),
-            'special_traits': forms.TextInput(
-                attrs={
-                    'placeholder': 'e.g. Playmaker, Flair, Finesse shooter',
-                }
-            ),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['location'].help_text = 'Choose or type a county name from the 47 counties list.'
-        self.fields['secondary_position'].label = 'Secondary position'
-        self.fields['height_cm'].label = 'Height (cm)'
-        self.fields['weight_kg'].label = 'Weight (kg)'
-        self.fields['current_club'].label = 'Current club'
-        self.fields['previous_club'].label = 'Previous club'
-        self.fields['previous_club_duration'].label = 'Duration at previous club'
-        self.fields['football_experience'].label = 'Football experience'
-        self.fields['special_traits'].label = 'Special traits'
         self.fields['location'].help_text = 'Choose or type a county name from the 47 counties list.'
 
     def clean_location(self):
@@ -160,9 +146,31 @@ class PlayerVideoForm(forms.ModelForm):
 
         fields = [
             'title',
+            'category',
+            'description',
             'video_file',
         ]
 
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Video title'}),
+            'description': forms.Textarea(
+                attrs={
+                    'rows': 2,
+                    'placeholder': 'Optional: what should scouts look out for in this clip?',
+                }
+            ),
+            'video_file': forms.FileInput(attrs={'accept': 'video/*'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['description'].required = False
+        self.fields['category'].label = 'Video type'
+
+    def clean_video_file(self):
+        video_file = self.cleaned_data.get('video_file')
+        if video_file:
+            max_size_mb = 100
+            if video_file.size > max_size_mb * 1024 * 1024:
+                raise forms.ValidationError(f'Video file is too large. Please keep it under {max_size_mb}MB.')
+        return video_file

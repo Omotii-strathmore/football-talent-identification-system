@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
+from django.utils import timezone
 
 from opportunities.models import Application, Opportunity
 from players.models import PlayerProfile, PlayerVideo
@@ -63,12 +64,38 @@ def player_directory(request):
 
     if request.method == 'POST':
         video_id = request.POST.get('video_id')
-        comment = request.POST.get('comment', '').strip()
         current_query = request.POST.get('current_query', '').strip()
 
         if not video_id:
             messages.error(request, 'Could not identify the selected video.')
+        elif 'scout_reply' in request.POST:
+            video = get_object_or_404(PlayerVideo.objects.select_related('profile'), id=video_id)
+            feedback = ScoutVideoFeedback.objects.filter(scout=request.user, video=video).first()
+            reply_text = request.POST.get('scout_reply', '').strip()
+            if not feedback:
+                messages.error(request, 'Add initial feedback for this video before responding to the player.')
+            elif reply_text:
+                reply_stamp = timezone.localtime().strftime('%Y-%m-%d %H:%M')
+                reply_line = f'Scout ({reply_stamp}): {reply_text}'
+                feedback.scout_reply = f'{feedback.scout_reply}\n{reply_line}' if feedback.scout_reply else reply_line
+                feedback.scout_reply_at = timezone.now()
+                feedback.is_seen = False
+                feedback.seen_at = None
+                feedback.save(update_fields=['scout_reply', 'scout_reply_at', 'is_seen', 'seen_at', 'updated_at'])
+                messages.success(request, 'Your response to the player was saved.')
+            else:
+                messages.info(request, 'Response box was empty. Nothing was saved.')
+        elif 'scout_reply_history' in request.POST:
+            video = get_object_or_404(PlayerVideo.objects.select_related('profile'), id=video_id)
+            feedback = ScoutVideoFeedback.objects.filter(scout=request.user, video=video).first()
+            if not feedback or not feedback.scout_reply_editable:
+                messages.error(request, f'The {ScoutVideoFeedback.REPLY_EDIT_WINDOW_MINUTES}-minute edit window for your response has closed.')
+            else:
+                feedback.scout_reply = request.POST.get('scout_reply_history', '').strip()
+                feedback.save(update_fields=['scout_reply', 'updated_at'])
+                messages.success(request, 'Your previous response was updated.')
         else:
+            comment = request.POST.get('comment', '').strip()
             video = get_object_or_404(PlayerVideo.objects.select_related('profile'), id=video_id)
             if comment:
                 ScoutVideoFeedback.objects.update_or_create(

@@ -16,6 +16,10 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp_view, name='verify_otp'),
     path('verify-otp/resend/', views.resend_otp_view, name='resend_otp'),
 
+    path('password-reset/', views.password_reset_request_view, name='password_reset_request'),
+    path('password-reset/confirm/', views.password_reset_confirm_view, name='password_reset_confirm'),
+    path('password-reset/resend/', views.password_reset_resend_view, name='password_reset_resend'),
+
     path('management/dashboard/', views.admin_dashboard_view, name='admin_dashboard'),
     path('management/verifications/', views.admin_verifications_view, name='admin_verifications'),
     path('management/verifications/<int:scout_id>/approve/', views.admin_approve_scout_view, name='admin_approve_scout'),

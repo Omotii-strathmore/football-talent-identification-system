@@ -362,6 +362,156 @@
                 justify-self:start;
             }
         }
+
+        .tour-dim {
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,.55);
+            z-index:1290;
+            opacity:0;
+            visibility:hidden;
+            transition:opacity .2s ease;
+        }
+
+        .tour-dim.is-active {
+            opacity:1;
+            visibility:visible;
+        }
+
+        .tour-highlight {
+            position:fixed;
+            border-radius:10px;
+            box-shadow:0 0 0 3px var(--gold), 0 0 0 6000px rgba(0,0,0,.6);
+            z-index:1300;
+            pointer-events:none;
+            transition:top .25s ease, left .25s ease, width .25s ease, height .25s ease, opacity .2s ease;
+            opacity:0;
+        }
+
+        .tour-highlight.is-active {
+            opacity:1;
+        }
+
+        .tour-tooltip {
+            position:fixed;
+            z-index:1310;
+            width:min(320px, 86vw);
+            background:var(--off);
+            border:1px solid var(--border);
+            border-radius:12px;
+            padding:18px;
+            box-shadow:0 20px 50px rgba(0,0,0,.5);
+            opacity:0;
+            visibility:hidden;
+            transition:opacity .2s ease, top .25s ease, left .25s ease;
+        }
+
+        .tour-tooltip.is-active {
+            opacity:1;
+            visibility:visible;
+        }
+
+        .tour-step-label {
+            font-size:.72rem;
+            letter-spacing:1.5px;
+            text-transform:uppercase;
+            color:var(--gold);
+            font-weight:700;
+            margin-bottom:8px;
+        }
+
+        .tour-title {
+            font-family:var(--font-display);
+            font-size:1.35rem;
+            letter-spacing:.5px;
+            margin-bottom:8px;
+            color:var(--white);
+        }
+
+        .tour-desc {
+            font-size:.88rem;
+            color:#c7c7c7;
+            margin-bottom:16px;
+            line-height:1.55;
+        }
+
+        .tour-actions {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+        }
+
+        .tour-skip-btn {
+            background:none;
+            border:0;
+            color:var(--muted);
+            font-size:.8rem;
+            cursor:pointer;
+            padding:0;
+        }
+
+        .tour-skip-btn:hover {
+            color:var(--white);
+        }
+
+        .tour-nav-btns {
+            display:flex;
+            gap:8px;
+        }
+
+        .tour-nav-btn {
+            border:1px solid var(--border);
+            background:transparent;
+            color:var(--white);
+            font-size:.82rem;
+            font-weight:700;
+            padding:7px 16px;
+            border-radius:4px;
+            cursor:pointer;
+        }
+
+        .tour-nav-btn.tour-next-btn {
+            background:var(--gold);
+            color:var(--black);
+            border-color:var(--gold);
+        }
+
+        .tour-nav-btn:disabled {
+            opacity:.35;
+            cursor:default;
+        }
+
+        .tour-replay-btn {
+            position:fixed;
+            bottom:22px;
+            right:22px;
+            z-index:150;
+            width:42px;
+            height:42px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            background:var(--gold);
+            color:var(--black);
+            border:0;
+            border-radius:50%;
+            padding:0;
+            font-size:1rem;
+            box-shadow:0 8px 20px rgba(0,0,0,.35);
+            cursor:grab;
+            touch-action:none;
+            user-select:none;
+        }
+
+        .tour-replay-btn:hover {
+            background:#ffd533;
+        }
+
+        .tour-replay-btn.is-dragging {
+            cursor:grabbing;
+            box-shadow:0 12px 26px rgba(0,0,0,.5);
+        }
     </style>
 </head>
 <body>
@@ -375,9 +525,9 @@
         <div class="logo">Talanta <span>Soka</span></div>
         <ul class="links">
             <li><a href="{% url 'home' %}">Home</a></li>
-            <li><a href="{% url 'public_opportunities' %}">Trials/Tournaments(fursa)</a></li>
-            <li><a href="{% url 'login' %}">Login/ingia</a></li>
-            <li><a href="{% url 'register' %}" class="cta">Sign Up/Jisajili</a></li>
+            <li><a href="{% url 'public_opportunities' %}" id="tour-trials">Trials/Tournaments(fursa)</a></li>
+            <li><a href="{% url 'login' %}" id="tour-login">Login/ingia</a></li>
+            <li><a href="{% url 'register' %}" class="cta" id="tour-signup">Sign Up/Jisajili</a></li>
         </ul>
     </nav>
 
@@ -389,8 +539,8 @@
                 <p class="sub">Talanta Soka connects players with verified scouts through structured profiles, videos, and real football opportunities.</p>
 
                 <div class="actions">
-                    <a href="{% url 'register' %}?role=player" class="btn-primary">Register as Player</a>
-                    <a href="{% url 'register' %}?role=scout" class="btn-secondary">Join as Scout</a>
+                    <a href="{% url 'register' %}?role=player" class="btn-primary" id="tour-register-player">Register as Player</a>
+                    <a href="{% url 'register' %}?role=scout" class="btn-secondary" id="tour-register-scout">Join as Scout</a>
                 </div>
             </div>
 
@@ -459,6 +609,231 @@
                 container.appendChild(card);
                 setTimeout(function () { card.remove(); }, 4000);
             });
+        })();
+    </script>
+
+    <div class="tour-dim" id="tour-dim"></div>
+    <div class="tour-highlight" id="tour-highlight"></div>
+    <div class="tour-tooltip" id="tour-tooltip" role="dialog" aria-live="polite">
+        <p class="tour-step-label" id="tour-step-label"></p>
+        <h4 class="tour-title" id="tour-title"></h4>
+        <p class="tour-desc" id="tour-desc"></p>
+        <div class="tour-actions">
+            <button type="button" class="tour-skip-btn" id="tour-skip">Skip tutorial</button>
+            <div class="tour-nav-btns">
+                <button type="button" class="tour-nav-btn" id="tour-back">Back</button>
+                <button type="button" class="tour-nav-btn tour-next-btn" id="tour-next">Next</button>
+            </div>
+        </div>
+    </div>
+    <button type="button" class="tour-replay-btn" id="tour-replay" aria-label="Take the tour" title="Take the tour">🎬</button>
+
+    <script>
+        (function () {
+            const STORAGE_KEY = 'talantaSokaTourDone';
+
+            const steps = [
+                {
+                    target: null,
+                    title: 'Welcome to Talanta Soka',
+                    desc: 'Talanta Soka connects football players across Kenya with verified scouts. This quick tour shows you what each button on this page does — skip anytime if you already know your way around.'
+                },
+                {
+                    target: '#tour-signup',
+                    title: 'Sign Up / Jisajili',
+                    desc: 'Start here to create a brand new account, either as a Player or a Scout.'
+                },
+                {
+                    target: '#tour-register-player',
+                    title: 'Register as Player',
+                    desc: 'Players tap this to build a football profile, add position and stats, then upload highlight videos scouts can review.'
+                },
+                {
+                    target: '#tour-register-scout',
+                    title: 'Join as Scout',
+                    desc: 'Scouts tap this to register, get verified, then post trials and tournaments and review player applications.'
+                },
+                {
+                    target: '#tour-trials',
+                    title: 'Trials/Tournaments (Fursa)',
+                    desc: 'Browse open trials and tournaments from verified scouts — no account needed to look, only to apply.'
+                },
+                {
+                    target: '#tour-login',
+                    title: 'Login / Ingia',
+                    desc: 'Already have an account? Sign in here to reach your dashboard, profile, or scouting tools.'
+                }
+            ];
+
+            const dim = document.getElementById('tour-dim');
+            const highlight = document.getElementById('tour-highlight');
+            const tooltip = document.getElementById('tour-tooltip');
+            const stepLabel = document.getElementById('tour-step-label');
+            const titleEl = document.getElementById('tour-title');
+            const descEl = document.getElementById('tour-desc');
+            const backBtn = document.getElementById('tour-back');
+            const nextBtn = document.getElementById('tour-next');
+            const skipBtn = document.getElementById('tour-skip');
+            const replayBtn = document.getElementById('tour-replay');
+
+            let currentStep = 0;
+            let active = false;
+
+            function positionForTarget(target) {
+                if (!target) {
+                    highlight.classList.remove('is-active');
+                    const tw = tooltip.offsetWidth || 320;
+                    const th = tooltip.offsetHeight || 200;
+                    tooltip.style.top = Math.max(16, (window.innerHeight - th) / 2) + 'px';
+                    tooltip.style.left = Math.max(16, (window.innerWidth - tw) / 2) + 'px';
+                    return;
+                }
+
+                const el = document.querySelector(target);
+                if (!el) {
+                    positionForTarget(null);
+                    return;
+                }
+
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                setTimeout(function () {
+                    const rect = el.getBoundingClientRect();
+                    const pad = 8;
+
+                    highlight.classList.add('is-active');
+                    highlight.style.top = (rect.top - pad) + 'px';
+                    highlight.style.left = (rect.left - pad) + 'px';
+                    highlight.style.width = (rect.width + pad * 2) + 'px';
+                    highlight.style.height = (rect.height + pad * 2) + 'px';
+
+                    const tw = tooltip.offsetWidth || 320;
+                    const th = tooltip.offsetHeight || 200;
+                    let top = rect.bottom + pad + 14;
+                    if (top + th > window.innerHeight - 16) {
+                        top = Math.max(16, rect.top - pad - 14 - th);
+                    }
+                    let left = rect.left;
+                    left = Math.min(Math.max(16, left), window.innerWidth - tw - 16);
+
+                    tooltip.style.top = top + 'px';
+                    tooltip.style.left = left + 'px';
+                }, 320);
+            }
+
+            function renderStep() {
+                const step = steps[currentStep];
+                stepLabel.textContent = 'Step ' + (currentStep + 1) + ' of ' + steps.length;
+                titleEl.textContent = step.title;
+                descEl.textContent = step.desc;
+                backBtn.disabled = currentStep === 0;
+                nextBtn.textContent = currentStep === steps.length - 1 ? 'Got it' : 'Next';
+                positionForTarget(step.target);
+            }
+
+            function startTour() {
+                active = true;
+                currentStep = 0;
+                dim.classList.add('is-active');
+                tooltip.classList.add('is-active');
+                renderStep();
+            }
+
+            function endTour() {
+                active = false;
+                dim.classList.remove('is-active');
+                tooltip.classList.remove('is-active');
+                highlight.classList.remove('is-active');
+                try { localStorage.setItem(STORAGE_KEY, '1'); } catch (e) {}
+            }
+
+            nextBtn.addEventListener('click', function () {
+                if (currentStep === steps.length - 1) {
+                    endTour();
+                    return;
+                }
+                currentStep += 1;
+                renderStep();
+            });
+
+            backBtn.addEventListener('click', function () {
+                if (currentStep === 0) {
+                    return;
+                }
+                currentStep -= 1;
+                renderStep();
+            });
+
+            skipBtn.addEventListener('click', endTour);
+
+            const BTN_POS_KEY = 'talantaSokaTourBtnPos';
+            let dragged = false;
+            let dragStart = null;
+
+            (function restoreButtonPosition() {
+                let pos = null;
+                try { pos = JSON.parse(localStorage.getItem(BTN_POS_KEY)); } catch (e) {}
+                if (pos && typeof pos.left === 'number' && typeof pos.top === 'number') {
+                    const size = 42;
+                    const left = Math.min(Math.max(4, pos.left), window.innerWidth - size - 4);
+                    const top = Math.min(Math.max(4, pos.top), window.innerHeight - size - 4);
+                    replayBtn.style.left = left + 'px';
+                    replayBtn.style.top = top + 'px';
+                    replayBtn.style.right = 'auto';
+                    replayBtn.style.bottom = 'auto';
+                }
+            })();
+
+            replayBtn.addEventListener('pointerdown', function (e) {
+                dragged = false;
+                const rect = replayBtn.getBoundingClientRect();
+                dragStart = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
+                replayBtn.setPointerCapture(e.pointerId);
+                replayBtn.classList.add('is-dragging');
+            });
+
+            replayBtn.addEventListener('pointermove', function (e) {
+                if (!dragStart) {
+                    return;
+                }
+                const dx = e.clientX - dragStart.x;
+                const dy = e.clientY - dragStart.y;
+                if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+                    dragged = true;
+                }
+                if (dragged) {
+                    const size = replayBtn.offsetWidth;
+                    const newLeft = Math.min(Math.max(4, dragStart.left + dx), window.innerWidth - size - 4);
+                    const newTop = Math.min(Math.max(4, dragStart.top + dy), window.innerHeight - size - 4);
+                    replayBtn.style.left = newLeft + 'px';
+                    replayBtn.style.top = newTop + 'px';
+                    replayBtn.style.right = 'auto';
+                    replayBtn.style.bottom = 'auto';
+                }
+            });
+
+            replayBtn.addEventListener('pointerup', function () {
+                replayBtn.classList.remove('is-dragging');
+                if (dragged) {
+                    const rect = replayBtn.getBoundingClientRect();
+                    try { localStorage.setItem(BTN_POS_KEY, JSON.stringify({ left: rect.left, top: rect.top })); } catch (e) {}
+                } else {
+                    startTour();
+                }
+                dragStart = null;
+            });
+
+            window.addEventListener('resize', function () {
+                if (active) {
+                    positionForTarget(steps[currentStep].target);
+                }
+            });
+
+            let seen = false;
+            try { seen = !!localStorage.getItem(STORAGE_KEY); } catch (e) {}
+            if (!seen) {
+                setTimeout(startTour, 700);
+            }
         })();
     </script>
 </body>

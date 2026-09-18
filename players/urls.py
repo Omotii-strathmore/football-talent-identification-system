@@ -6,5 +6,4 @@ urlpatterns = [
     path('profile/', views.profile_view, name='player_profile'),
     path('videos/upload/', views.upload_video, name='upload_video'),
     path('videos/<int:video_id>/delete/', views.delete_video, name='delete_video'),
-    
 ]

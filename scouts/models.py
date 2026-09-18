@@ -1,5 +1,8 @@
+from datetime import timedelta
+
 from django.core.validators import FileExtensionValidator
 from django.db import models
+from django.utils import timezone
 from users.models import User
 from players.models import PlayerProfile, PlayerVideo
 
@@ -79,6 +82,8 @@ class ScoutVideoFeedback(models.Model):
         ('noted', 'Noted'),
     ]
 
+    REPLY_EDIT_WINDOW_MINUTES = 15
+
     scout = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -91,12 +96,15 @@ class ScoutVideoFeedback(models.Model):
     )
     comment = models.TextField()
     player_reply = models.TextField(blank=True, default='')
+    player_reply_at = models.DateTimeField(blank=True, null=True)
     player_reaction = models.CharField(
         max_length=20,
         choices=REACTION_CHOICES,
         blank=True,
         default='',
     )
+    scout_reply = models.TextField(blank=True, default='')
+    scout_reply_at = models.DateTimeField(blank=True, null=True)
     is_seen = models.BooleanField(default=False)
     seen_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -113,3 +121,15 @@ class ScoutVideoFeedback(models.Model):
 
     def __str__(self):
         return f'{self.scout.full_name} feedback for {self.video.title}'
+
+    @property
+    def player_reply_editable(self):
+        if not self.player_reply_at:
+            return False
+        return timezone.now() - self.player_reply_at <= timedelta(minutes=self.REPLY_EDIT_WINDOW_MINUTES)
+
+    @property
+    def scout_reply_editable(self):
+        if not self.scout_reply_at:
+            return False
+        return timezone.now() - self.scout_reply_at <= timedelta(minutes=self.REPLY_EDIT_WINDOW_MINUTES)

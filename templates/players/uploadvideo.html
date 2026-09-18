@@ -3,6 +3,109 @@
 
 {% block title %}Upload Player Videos{% endblock %}
 
+{% block extra_css %}
+<style>
+    .upload-card {
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        border-radius: 18px;
+        background: #fff;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+    }
+
+    .upload-dropzone {
+        border: 2px dashed rgba(59, 130, 246, 0.35);
+        border-radius: 14px;
+        background: #f8fafc;
+        padding: 22px;
+        text-align: center;
+        transition: border-color .15s ease, background .15s ease;
+        cursor: pointer;
+    }
+
+    .upload-dropzone.is-dragover {
+        border-color: #3b82f6;
+        background: #eff6ff;
+    }
+
+    .upload-dropzone .upload-icon {
+        font-size: 1.8rem;
+        margin-bottom: 6px;
+    }
+
+    .upload-filename {
+        font-weight: 600;
+        color: #0f172a;
+        margin-top: 8px;
+        word-break: break-all;
+    }
+
+    .upload-hint {
+        font-size: 0.8rem;
+        color: #64748b;
+    }
+
+    .video-filter-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .video-filter-tab {
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        background: #fff;
+        color: #334155;
+        border-radius: 999px;
+        padding: 6px 16px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .video-filter-tab.active {
+        background: #0f172a;
+        color: #fff;
+        border-color: #0f172a;
+    }
+
+    .video-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.25rem 0.6rem;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        background: #eef2ff;
+        color: #4338ca;
+        margin-bottom: 8px;
+    }
+
+    .video-wrap {
+        position: relative;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #000;
+        aspect-ratio: 16 / 9;
+        margin-bottom: 10px;
+    }
+
+    .video-wrap video {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    .video-desc {
+        font-size: 0.85rem;
+        color: #475569;
+        margin-bottom: 6px;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -10,25 +113,55 @@
         <a href="{% url 'player_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data" novalidate>
-                {% csrf_token %}
-                {{ form|crispy }}
-                <button type="submit" class="btn btn-primary mt-2">Upload Video</button>
-            </form>
-        </div>
+    <div class="upload-card p-3 p-md-4 mb-4">
+        <form method="post" enctype="multipart/form-data" novalidate id="video-upload-form">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+
+            <div class="row">
+                <div class="col-md-7">{{ form.title|as_crispy_field }}</div>
+                <div class="col-md-5">{{ form.category|as_crispy_field }}</div>
+            </div>
+            {{ form.description|as_crispy_field }}
+
+            <label class="form-label">Video file</label>
+            <div class="upload-dropzone" id="upload-dropzone">
+                <div class="upload-icon">🎥</div>
+                <div>Drag and drop your video here, or click to browse</div>
+                <div class="upload-hint">MP4, MOV, or WEBM. Keep it under 100MB for a faster upload.</div>
+                <div class="upload-filename" id="upload-filename"></div>
+            </div>
+            {{ form.video_file }}
+            {% if form.video_file.errors %}
+                <div class="text-danger small mt-1">{{ form.video_file.errors }}</div>
+            {% endif %}
+
+            <button type="submit" class="btn btn-primary mt-3">Upload Video</button>
+        </form>
     </div>
 
-    <h4>My Uploaded Videos</h4>
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <h4 class="mb-0">My Uploaded Videos</h4>
+        <span class="text-muted small">{{ videos|length }} video{{ videos|length|pluralize }}</span>
+    </div>
+
     {% if videos %}
-        <div class="row g-3">
+        <div class="video-filter-tabs" id="video-filter-tabs">
+            <button type="button" class="video-filter-tab active" data-filter="all">All</button>
+            <button type="button" class="video-filter-tab" data-filter="highlights">Highlights</button>
+            <button type="button" class="video-filter-tab" data-filter="match">Match Footage</button>
+            <button type="button" class="video-filter-tab" data-filter="training">Training</button>
+            <button type="button" class="video-filter-tab" data-filter="skills">Skills Showcase</button>
+        </div>
+
+        <div class="row g-3" id="video-grid">
             {% for video in videos %}
-                <div class="col-md-6">
+                <div class="col-md-6" data-category="{{ video.category }}">
                     <div class="card h-100">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start gap-2">
                                 <div>
+                                    <span class="video-badge">{{ video.get_category_display }}</span>
                                     <h5 class="card-title mb-1">{{ video.title }}</h5>
                                     <p class="text-muted small mb-2">Uploaded {{ video.uploaded_at }}</p>
                                 </div>
@@ -38,10 +171,15 @@
                                 </form>
                             </div>
 
-                            <video class="w-100 mb-3" controls preload="metadata" style="max-height:220px; border-radius:10px; background:#000;">
-                                <source src="{{ video.video_file.url }}">
-                                Your browser does not support embedded video playback.
-                            </video>
+                            <div class="video-wrap">
+                                <video controls preload="metadata">
+                                    <source src="{{ video.video_file.url }}">
+                                    Your browser does not support embedded video playback.
+                                </video>
+                            </div>
+                            {% if video.description %}
+                                <p class="video-desc">{{ video.description }}</p>
+                            {% endif %}
 
                             <a href="{{ video.video_file.url }}" target="_blank" class="small">Open video in new tab</a>
 
@@ -62,6 +200,9 @@
                                                 {% if feedback.player_reaction %}
                                                     <div class="text-muted"><strong>Your reaction:</strong> {{ feedback.player_reaction }}</div>
                                                 {% endif %}
+                                                {% if feedback.scout_reply %}
+                                                    <div class="text-muted mt-1"><strong>Scout's response:</strong><br>{{ feedback.scout_reply|linebreaksbr }}</div>
+                                                {% endif %}
 
                                                 <form method="post" class="mt-2">
                                                     {% csrf_token %}
@@ -77,15 +218,20 @@
                                                 </form>
 
                                                 {% if feedback.player_reply %}
-                                                    <details class="mt-2">
-                                                        <summary class="small text-primary" style="cursor:pointer;">Edit previous replies</summary>
-                                                        <form method="post" class="mt-2">
-                                                            {% csrf_token %}
-                                                            <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
-                                                            <textarea name="player_reply_history" rows="4" class="form-control" placeholder="Edit previous replies...">{{ feedback.player_reply }}</textarea>
-                                                            <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Update previous replies</button>
-                                                        </form>
-                                                    </details>
+                                                    {% if feedback.player_reply_editable %}
+                                                        <details class="mt-2">
+                                                            <summary class="small text-primary" style="cursor:pointer;">Edit previous replies</summary>
+                                                            <p class="text-muted mb-1" style="font-size:0.75rem;">You can edit for {{ feedback.REPLY_EDIT_WINDOW_MINUTES }} minutes after replying.</p>
+                                                            <form method="post" class="mt-2">
+                                                                {% csrf_token %}
+                                                                <input type="hidden" name="feedback_id" value="{{ feedback.id }}">
+                                                                <textarea name="player_reply_history" rows="4" class="form-control" placeholder="Edit previous replies...">{{ feedback.player_reply }}</textarea>
+                                                                <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Update previous replies</button>
+                                                            </form>
+                                                        </details>
+                                                    {% else %}
+                                                        <p class="text-muted mb-0 mt-1" style="font-size:0.75rem;">Edit window closed. Write a new reply above instead.</p>
+                                                    {% endif %}
                                                 {% endif %}
                                             </div>
                                         {% endfor %}
@@ -97,8 +243,73 @@
                 </div>
             {% endfor %}
         </div>
+        <div class="alert alert-light border mt-3" id="video-empty-filter" style="display:none;">No videos uploaded yet under this category.</div>
     {% else %}
         <div class="alert alert-info">No videos uploaded yet.</div>
     {% endif %}
 </div>
+
+<script>
+    (function () {
+        const dropzone = document.getElementById('upload-dropzone');
+        const fileInput = document.getElementById('id_video_file');
+        const filenameLabel = document.getElementById('upload-filename');
+
+        if (dropzone && fileInput) {
+            fileInput.style.display = 'none';
+
+            dropzone.addEventListener('click', function () {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function () {
+                const file = this.files && this.files[0];
+                filenameLabel.textContent = file ? ('Selected: ' + file.name) : '';
+            });
+
+            ['dragover', 'dragenter'].forEach(function (evt) {
+                dropzone.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    dropzone.classList.add('is-dragover');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(function (evt) {
+                dropzone.addEventListener(evt, function (e) {
+                    e.preventDefault();
+                    dropzone.classList.remove('is-dragover');
+                });
+            });
+
+            dropzone.addEventListener('drop', function (e) {
+                const files = e.dataTransfer.files;
+                if (files && files.length) {
+                    fileInput.files = files;
+                    filenameLabel.textContent = 'Selected: ' + files[0].name;
+                }
+            });
+        }
+
+        const tabs = document.querySelectorAll('.video-filter-tab');
+        const cards = document.querySelectorAll('#video-grid > [data-category]');
+        const emptyFilterNote = document.getElementById('video-empty-filter');
+        tabs.forEach(function (tab) {
+            tab.addEventListener('click', function () {
+                tabs.forEach(function (t) { t.classList.remove('active'); });
+                tab.classList.add('active');
+                const filter = tab.getAttribute('data-filter');
+                let visibleCount = 0;
+                cards.forEach(function (card) {
+                    const show = filter === 'all' || card.getAttribute('data-category') === filter;
+                    card.style.display = show ? '' : 'none';
+                    if (show) { visibleCount += 1; }
+                });
+                if (emptyFilterNote) {
+                    emptyFilterNote.style.display = visibleCount === 0 ? '' : 'none';
+                    emptyFilterNote.textContent = 'No videos uploaded yet under ' + tab.textContent.trim() + '.';
+                }
+            });
+        });
+    })();
+</script>
 {% endblock %}

@@ -1,0 +1,149 @@
+.st-dim {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, .45);
+    z-index: 1290;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s ease;
+}
+
+.st-dim.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.st-highlight {
+    position: fixed;
+    border-radius: 12px;
+    box-shadow: 0 0 0 3px #f59e0b, 0 0 0 6000px rgba(15, 23, 42, .45);
+    z-index: 1300;
+    pointer-events: none;
+    transition: top .25s ease, left .25s ease, width .25s ease, height .25s ease, opacity .2s ease;
+    opacity: 0;
+}
+
+.st-highlight.is-active {
+    opacity: 1;
+}
+
+.st-tooltip {
+    position: fixed;
+    z-index: 1310;
+    width: min(320px, 86vw);
+    background: #fff;
+    border: 1px solid rgba(148, 163, 184, .25);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 20px 44px rgba(15, 23, 42, .22);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity .2s ease, top .25s ease, left .25s ease;
+}
+
+.st-tooltip.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.st-step-label {
+    font-size: .7rem;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: #d97706;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.st-title {
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: #0f172a;
+}
+
+.st-desc {
+    font-size: .86rem;
+    color: #475569;
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.st-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.st-skip {
+    background: none;
+    border: 0;
+    color: #64748b;
+    font-size: .78rem;
+    cursor: pointer;
+    padding: 0;
+}
+
+.st-skip:hover {
+    color: #0f172a;
+}
+
+.st-nav-btns {
+    display: flex;
+    gap: 8px;
+}
+
+.st-back,
+.st-next {
+    border: 1px solid rgba(148, 163, 184, .35);
+    background: #fff;
+    color: #0f172a;
+    font-size: .8rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.st-next {
+    background: #0f172a;
+    color: #fff;
+    border-color: #0f172a;
+}
+
+.st-back:disabled {
+    opacity: .35;
+    cursor: default;
+}
+
+.st-replay-btn {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 150;
+    width: 42px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f172a;
+    color: #fff;
+    border: 0;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 1rem;
+    box-shadow: 0 8px 20px rgba(15, 23, 42, .35);
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.st-replay-btn:hover {
+    background: #1e293b;
+}
+
+.st-replay-btn.is-dragging {
+    cursor: grabbing;
+    box-shadow: 0 12px 26px rgba(15, 23, 42, .5);
+}
