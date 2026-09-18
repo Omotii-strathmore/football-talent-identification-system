@@ -2,6 +2,35 @@
 
 {% block title %}System Reports{% endblock %}
 
+{% block extra_css %}
+<style>
+    .quick-export-row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-top: 10px;
+    }
+
+    .quick-export-btn {
+        border-radius: 999px;
+        font-size: 0.82rem;
+        padding: 6px 16px;
+    }
+
+    .report-table-wrap {
+        max-height: 480px;
+        overflow-y: auto;
+    }
+
+    .report-table-wrap thead th {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        z-index: 1;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -132,14 +161,28 @@
                 <button type="submit" name="action" value="generate" class="btn btn-primary w-100">Generate Report</button>
             </div>
         </form>
-        <p class="text-muted mb-0 mt-2">Preview the table first, view the chart on a separate view, and then export the report as PDF or CSV.</p>
+        <div class="alert alert-light border mt-3 mb-0 py-2 small">
+            💾 "Generate Report" downloads the file straight to your browser's downloads folder — it won't open a new tab. Check your browser's download bar or Downloads folder after clicking.
+        </div>
+
+        <div class="quick-export-row">
+            <span class="text-muted small me-1">Quick export (CSV):</span>
+            <a href="?report=summary&action=generate&format=csv" class="btn btn-outline-secondary quick-export-btn">Summary</a>
+            <a href="?report=players&action=generate&format=csv" class="btn btn-outline-secondary quick-export-btn">Players</a>
+            <a href="?report=scouts&action=generate&format=csv" class="btn btn-outline-secondary quick-export-btn">Scouts</a>
+            <a href="?report=opportunities&action=generate&format=csv" class="btn btn-outline-secondary quick-export-btn">Opportunities</a>
+            <a href="?report=applications&action=generate&format=csv" class="btn btn-outline-secondary quick-export-btn">Applications</a>
+        </div>
     </div>
 
     {% if report_type and preview_mode == 'preview' and report_headers %}
     <div class="card mt-4">
         <div class="card-body">
-            <h5 class="mb-3">{{ report_type|title }} Preview</h5>
-            <div class="table-responsive">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0">{{ report_type|title }} Preview</h5>
+                <span class="text-muted small">{{ report_rows|length }} row{{ report_rows|length|pluralize }}</span>
+            </div>
+            <div class="table-responsive report-table-wrap">
                 <table class="table table-striped align-middle">
                     <thead>
                         <tr>
@@ -169,8 +212,8 @@
     <div class="card mt-4">
         <div class="card-body">
             <h5 class="mb-3">{{ chart_title }}</h5>
-            <div class="d-flex justify-content-center">
-                <canvas id="reportChart" height="220" style="max-width: 360px; width: 100%;"></canvas>
+            <div style="position: relative; height: 440px; width: 100%; max-width: 760px; margin: 0 auto;">
+                <canvas id="reportChart"></canvas>
             </div>
         </div>
     </div>
@@ -182,28 +225,50 @@
         const values = JSON.parse(document.getElementById('chart-values').textContent);
         const chartCanvas = document.getElementById('reportChart');
         const chartType = '{{ chart_type|default:"bar" }}';
-        const percentageLabelsPlugin = {
-            id: 'percentageLabels',
-            beforeDraw(chart) {
-                if (chart.config.type !== 'pie') {
-                    return;
+
+        function buildColorPalette(count) {
+            const basePalette = ['#0d6efd', '#198754', '#fd7e14', '#dc3545', '#6f42c1', '#20c997', '#0dcaf0', '#d63384', '#ffc107', '#6610f2'];
+            const colors = [];
+            for (let i = 0; i < count; i += 1) {
+                if (i < basePalette.length) {
+                    colors.push(basePalette[i]);
+                } else {
+                    const hue = (i * 47) % 360;
+                    colors.push(`hsl(${hue}, 65%, 55%)`);
                 }
+            }
+            return colors;
+        }
+
+        const palette = buildColorPalette(labels.length);
+
+        const valueLabelsPlugin = {
+            id: 'valueLabels',
+            afterDraw(chart) {
                 const { ctx } = chart;
                 const total = chart.data.datasets[0].data.reduce((sum, value) => sum + Number(value || 0), 0) || 1;
                 ctx.save();
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#111';
-                ctx.font = 'bold 11px sans-serif';
+                ctx.font = 'bold 12px sans-serif';
+                ctx.textAlign = 'center';
                 chart.getDatasetMeta(0).data.forEach((element, index) => {
-                    const { x, y } = element.getProps(['x', 'y']);
                     const value = Number(chart.data.datasets[0].data[index] || 0);
-                    const percent = total > 0 ? Math.round((value / total) * 100) : 0;
-                    ctx.fillText(`${percent}%`, x, y);
+                    const { x, y } = element.getProps(['x', 'y']);
+                    if (chart.config.type === 'pie') {
+                        const percent = total > 0 ? Math.round((value / total) * 100) : 0;
+                        ctx.textBaseline = 'middle';
+                        ctx.fillStyle = '#fff';
+                        ctx.fillText(`${percent}%`, x, y);
+                    } else {
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillStyle = '#111';
+                        ctx.fillText(String(value), x, y - 6);
+                    }
                 });
                 ctx.restore();
             }
         };
+
         if (chartCanvas) {
             new Chart(chartCanvas, {
                 type: chartType,
@@ -212,16 +277,38 @@
                     datasets: [{
                         label: 'Count',
                         data: values,
-                        backgroundColor: ['#0d6efd', '#198754', '#fd7e14', '#dc3545', '#6f42c1', '#20c997']
+                        backgroundColor: palette,
+                        borderRadius: chartType === 'bar' ? 6 : 0,
+                        borderColor: '#fff',
+                        borderWidth: chartType === 'pie' ? 2 : 0
                     }]
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 24 } },
                     plugins: {
-                        legend: { display: chartType === 'pie' }
-                    }
+                        legend: {
+                            display: true,
+                            position: chartType === 'pie' ? 'right' : 'top',
+                            labels: { font: { size: 13 } }
+                        },
+                        tooltip: { bodyFont: { size: 13 }, titleFont: { size: 13 } }
+                    },
+                    scales: chartType === 'bar' ? {
+                        x: {
+                            ticks: { autoSkip: false, maxRotation: 40, minRotation: 0, font: { size: 12 } },
+                            grid: { display: false }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0, font: { size: 12 } },
+                            grid: { color: '#e2e8f0' },
+                            title: { display: true, text: 'Count', font: { size: 13 } }
+                        }
+                    } : {}
                 },
-                plugins: chartType === 'pie' ? [percentageLabelsPlugin] : []
+                plugins: [valueLabelsPlugin]
             });
         }
     </script>

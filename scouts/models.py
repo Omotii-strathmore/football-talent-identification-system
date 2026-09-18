@@ -74,6 +74,38 @@ class ScoutPlayerFeedback(models.Model):
         return f'{self.scout.full_name} feedback for {self.profile.full_name}'
 
 
+class ScoutPlayerShortlist(models.Model):
+    scout = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='shortlisted_players',
+    )
+    profile = models.ForeignKey(
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name='shortlisted_by',
+    )
+    notes = models.TextField(
+        blank=True,
+        default='',
+        help_text='Your private notes about this player.',
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['scout', 'profile'],
+                name='unique_scout_player_shortlist',
+            )
+        ]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.scout.full_name} interested in {self.profile.full_name}'
+
+
 class ScoutVideoFeedback(models.Model):
     REACTION_CHOICES = [
         ('', 'No reaction'),

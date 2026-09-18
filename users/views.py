@@ -3,7 +3,7 @@ from collections import Counter
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
@@ -19,18 +19,22 @@ from io import BytesIO
 from opportunities.models import Application, Opportunity
 from players.models import PlayerProfile, PlayerVideo
 from players.forms import PlayerOnboardingForm
-from reportlab.graphics.charts.barcharts import VerticalBarChart
-from reportlab.graphics.charts.piecharts import Pie
-from reportlab.graphics.shapes import Drawing
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import inch
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from scouts.forms import ScoutOnboardingForm
 from scouts.models import Scout
 
-REPORTLAB_AVAILABLE = True
+try:
+    from reportlab.graphics.charts.barcharts import VerticalBarChart
+    from reportlab.graphics.charts.legends import Legend
+    from reportlab.graphics.charts.piecharts import Pie
+    from reportlab.graphics.shapes import Drawing
+    from reportlab.lib import colors
+    from reportlab.lib.pagesizes import letter
+    from reportlab.lib.styles import getSampleStyleSheet
+    from reportlab.lib.units import inch
+    from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+    REPORTLAB_AVAILABLE = True
+except ImportError:
+    REPORTLAB_AVAILABLE = False
 
 from .forms import (
     AdminUserUpdateForm,
@@ -125,8 +129,8 @@ def verify_otp_view(request):
         user = User.objects.filter(email=pending_user_email, is_active=False).first()
 
     if not user:
-        messages.error(request, 'No pending verification found. Please register or request a new code.')
-        return redirect('register')
+        messages.error(request, 'No pending verification found. Please request a new code below.')
+        return redirect('resend_verification_request')
 
     if request.method == 'POST':
         form = OTPVerifyForm(request.POST)
@@ -155,10 +159,17 @@ def verify_otp_view(request):
 
 def resend_otp_view(request):
     pending_user_id = request.session.get('pending_user_id')
-    user = User.objects.filter(id=pending_user_id).first() if pending_user_id else None
+    pending_user_email = request.session.get('pending_user_email')
+    user = None
+
+    if pending_user_id:
+        user = User.objects.filter(id=pending_user_id).first()
+    elif pending_user_email:
+        user = User.objects.filter(email=pending_user_email, is_active=False).first()
+
     if not user:
-        messages.error(request, 'No pending verification found. Please register again.')
-        return redirect('register')
+        messages.error(request, 'No pending verification found. Please request a new code below.')
+        return redirect('resend_verification_request')
 
     method = request.POST.get('method', 'email')
     # create and send a fresh OTP
@@ -172,6 +183,31 @@ def resend_otp_view(request):
             messages.error(request, 'Unable to send verification code via email. Please verify SMTP settings and make sure the sender address is allowed by your provider.')
 
     return redirect('verify_otp')
+
+
+def resend_verification_request_view(request):
+    if request.method == 'POST':
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            user = User.objects.filter(email=email, is_active=False).first()
+            if user:
+                request.session['pending_user_id'] = user.id
+                request.session['pending_user_email'] = user.email
+                sent = send_otp_to_user(user, method='email')
+                if sent:
+                    messages.success(request, 'A verification code was sent to your email.')
+                    if settings.DEBUG and settings.EMAIL_BACKEND == 'django.core.mail.backends.console.EmailBackend':
+                        messages.info(request, 'DEBUG mode: OTP is printed to the server console because SMTP is not configured.')
+                    return redirect('verify_otp')
+                messages.error(request, 'Unable to send the verification code via email. Please verify SMTP settings and try again.')
+            else:
+                # Do not reveal whether the email exists or is already verified.
+                messages.success(request, 'If that email has a pending account, a verification code was sent to it.')
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(request, 'users/resend_verification_request.html', {'form': form})
 
 
 def password_reset_request_view(request):
@@ -425,6 +461,7 @@ def logout_view(request):
 @login_required
 @user_passes_test(_is_staff_user, login_url='login')
 def admin_dashboard_view(request):
+    first_name = (request.user.full_name or 'Admin').split()[0]
     total_users = User.objects.count()
     total_players = User.objects.filter(role='player').count()
     total_scouts = User.objects.filter(role='scout').count()
@@ -436,6 +473,7 @@ def admin_dashboard_view(request):
         request,
         'users/admin_dashboard.html',
         {
+            'first_name': first_name,
             'total_users': total_users,
             'total_players': total_players,
             'total_scouts': total_scouts,
@@ -449,11 +487,29 @@ def admin_dashboard_view(request):
 @login_required
 @user_passes_test(_is_staff_user, login_url='login')
 def admin_verifications_view(request):
-    scouts = Scout.objects.select_related('user').all().order_by('verified', 'organization')
+    all_scouts = Scout.objects.select_related('user').all()
+    status_counts = {
+        'pending': all_scouts.filter(verification_status='pending').count(),
+        'approved': all_scouts.filter(verification_status='approved').count(),
+        'rejected': all_scouts.filter(verification_status='rejected').count(),
+    }
+
+    status_filter = request.GET.get('status', '').strip().lower()
+    scouts = all_scouts
+    if status_filter in {'pending', 'approved', 'rejected'}:
+        scouts = scouts.filter(verification_status=status_filter)
+
+    scouts = scouts.order_by('verified', 'organization')
+
     return render(
         request,
         'users/admin_verifications.html',
-        {'scouts': scouts},
+        {
+            'scouts': scouts,
+            'status_filter': status_filter,
+            'status_counts': status_counts,
+            'total_scouts': all_scouts.count(),
+        },
     )
 
 
@@ -489,10 +545,25 @@ def admin_reject_scout_view(request, scout_id):
 @user_passes_test(_is_staff_user, login_url='login')
 def admin_users_view(request):
     role_filter = request.GET.get('role', '').strip().lower()
-    users = User.objects.all().order_by('full_name')
+    search_query = request.GET.get('q', '').strip()
+    all_users = User.objects.all()
+    role_counts = {
+        'player': all_users.filter(role='player').count(),
+        'scout': all_users.filter(role='scout').count(),
+        'staff': all_users.filter(is_staff=True).count(),
+    }
 
-    if role_filter in {'player', 'scout'}:
+    users = all_users.order_by('full_name')
+
+    if role_filter == 'staff':
+        users = users.filter(is_staff=True)
+    elif role_filter in {'player', 'scout'}:
         users = users.filter(role=role_filter)
+
+    if search_query:
+        users = users.filter(
+            Q(full_name__icontains=search_query) | Q(email__icontains=search_query)
+        )
 
     edit_id = request.GET.get('edit')
     edit_user = None
@@ -509,6 +580,9 @@ def admin_users_view(request):
         {
             'users': users,
             'role_filter': role_filter,
+            'search_query': search_query,
+            'role_counts': role_counts,
+            'total_users': all_users.count(),
             'edit_form': edit_form,
             'edit_user': edit_user,
         },
@@ -687,81 +761,134 @@ def admin_reports_view(request):
     chart_labels, chart_values, chart_title = _build_chart_data_for_report(report_type, report_rows)
 
     if report_type and action == 'generate':
+        if not report_headers:
+            messages.error(request, f'Unknown report type "{report_type}". Please choose a report from the list.')
+            return redirect('admin_reports')
+
         timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
         if export_format == 'pdf':
             if not REPORTLAB_AVAILABLE:
                 messages.error(request, 'PDF export is unavailable because reportlab is not installed in the active environment.')
                 return redirect('admin_reports')
 
-            buffer = BytesIO()
-            doc = SimpleDocTemplate(buffer, pagesize=letter, title=f'{report_type.title()} Report')
-            styles = getSampleStyleSheet()
-            story = []
-            story.append(Paragraph('Talanta FC Admin Report', styles['Title']))
-            story.append(Spacer(1, 12))
-            story.append(Paragraph(f'Report Type: {report_type.title()}', styles['Heading2']))
-            story.append(Paragraph(f'Filters: start date {start_date or "all"}, end date {end_date or "all"}, position {position_value or "all"}', styles['BodyText']))
-            story.append(Spacer(1, 12))
+            try:
+                buffer = BytesIO()
+                doc = SimpleDocTemplate(buffer, pagesize=letter, title=f'{report_type.title()} Report')
+                styles = getSampleStyleSheet()
+                story = []
+                story.append(Paragraph('Talanta FC Admin Report', styles['Title']))
+                story.append(Spacer(1, 12))
+                story.append(Paragraph(f'Report Type: {report_type.title()}', styles['Heading2']))
+                story.append(Paragraph(f'Filters: start date {start_date or "all"}, end date {end_date or "all"}, position {position_value or "all"}', styles['BodyText']))
+                story.append(Spacer(1, 12))
 
-            data = [report_headers] + report_rows
-            table = Table(data, repeatRows=1)
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.white]),
-            ]))
-            story.append(table)
-            story.append(Spacer(1, 12))
-            story.append(Paragraph(f'Chart: {chart_type.title()} view', styles['Heading2']))
-            if chart_labels and chart_values:
-                if chart_type == 'pie':
-                    total_value = sum(chart_values)
-                    percent_labels = [
-                        f'{label} ({(value / total_value * 100):.0f}%)' if total_value else label
-                        for label, value in zip(chart_labels, chart_values)
+                safe_rows = [[str(cell) for cell in row] for row in report_rows]
+                data = [report_headers] + safe_rows
+                table = Table(data, repeatRows=1)
+                table.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#0d6efd')),
+                    ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                    ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                    ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                    ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.whitesmoke, colors.white]),
+                ]))
+                story.append(table)
+                story.append(Spacer(1, 12))
+                story.append(Paragraph(f'Chart: {chart_type.title()} view', styles['Heading2']))
+                if chart_labels and chart_values:
+                    palette = [
+                        colors.HexColor('#0d6efd'), colors.HexColor('#198754'), colors.HexColor('#fd7e14'),
+                        colors.HexColor('#dc3545'), colors.HexColor('#6f42c1'), colors.HexColor('#20c997'),
+                        colors.HexColor('#0dcaf0'), colors.HexColor('#d63384'), colors.HexColor('#ffc107'),
+                        colors.HexColor('#6610f2'),
                     ]
-                    pie_chart = Pie()
-                    pie_chart.width = 1.6 * inch
-                    pie_chart.height = 1.6 * inch
-                    pie_chart.data = chart_values
-                    pie_chart.labels = percent_labels
-                    pie_chart.slices.strokeColor = colors.white
-                    pie_chart.slices.strokeWidth = 0.5
-                    drawing = Drawing(240, 220)
-                    drawing.add(pie_chart)
-                    story.append(drawing)
-                else:
-                    bar_chart = VerticalBarChart()
-                    bar_chart.width = 3.2 * inch
-                    bar_chart.height = 2.2 * inch
-                    bar_chart.x = 0.5 * inch
-                    bar_chart.y = 0.2 * inch
-                    bar_chart.data = [chart_values]
-                    bar_chart.categoryAxis.categoryNames = chart_labels
-                    bar_chart.valueAxis.valueMin = 0
-                    bar_chart.valueAxis.valueMax = max(chart_values) + 1 if chart_values else 1
-                    bar_chart.bars[0].fillColor = colors.HexColor('#198754')
-                    drawing = Drawing(320, 220)
-                    drawing.add(bar_chart)
-                    story.append(drawing)
-            doc.build(story)
-            pdf_value = buffer.getvalue()
+                    if chart_type == 'pie':
+                        total_value = sum(chart_values)
+                        percent_labels = [
+                            f'{(value / total_value * 100):.0f}%' if total_value else '0%'
+                            for value in chart_values
+                        ]
+                        pie_chart = Pie()
+                        pie_chart.x = 40
+                        pie_chart.y = 30
+                        pie_chart.width = 2.6 * inch
+                        pie_chart.height = 2.6 * inch
+                        pie_chart.data = chart_values
+                        pie_chart.labels = percent_labels
+                        pie_chart.slices.strokeColor = colors.white
+                        pie_chart.slices.strokeWidth = 1
+                        pie_chart.simpleLabels = 1
+                        pie_chart.sideLabels = 0
+                        for i in range(len(chart_values)):
+                            pie_chart.slices[i].fillColor = palette[i % len(palette)]
+
+                        legend = Legend()
+                        legend.x = 4.6 * inch
+                        legend.y = 2.6 * inch
+                        legend.dx = 8
+                        legend.dy = 8
+                        legend.fontName = 'Helvetica'
+                        legend.fontSize = 8
+                        legend.boxAnchor = 'nw'
+                        legend.columnMaximum = 12
+                        legend.alignment = 'right'
+                        legend.deltax = 8
+                        legend.deltay = 10
+                        legend.colorNamePairs = [
+                            (palette[i % len(palette)], f'{label} ({chart_values[i]})')
+                            for i, label in enumerate(chart_labels)
+                        ]
+
+                        drawing = Drawing(520, 300)
+                        drawing.add(pie_chart)
+                        drawing.add(legend)
+                        story.append(drawing)
+                    else:
+                        bar_chart = VerticalBarChart()
+                        bar_chart.width = 4.6 * inch
+                        bar_chart.height = 2.8 * inch
+                        bar_chart.x = 0.6 * inch
+                        bar_chart.y = 0.9 * inch
+                        bar_chart.data = [chart_values]
+                        bar_chart.categoryAxis.categoryNames = chart_labels
+                        bar_chart.categoryAxis.labels.fontSize = 7
+                        bar_chart.categoryAxis.labels.angle = 30
+                        bar_chart.categoryAxis.labels.dx = -6
+                        bar_chart.categoryAxis.labels.dy = -12
+                        bar_chart.categoryAxis.labels.boxAnchor = 'e'
+                        bar_chart.valueAxis.valueMin = 0
+                        bar_chart.valueAxis.valueMax = max(chart_values) + 1 if chart_values else 1
+                        bar_chart.valueAxis.labels.fontSize = 8
+                        bar_chart.barLabelFormat = '%d'
+                        bar_chart.barLabels.nudge = 8
+                        bar_chart.barLabels.fontSize = 8
+                        bar_chart.barSpacing = 4
+                        for i in range(len(chart_values)):
+                            bar_chart.bars[(0, i)].fillColor = palette[i % len(palette)]
+                        drawing = Drawing(520, 300)
+                        drawing.add(bar_chart)
+                        story.append(drawing)
+                doc.build(story)
+                pdf_value = buffer.getvalue()
+            except Exception:
+                logger.exception('Failed to build PDF report "%s"', report_type)
+                messages.error(request, 'Could not generate the PDF report. Please try again, or export as CSV instead.')
+                return redirect('admin_reports')
+
             response = HttpResponse(pdf_value, content_type='application/pdf')
             response['Content-Disposition'] = f'attachment; filename="{report_type}_report_{timestamp}.pdf"'
             return response
 
-        response = HttpResponse(content_type='text/csv')
-        writer = csv.writer(response)
+        response = HttpResponse(content_type='text/csv; charset=utf-8')
         response['Content-Disposition'] = f'attachment; filename="{report_type}_report_{timestamp}.csv"'
+        # UTF-8 BOM + explicit separator hint so Excel opens this correctly on any regional
+        # locale, instead of mangling accented characters or splitting on the wrong delimiter.
+        response.write('﻿')
+        response.write('sep=,\r\n')
+        writer = csv.writer(response)
         writer.writerow(report_headers)
         for row in report_rows:
             writer.writerow(row)
-        writer.writerow([])
-        writer.writerow(['Chart Type', chart_type.title()])
-        writer.writerow(['Chart Labels', '|'.join(chart_labels)])
-        writer.writerow(['Chart Values', '|'.join(str(value) for value in chart_values)])
         return response
 
     reports = {

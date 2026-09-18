@@ -63,14 +63,17 @@
     <div class="panel-soft p-3 p-md-4 mb-4">
             <h4 class="section-title">Quick Actions</h4>
             <div class="row g-3">
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <a href="{% url 'post_opportunity' %}" id="tour-post-opportunity" class="btn btn-primary w-100">Post Opportunity</a>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <a href="{% url 'manage_posted_opportunities' %}" id="tour-manage-opportunities" class="btn btn-outline-primary w-100">Manage Posted Opportunities</a>
                 </div>
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <a href="{% url 'scout_player_directory' %}" id="tour-player-directory" class="btn btn-outline-dark w-100">View Player Profiles & Videos</a>
+                </div>
+                <div class="col-md-3">
+                    <a href="{% url 'scout_shortlist' %}" id="tour-my-interests" class="btn btn-outline-danger w-100">❤ My Interests ({{ shortlist_count }})</a>
                 </div>
             </div>
     </div>
@@ -125,6 +128,27 @@
             </div>
         </div>
     </div>
+
+    {% if recent_replies %}
+    <div class="panel-soft p-3 p-md-4 mt-4">
+        <h4 class="section-title">Recent Player Replies</h4>
+        <div class="list-group list-group-flush">
+            {% for feedback in recent_replies %}
+                <div class="list-group-item px-0">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div>
+                            <strong>{{ feedback.video.profile.full_name }}</strong>
+                            <span class="text-muted">replied on "{{ feedback.video.title }}"</span>
+                        </div>
+                        <small class="text-muted">{{ feedback.updated_at|date:'M d, Y H:i' }}</small>
+                    </div>
+                    <p class="mb-1 mt-1">{{ feedback.player_reply|linebreaksbr }}</p>
+                    <a href="{% url 'scout_shortlist' %}#video-{{ feedback.video.id }}" class="small">Respond in My Interests</a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -151,7 +175,18 @@
             target: '#tour-player-directory',
             title: 'View Player Profiles & Videos',
             desc: 'Browse player profiles and videos filtered by position, location, or age — and leave feedback on their clips.'
+        },
+        {
+            target: '#tour-my-interests',
+            title: 'My Interests',
+            desc: 'Mark players as interested from the directory, then track them here with your own private notes.'
         }
-    ], { storageKey: 'talantaSokaScoutDashboardTourDone' });
+    ], {
+        storageKey: 'talantaSokaScoutDashboardTourDone',
+        welcome: {
+            title: 'Welcome to Talanta Soka, {{ first_name|escapejs }}!',
+            message: 'You are a blessing — thank you for helping uplift players and giving hidden talent the chance to be seen.'
+        }
+    });
 </script>
 {% endblock %}

@@ -19,6 +19,7 @@ window.SiteTour = (function () {
             '<p class="st-step-label"></p>' +
             '<h4 class="st-title"></h4>' +
             '<p class="st-desc"></p>' +
+            '<div class="st-dots"></div>' +
             '<div class="st-actions">' +
             '<button type="button" class="st-skip">Skip tutorial</button>' +
             '<div class="st-nav-btns">' +
@@ -34,20 +35,79 @@ window.SiteTour = (function () {
         replayBtn.setAttribute('title', 'Take the tour');
         replayBtn.textContent = '🎬';
 
+        var welcome = options.welcome || null;
+        var welcomeKey = storageKey + 'WelcomeSeen';
+        var welcomeModal = null;
+        if (welcome) {
+            welcomeModal = document.createElement('div');
+            welcomeModal.className = 'st-tooltip st-welcome';
+            welcomeModal.innerHTML =
+                '<h4 class="st-title"></h4>' +
+                '<p class="st-desc"></p>' +
+                '<div class="st-actions" style="justify-content:flex-end;">' +
+                '<button type="button" class="st-next st-welcome-continue">Let\'s go</button>' +
+                '</div>';
+            welcomeModal.querySelector('.st-title').textContent = '🥳 ' + (welcome.title || '');
+            welcomeModal.querySelector('.st-desc').textContent = welcome.message || '';
+        }
+
+        function spawnConfetti() {
+            var colors = ['#f59e0b', '#ef4444', '#10b981', '#3b82f6', '#a855f7', '#ec4899'];
+            var container = document.createElement('div');
+            container.className = 'st-confetti';
+            for (var i = 0; i < 46; i += 1) {
+                var piece = document.createElement('div');
+                piece.className = 'st-confetti-piece';
+                var left = Math.random() * 100;
+                var color = colors[Math.floor(Math.random() * colors.length)];
+                var duration = 2.2 + Math.random() * 1.6;
+                var delay = Math.random() * 0.5;
+                var rotateStart = Math.random() * 360;
+                var drift = (Math.random() * 60 - 30) + 'px';
+                piece.style.left = left + 'vw';
+                piece.style.background = color;
+                piece.style.animationDuration = duration + 's';
+                piece.style.animationDelay = delay + 's';
+                piece.style.setProperty('--st-confetti-drift', drift);
+                piece.style.transform = 'rotate(' + rotateStart + 'deg)';
+                container.appendChild(piece);
+            }
+            document.body.appendChild(container);
+            setTimeout(function () {
+                container.remove();
+            }, 4200);
+        }
+
         document.body.appendChild(dim);
         document.body.appendChild(highlight);
         document.body.appendChild(tooltip);
+        if (welcomeModal) {
+            document.body.appendChild(welcomeModal);
+        }
         document.body.appendChild(replayBtn);
 
         var stepLabel = tooltip.querySelector('.st-step-label');
         var titleEl = tooltip.querySelector('.st-title');
         var descEl = tooltip.querySelector('.st-desc');
+        var dotsWrap = tooltip.querySelector('.st-dots');
         var backBtn = tooltip.querySelector('.st-back');
         var nextBtn = tooltip.querySelector('.st-next');
         var skipBtn = tooltip.querySelector('.st-skip');
 
         var currentStep = 0;
         var active = false;
+
+        steps.forEach(function (_, idx) {
+            var dot = document.createElement('button');
+            dot.type = 'button';
+            dot.className = 'st-dot';
+            dot.setAttribute('aria-label', 'Go to step ' + (idx + 1));
+            dot.addEventListener('click', function () {
+                currentStep = idx;
+                renderStep();
+            });
+            dotsWrap.appendChild(dot);
+        });
 
         function positionForTarget(target) {
             if (!target) {
@@ -97,6 +157,12 @@ window.SiteTour = (function () {
             descEl.textContent = step.desc;
             backBtn.disabled = currentStep === 0;
             nextBtn.textContent = currentStep === steps.length - 1 ? 'Got it' : 'Next';
+
+            var dots = dotsWrap.querySelectorAll('.st-dot');
+            for (var i = 0; i < dots.length; i += 1) {
+                dots[i].classList.toggle('is-active', i === currentStep);
+            }
+
             positionForTarget(step.target);
         }
 
@@ -197,10 +263,36 @@ window.SiteTour = (function () {
             }
         });
 
-        var seen = false;
-        try { seen = !!localStorage.getItem(storageKey); } catch (e) {}
-        if (autoStart && !seen) {
-            setTimeout(startTour, autoStartDelay);
+        function maybeAutoStartTour() {
+            var seen = false;
+            try { seen = !!localStorage.getItem(storageKey); } catch (e) {}
+            if (autoStart && !seen) {
+                setTimeout(startTour, autoStartDelay);
+            } else {
+                dim.classList.remove('is-active');
+            }
+        }
+
+        if (welcomeModal) {
+            welcomeModal.querySelector('.st-welcome-continue').addEventListener('click', function () {
+                welcomeModal.classList.remove('is-active');
+                try { localStorage.setItem(welcomeKey, '1'); } catch (e) {}
+                maybeAutoStartTour();
+            });
+
+            var seenWelcome = false;
+            try { seenWelcome = !!localStorage.getItem(welcomeKey); } catch (e) {}
+            if (!seenWelcome) {
+                setTimeout(function () {
+                    dim.classList.add('is-active');
+                    welcomeModal.classList.add('is-active');
+                    spawnConfetti();
+                }, 500);
+            } else {
+                maybeAutoStartTour();
+            }
+        } else {
+            maybeAutoStartTour();
         }
 
         return { start: startTour, end: endTour };

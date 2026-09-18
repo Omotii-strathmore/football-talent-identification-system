@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/site-tour.css' %}">
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="dashboard-hero mb-4">
-        <h2 class="fw-bold mb-1">Admin Dashboard</h2>
+        <h2 class="fw-bold mb-1">Welcome, {{ first_name }}</h2>
         <p class="text-muted mb-0">Monitor system activity and manage users and scout verification.</p>
     </div>
 
@@ -56,13 +61,13 @@
         <h4 class="section-title">Admin Actions</h4>
         <div class="row g-3">
             <div class="col-md-4">
-                <a href="{% url 'admin_verifications' %}" class="btn btn-primary w-100">Review Verification Docs</a>
+                <a href="{% url 'admin_verifications' %}" id="tour-review-verifications" class="btn btn-primary w-100">Review Verification Docs</a>
             </div>
             <div class="col-md-4">
-                <a href="{% url 'admin_users' %}" class="btn btn-outline-dark w-100">Manage Accounts</a>
+                <a href="{% url 'admin_users' %}" id="tour-manage-accounts" class="btn btn-outline-dark w-100">Manage Accounts</a>
             </div>
             <div class="col-md-4">
-                <a href="{% url 'admin_reports' %}" class="btn btn-outline-primary w-100">System Reports</a>
+                <a href="{% url 'admin_reports' %}" id="tour-system-reports" class="btn btn-outline-primary w-100">System Reports</a>
             </div>
         </div>
     </div>
@@ -90,4 +95,38 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/site-tour.js' %}"></script>
+<script>
+    SiteTour.create([
+        {
+            target: null,
+            title: 'Welcome to your Admin Dashboard',
+            desc: 'This quick tour shows what each admin action does — skip anytime.'
+        },
+        {
+            target: '#tour-review-verifications',
+            title: 'Review Verification Docs',
+            desc: 'Check scout verification documents and approve or reject their accounts.'
+        },
+        {
+            target: '#tour-manage-accounts',
+            title: 'Manage Accounts',
+            desc: 'Search, filter, edit, or remove any player, scout, or staff account.'
+        },
+        {
+            target: '#tour-system-reports',
+            title: 'System Reports',
+            desc: 'Preview data, view charts, and export CSV/PDF reports on players, scouts, opportunities, and applications.'
+        }
+    ], {
+        storageKey: 'talantaSokaAdminDashboardTourDone',
+        welcome: {
+            title: 'Welcome to Talanta Soka, {{ first_name|escapejs }}!',
+            message: 'You are a blessing — thank you for keeping this community safe, verified, and running smoothly.'
+        }
+    });
+</script>
 {% endblock %}

@@ -15,6 +15,7 @@ urlpatterns = [
 
     path('verify-otp/', views.verify_otp_view, name='verify_otp'),
     path('verify-otp/resend/', views.resend_otp_view, name='resend_otp'),
+    path('verify-otp/request/', views.resend_verification_request_view, name='resend_verification_request'),
 
     path('password-reset/', views.password_reset_request_view, name='password_reset_request'),
     path('password-reset/confirm/', views.password_reset_confirm_view, name='password_reset_confirm'),

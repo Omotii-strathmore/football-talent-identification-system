@@ -185,6 +185,12 @@
             title: 'My Applications',
             desc: 'Track the status of every opportunity you have applied for.'
         }
-    ], { storageKey: 'talantaSokaPlayerDashboardTourDone' });
+    ], {
+        storageKey: 'talantaSokaPlayerDashboardTourDone',
+        welcome: {
+            title: 'Welcome to Talanta Soka, {{ first_name|escapejs }}!',
+            message: 'You are a blessing, and your talent deserves to be seen. Best of luck on your journey!'
+        }
+    });
 </script>
 {% endblock %}

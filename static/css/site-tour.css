@@ -6,6 +6,7 @@
     opacity: 0;
     visibility: hidden;
     transition: opacity .2s ease;
+    pointer-events: none;
 }
 
 .st-dim.is-active {
@@ -46,6 +47,53 @@
     visibility: visible;
 }
 
+.st-welcome {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: min(360px, 88vw);
+}
+
+.st-welcome .st-title {
+    font-size: 1.3rem;
+}
+
+.st-welcome .st-desc {
+    margin-bottom: 4px;
+}
+
+.st-confetti {
+    position: fixed;
+    inset: 0;
+    z-index: 1305;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.st-confetti-piece {
+    position: absolute;
+    top: -24px;
+    width: 8px;
+    height: 18px;
+    border-radius: 3px;
+    opacity: 0.95;
+    animation-name: st-confetti-fall;
+    animation-timing-function: ease-in;
+    animation-fill-mode: forwards;
+}
+
+@keyframes st-confetti-fall {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(var(--st-confetti-drift, 0), 110vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
 .st-step-label {
     font-size: .7rem;
     letter-spacing: 1.4px;
@@ -67,6 +115,34 @@
     color: #475569;
     margin-bottom: 14px;
     line-height: 1.5;
+}
+
+.st-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin: 0 0 14px;
+}
+
+.st-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 0;
+    background: rgba(148, 163, 184, .4);
+    padding: 0;
+    cursor: pointer;
+    transition: width .15s ease, border-radius .15s ease, background .15s ease;
+}
+
+.st-dot:hover {
+    background: rgba(148, 163, 184, .7);
+}
+
+.st-dot.is-active {
+    background: #0f172a;
+    width: 20px;
+    border-radius: 4px;
 }
 
 .st-actions {

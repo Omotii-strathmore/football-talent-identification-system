@@ -2,6 +2,47 @@
 
 {% block title %}Scout Verification{% endblock %}
 
+{% block extra_css %}
+<style>
+    .verif-tabs {
+        display: inline-flex;
+        gap: 4px;
+        padding: 4px;
+        border-radius: 999px;
+        background: #e2e8f0;
+        margin-bottom: 16px;
+    }
+
+    .verif-tabs .btn {
+        border-radius: 999px !important;
+        border: 0 !important;
+    }
+
+    .doc-icon {
+        font-size: 1.1rem;
+    }
+
+    .scout-name-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .scout-avatar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+        color: #0f172a;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -9,13 +50,19 @@
         <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">Back to Admin Dashboard</a>
     </div>
 
+    <div class="verif-tabs">
+        <a href="{% url 'admin_verifications' %}" class="btn btn-sm {% if not status_filter %}btn-dark{% else %}btn-light{% endif %}">All ({{ total_scouts }})</a>
+        <a href="?status=pending" class="btn btn-sm {% if status_filter == 'pending' %}btn-warning{% else %}btn-light{% endif %}">Pending ({{ status_counts.pending }})</a>
+        <a href="?status=approved" class="btn btn-sm {% if status_filter == 'approved' %}btn-success{% else %}btn-light{% endif %}">Approved ({{ status_counts.approved }})</a>
+        <a href="?status=rejected" class="btn btn-sm {% if status_filter == 'rejected' %}btn-danger{% else %}btn-light{% endif %}">Rejected ({{ status_counts.rejected }})</a>
+    </div>
+
     {% if scouts %}
         <div class="table-responsive">
             <table class="table table-bordered table-striped align-middle">
                 <thead>
                     <tr>
-                        <th>Scout Name</th>
-                        <th>Email</th>
+                        <th>Scout</th>
                         <th>Organization</th>
                         <th>Specialization</th>
                         <th>Verification Document</th>
@@ -26,12 +73,25 @@
                 <tbody>
                     {% for scout in scouts %}
                         <tr>
-                            <td>{{ scout.user.full_name }}</td>
-                            <td>{{ scout.user.email }}</td>
+                            <td>
+                                <div class="scout-name-cell">
+                                    <div class="scout-avatar">{{ scout.user.full_name|slice:':1'|upper }}</div>
+                                    <div>
+                                        <div class="fw-semibold">{{ scout.user.full_name }}</div>
+                                        <div class="text-muted small">{{ scout.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
                             <td>{{ scout.organization }}</td>
                             <td>{{ scout.specialization }}</td>
                             <td>
-                                <a href="{{ scout.verification_document.url }}" target="_blank" class="btn btn-sm btn-outline-dark">View Document</a>
+                                {% if scout.verification_document %}
+                                    <a href="{{ scout.verification_document.url }}" target="_blank" class="btn btn-sm btn-outline-dark">
+                                        <span class="doc-icon">📄</span> View Document
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted small">No document uploaded</span>
+                                {% endif %}
                             </td>
                             <td>
                                 {% if scout.verification_status == 'approved' %}
@@ -46,11 +106,11 @@
                                 <div class="d-flex gap-2">
                                     <form method="post" action="{% url 'admin_approve_scout' scout.id %}">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                        <button type="submit" class="btn btn-sm btn-success" {% if scout.verification_status == 'approved' %}disabled{% endif %}>Approve</button>
                                     </form>
                                     <form method="post" action="{% url 'admin_reject_scout' scout.id %}">
                                         {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" {% if scout.verification_status == 'rejected' %}disabled{% endif %}>Reject</button>
                                     </form>
                                 </div>
                             </td>
@@ -60,7 +120,7 @@
             </table>
         </div>
     {% else %}
-        <div class="alert alert-info">No scout records found.</div>
+        <div class="alert alert-info">No scout records match this filter.</div>
     {% endif %}
 </div>
 {% endblock %}

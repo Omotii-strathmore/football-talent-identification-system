@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.db.models import F, Q
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -7,7 +8,7 @@ from django.utils import timezone
 from opportunities.models import Application, Opportunity
 from players.models import PlayerProfile, PlayerVideo
 from scouts.forms import ScoutEditDetailsForm
-from scouts.models import ScoutVideoFeedback
+from scouts.models import ScoutPlayerShortlist, ScoutVideoFeedback
 
 
 def _recommended_position_from_specialization(specialization):
@@ -40,6 +41,14 @@ def dashboard(request):
         Application.objects.select_related('opportunity', 'player')
         .filter(opportunity__scout=request.user)[:5]
     )
+    shortlist_count = ScoutPlayerShortlist.objects.filter(scout=request.user).count()
+    recent_replies = (
+        ScoutVideoFeedback.objects.select_related('video', 'video__profile')
+        .filter(scout=request.user, video__profile__shortlisted_by__scout=request.user)
+        .exclude(player_reply='')
+        .filter(Q(scout_reply_at__isnull=True) | Q(player_reply_at__gt=F('scout_reply_at')))
+        .order_by('-updated_at')[:5]
+    )
 
     return render(
         request,
@@ -52,6 +61,8 @@ def dashboard(request):
             'applications_count': total_applications,
             'recent_opportunities': recent_opportunities,
             'recent_applications': recent_applications,
+            'shortlist_count': shortlist_count,
+            'recent_replies': recent_replies,
         }
     )
 
@@ -61,60 +72,6 @@ def player_directory(request):
     if request.user.role != 'scout':
         messages.error(request, 'Only scouts can view player profiles.')
         return redirect('player_dashboard')
-
-    if request.method == 'POST':
-        video_id = request.POST.get('video_id')
-        current_query = request.POST.get('current_query', '').strip()
-
-        if not video_id:
-            messages.error(request, 'Could not identify the selected video.')
-        elif 'scout_reply' in request.POST:
-            video = get_object_or_404(PlayerVideo.objects.select_related('profile'), id=video_id)
-            feedback = ScoutVideoFeedback.objects.filter(scout=request.user, video=video).first()
-            reply_text = request.POST.get('scout_reply', '').strip()
-            if not feedback:
-                messages.error(request, 'Add initial feedback for this video before responding to the player.')
-            elif reply_text:
-                reply_stamp = timezone.localtime().strftime('%Y-%m-%d %H:%M')
-                reply_line = f'Scout ({reply_stamp}): {reply_text}'
-                feedback.scout_reply = f'{feedback.scout_reply}\n{reply_line}' if feedback.scout_reply else reply_line
-                feedback.scout_reply_at = timezone.now()
-                feedback.is_seen = False
-                feedback.seen_at = None
-                feedback.save(update_fields=['scout_reply', 'scout_reply_at', 'is_seen', 'seen_at', 'updated_at'])
-                messages.success(request, 'Your response to the player was saved.')
-            else:
-                messages.info(request, 'Response box was empty. Nothing was saved.')
-        elif 'scout_reply_history' in request.POST:
-            video = get_object_or_404(PlayerVideo.objects.select_related('profile'), id=video_id)
-            feedback = ScoutVideoFeedback.objects.filter(scout=request.user, video=video).first()
-            if not feedback or not feedback.scout_reply_editable:
-                messages.error(request, f'The {ScoutVideoFeedback.REPLY_EDIT_WINDOW_MINUTES}-minute edit window for your response has closed.')
-            else:
-                feedback.scout_reply = request.POST.get('scout_reply_history', '').strip()
-                feedback.save(update_fields=['scout_reply', 'updated_at'])
-                messages.success(request, 'Your previous response was updated.')
-        else:
-            comment = request.POST.get('comment', '').strip()
-            video = get_object_or_404(PlayerVideo.objects.select_related('profile'), id=video_id)
-            if comment:
-                ScoutVideoFeedback.objects.update_or_create(
-                    scout=request.user,
-                    video=video,
-                    defaults={
-                        'comment': comment,
-                        'is_seen': False,
-                        'seen_at': None,
-                    },
-                )
-                messages.success(request, f'Feedback saved for video "{video.title}".')
-            else:
-                messages.info(request, 'Feedback box was empty. Nothing was saved.')
-
-        redirect_url = reverse('scout_player_directory')
-        if current_query:
-            redirect_url = f'{redirect_url}?{current_query}'
-        return redirect(redirect_url)
 
     scout_specialization = (request.user.scout_profile.specialization or '').strip().lower()
     is_general_scout = scout_specialization == 'general'
@@ -180,16 +137,14 @@ def player_directory(request):
 
     profiles = list(profiles)
     profile_ids = [profile.id for profile in profiles]
-    feedback_map = {
-        entry.video_id: entry
-        for entry in ScoutVideoFeedback.objects.filter(
+    shortlisted_ids = set(
+        ScoutPlayerShortlist.objects.filter(
             scout=request.user,
-            video__profile_id__in=profile_ids,
-        )
-    }
+            profile_id__in=profile_ids,
+        ).values_list('profile_id', flat=True)
+    )
     for profile in profiles:
-        for video in profile.videos.all():
-            video.current_scout_feedback = feedback_map.get(video.id)
+        profile.is_shortlisted = profile.id in shortlisted_ids
 
     return render(
         request,
@@ -207,6 +162,128 @@ def player_directory(request):
             'recommended_position': recommended_position,
             'is_general_scout': is_general_scout,
         }
+    )
+
+
+def _safe_redirect_target(request, fallback_url_name):
+    redirect_to = request.POST.get('redirect_to', '').strip()
+    if redirect_to.startswith('/') and not redirect_to.startswith('//'):
+        return redirect_to
+    return reverse(fallback_url_name)
+
+
+@login_required
+def scout_toggle_shortlist(request):
+    if request.user.role != 'scout':
+        messages.error(request, 'Only scouts can manage their interests list.')
+        return redirect('player_dashboard')
+
+    if request.method != 'POST':
+        return redirect('scout_player_directory')
+
+    profile_id = request.POST.get('profile_id')
+    profile = get_object_or_404(PlayerProfile, id=profile_id)
+
+    entry = ScoutPlayerShortlist.objects.filter(scout=request.user, profile=profile).first()
+    if entry:
+        entry.delete()
+        messages.success(request, f'Removed {profile.full_name} from your interests.')
+    else:
+        ScoutPlayerShortlist.objects.create(scout=request.user, profile=profile)
+        messages.success(request, f'Added {profile.full_name} to your interests.')
+
+    return redirect(_safe_redirect_target(request, 'scout_player_directory'))
+
+
+@login_required
+def scout_shortlist(request):
+    if request.user.role != 'scout':
+        messages.error(request, 'Only scouts can view their interests list.')
+        return redirect('player_dashboard')
+
+    if request.method == 'POST':
+        if 'notes' in request.POST:
+            entry_id = request.POST.get('entry_id')
+            entry = get_object_or_404(ScoutPlayerShortlist, id=entry_id, scout=request.user)
+            entry.notes = request.POST.get('notes', '').strip()
+            entry.save(update_fields=['notes', 'updated_at'])
+            messages.success(request, f'Notes updated for {entry.profile.full_name}.')
+            return redirect('scout_shortlist')
+
+        video_id = request.POST.get('video_id')
+        if not video_id:
+            messages.error(request, 'Could not identify the selected video.')
+            return redirect('scout_shortlist')
+
+        video = get_object_or_404(
+            PlayerVideo.objects.select_related('profile'),
+            id=video_id,
+            profile__shortlisted_by__scout=request.user,
+        )
+
+        if 'scout_reply' in request.POST:
+            feedback = ScoutVideoFeedback.objects.filter(scout=request.user, video=video).first()
+            reply_text = request.POST.get('scout_reply', '').strip()
+            if not feedback:
+                messages.error(request, 'Add initial feedback for this video before responding to the player.')
+            elif reply_text:
+                reply_stamp = timezone.localtime().strftime('%Y-%m-%d %H:%M')
+                reply_line = f'Scout ({reply_stamp}): {reply_text}'
+                feedback.scout_reply = f'{feedback.scout_reply}\n{reply_line}' if feedback.scout_reply else reply_line
+                feedback.scout_reply_at = timezone.now()
+                feedback.is_seen = False
+                feedback.seen_at = None
+                feedback.save(update_fields=['scout_reply', 'scout_reply_at', 'is_seen', 'seen_at', 'updated_at'])
+                messages.success(request, 'Your response to the player was saved.')
+            else:
+                messages.info(request, 'Response box was empty. Nothing was saved.')
+        elif 'scout_reply_history' in request.POST:
+            feedback = ScoutVideoFeedback.objects.filter(scout=request.user, video=video).first()
+            if not feedback or not feedback.scout_reply_editable:
+                messages.error(request, f'The {ScoutVideoFeedback.REPLY_EDIT_WINDOW_MINUTES}-minute edit window for your response has closed.')
+            else:
+                feedback.scout_reply = request.POST.get('scout_reply_history', '').strip()
+                feedback.save(update_fields=['scout_reply', 'updated_at'])
+                messages.success(request, 'Your previous response was updated.')
+        else:
+            comment = request.POST.get('comment', '').strip()
+            if comment:
+                ScoutVideoFeedback.objects.update_or_create(
+                    scout=request.user,
+                    video=video,
+                    defaults={
+                        'comment': comment,
+                        'is_seen': False,
+                        'seen_at': None,
+                    },
+                )
+                messages.success(request, f'Feedback saved for video "{video.title}".')
+            else:
+                messages.info(request, 'Feedback box was empty. Nothing was saved.')
+
+        return redirect(f"{reverse('scout_shortlist')}#video-{video.id}")
+
+    entries = (
+        ScoutPlayerShortlist.objects.select_related('profile', 'profile__user')
+        .prefetch_related('profile__videos')
+        .filter(scout=request.user)
+    )
+    profile_ids = [entry.profile_id for entry in entries]
+    feedback_map = {
+        entry.video_id: entry
+        for entry in ScoutVideoFeedback.objects.filter(
+            scout=request.user,
+            video__profile_id__in=profile_ids,
+        )
+    }
+    for entry in entries:
+        for video in entry.profile.videos.all():
+            video.current_scout_feedback = feedback_map.get(video.id)
+
+    return render(
+        request,
+        'scouts/shortlist.html',
+        {'entries': entries},
     )
 
 

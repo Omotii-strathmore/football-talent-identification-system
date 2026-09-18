@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+
+{% block title %}My Interests{% endblock %}
+
+{% block extra_css %}
+<style>
+    .player-photo {
+        width: 72px;
+        height: 72px;
+        object-fit: cover;
+        border-radius: 50%;
+        border: 2px solid #e2e8f0;
+    }
+
+    .player-photo-fallback {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+        color: #0f172a;
+        display: grid;
+        place-items: center;
+        font-weight: 700;
+        border: 2px solid #e2e8f0;
+    }
+
+    .player-video {
+        width: 100%;
+        max-height: 220px;
+        border-radius: 10px;
+        background: #000;
+        border: 1px solid #e2e8f0;
+    }
+
+    .notes-card {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <h2 class="mb-0">My Interests</h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'scout_player_directory' %}" class="btn btn-outline-primary">Browse Players</a>
+            <a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <p class="text-muted">Players you've marked as interested. Keep private notes here to track what stood out about each one.</p>
+
+    {% if entries %}
+        <div class="row g-3">
+            {% for entry in entries %}
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
+                                <div class="d-flex align-items-start gap-3">
+                                    {% if entry.profile.profile_photo %}
+                                        <img src="{{ entry.profile.profile_photo.url }}" alt="{{ entry.profile.full_name }}" class="player-photo">
+                                    {% else %}
+                                        <div class="player-photo-fallback">{{ entry.profile.full_name|slice:':1'|upper }}</div>
+                                    {% endif %}
+                                    <div>
+                                        <h5 class="card-title mb-1">{{ entry.profile.full_name }}</h5>
+                                        <p class="text-muted mb-1">Position: {{ entry.profile.position }}</p>
+                                        <p class="text-muted mb-0">Age: {{ entry.profile.age }} | Location: {{ entry.profile.location }}</p>
+                                    </div>
+                                </div>
+                                <form method="post" action="{% url 'scout_toggle_shortlist' %}">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="profile_id" value="{{ entry.profile.id }}">
+                                    <input type="hidden" name="redirect_to" value="{% url 'scout_shortlist' %}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Remove {{ entry.profile.full_name }} from your interests?');">Remove</button>
+                                </form>
+                            </div>
+
+                            <p class="text-muted small mb-2">Added to interests {{ entry.created_at|date:'M d, Y' }}</p>
+
+                            <div class="mt-2">
+                                <button
+                                    class="btn btn-outline-primary btn-sm"
+                                    type="button"
+                                    data-bs-toggle="collapse"
+                                    data-bs-target="#interest-videos-{{ entry.id }}"
+                                    aria-expanded="false"
+                                    aria-controls="interest-videos-{{ entry.id }}"
+                                >
+                                    View videos
+                                </button>
+                            </div>
+
+                            <div class="collapse mt-3" id="interest-videos-{{ entry.id }}">
+                                {% if entry.profile.videos.all %}
+                                    {% for video in entry.profile.videos.all %}
+                                        <div id="video-{{ video.id }}" class="mb-4 pb-3 border-bottom">
+                                            <p class="mb-1"><strong>{{ video.title }}</strong> <span class="text-muted">({{ video.get_category_display }})</span></p>
+                                            <video class="player-video mb-2" controls preload="metadata">
+                                                <source src="{{ video.video_file.url }}">
+                                                Your browser does not support embedded video playback.
+                                            </video>
+                                            <div class="mb-2">
+                                                <a href="{{ video.video_file.url }}" target="_blank" class="small">Open video in new tab</a>
+                                            </div>
+
+                                            <h6 class="mt-2">Scout Feedback (optional)</h6>
+                                            <form method="post" action="{% url 'scout_shortlist' %}" class="mt-2 mb-3">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="video_id" value="{{ video.id }}">
+                                                <textarea
+                                                    name="comment"
+                                                    rows="3"
+                                                    class="form-control"
+                                                    placeholder="Add or edit feedback for this specific video..."
+                                                >{% if video.current_scout_feedback %}{{ video.current_scout_feedback.comment }}{% endif %}</textarea>
+                                                <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Save feedback</button>
+                                            </form>
+                                            {% if video.current_scout_feedback %}
+                                                <div class="border rounded p-2 mt-2 small">
+                                                    <div class="mb-1">
+                                                        {% if video.current_scout_feedback.is_seen %}
+                                                            <span class="badge bg-success">Seen by player</span>
+                                                        {% else %}
+                                                            <span class="badge bg-warning text-dark">Unread by player</span>
+                                                        {% endif %}
+                                                    </div>
+                                                    {% if video.current_scout_feedback.player_reply %}
+                                                        <div class="mb-1"><strong>Player reply:</strong><br>{{ video.current_scout_feedback.player_reply|linebreaksbr }}</div>
+                                                    {% endif %}
+                                                    {% if video.current_scout_feedback.player_reaction %}
+                                                        <div class="mb-1"><strong>Player reaction:</strong> {{ video.current_scout_feedback.player_reaction }}</div>
+                                                    {% endif %}
+                                                    {% if video.current_scout_feedback.scout_reply %}
+                                                        <div class="mb-1"><strong>Your response:</strong><br>{{ video.current_scout_feedback.scout_reply|linebreaksbr }}</div>
+                                                    {% endif %}
+
+                                                    {% if video.current_scout_feedback.player_reply %}
+                                                        <form method="post" action="{% url 'scout_shortlist' %}" class="mt-2">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="video_id" value="{{ video.id }}">
+                                                            <textarea name="scout_reply" rows="2" class="form-control" placeholder="Respond to the player's reply (optional)..."></textarea>
+                                                            <button type="submit" class="btn btn-primary btn-sm mt-2">Save response</button>
+                                                        </form>
+
+                                                        {% if video.current_scout_feedback.scout_reply %}
+                                                            {% if video.current_scout_feedback.scout_reply_editable %}
+                                                                <details class="mt-2">
+                                                                    <summary class="small text-primary" style="cursor:pointer;">Edit previous response</summary>
+                                                                    <p class="text-muted mb-1" style="font-size:0.75rem;">You can edit for {{ video.current_scout_feedback.REPLY_EDIT_WINDOW_MINUTES }} minutes after responding.</p>
+                                                                    <form method="post" action="{% url 'scout_shortlist' %}" class="mt-2">
+                                                                        {% csrf_token %}
+                                                                        <input type="hidden" name="video_id" value="{{ video.id }}">
+                                                                        <textarea name="scout_reply_history" rows="3" class="form-control">{{ video.current_scout_feedback.scout_reply }}</textarea>
+                                                                        <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Update response</button>
+                                                                    </form>
+                                                                </details>
+                                                            {% else %}
+                                                                <p class="text-muted mb-0 mt-1" style="font-size:0.75rem;">Edit window closed. Write a new response above instead.</p>
+                                                            {% endif %}
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <p class="text-muted mb-0">No videos uploaded yet.</p>
+                                {% endif %}
+                            </div>
+
+                            <div class="notes-card mt-3">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="entry_id" value="{{ entry.id }}">
+                                    <label class="form-label small fw-bold mb-1">Your notes about this player</label>
+                                    <textarea name="notes" rows="3" class="form-control" placeholder="e.g. Strong left foot, good positioning, follow up after next trial...">{{ entry.notes }}</textarea>
+                                    <button type="submit" class="btn btn-primary btn-sm mt-2">Save notes</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">You haven't marked any players as interested yet. Browse the <a href="{% url 'scout_player_directory' %}">player directory</a> and tap "Mark as interested" on a profile.</div>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!window.location.hash) {
+            return;
+        }
+        var target = document.querySelector(window.location.hash);
+        if (!target) {
+            return;
+        }
+        var collapseParent = target.closest('.collapse');
+        if (collapseParent && window.bootstrap) {
+            bootstrap.Collapse.getOrCreateInstance(collapseParent, { toggle: false }).show();
+        }
+        setTimeout(function () {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 350);
+    });
+</script>
+{% endblock %}
