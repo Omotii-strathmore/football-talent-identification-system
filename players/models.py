@@ -1,5 +1,13 @@
+from datetime import date
+
 from django.db import models
 from users.models import User
+
+
+def _calculate_age(born):
+    today = date.today()
+    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
+
 
 class PlayerProfile(models.Model):
 
@@ -17,6 +25,11 @@ class PlayerProfile(models.Model):
     )
 
     full_name = models.CharField(max_length=100)
+    date_of_birth = models.DateField(
+        blank=True,
+        null=True,
+        help_text='Used to keep your age accurate automatically.'
+    )
     age = models.PositiveIntegerField()
     position = models.CharField(
         max_length=50,
@@ -105,6 +118,16 @@ class PlayerProfile(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+
+    def save(self, *args, **kwargs):
+        if self.date_of_birth:
+            self.age = _calculate_age(self.date_of_birth)
+            update_fields = kwargs.get('update_fields')
+            if update_fields is not None:
+                update_fields = set(update_fields)
+                update_fields.add('age')
+                kwargs['update_fields'] = update_fields
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.full_name

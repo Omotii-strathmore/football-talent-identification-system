@@ -1,5 +1,5 @@
 from django import forms
-from .models import PlayerProfile, PlayerVideo
+from .models import PlayerProfile, PlayerVideo, _calculate_age
 
 
 KENYA_COUNTIES = [
@@ -22,7 +22,7 @@ class PlayerProfileForm(forms.ModelForm):
 
         fields = [
             'full_name',
-            'age',
+            'date_of_birth',
             'position',
             'secondary_position',
             'height_cm',
@@ -42,12 +42,23 @@ class PlayerProfileForm(forms.ModelForm):
         ]
 
         widgets = {
+            'date_of_birth': forms.DateInput(
+                format='%Y-%m-%d',
+                attrs={
+                    'class': 'dob-picker-input',
+                    'placeholder': 'Select your date of birth',
+                    'autocomplete': 'off',
+                },
+            ),
             'previous_club_start_year': forms.NumberInput(attrs={'placeholder': 'From year, e.g. 2019'}),
             'previous_club_end_year': forms.NumberInput(attrs={'placeholder': 'To year, e.g. 2021'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields['date_of_birth'].input_formats = ['%Y-%m-%d']
+        self.fields['date_of_birth'].required = False
+        self.fields['date_of_birth'].help_text = 'Keeps your age accurate automatically. Allowed range: 12 to 28 years old.'
         self.fields['contact_email'].required = False
         self.fields['contact_phone'].required = False
         self.fields['secondary_position'].required = False
@@ -74,6 +85,12 @@ class PlayerProfileForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
+        dob = cleaned_data.get('date_of_birth')
+        if dob:
+            age = _calculate_age(dob)
+            if age < 12 or age > 28:
+                self.add_error('date_of_birth', 'Age must be between 12 and 28 years old.')
+
         start_year = cleaned_data.get('previous_club_start_year')
         end_year = cleaned_data.get('previous_club_end_year')
         if start_year and end_year and end_year < start_year:
@@ -93,15 +110,15 @@ class PlayerProfileForm(forms.ModelForm):
 class PlayerOnboardingForm(forms.ModelForm):
     KENYA_COUNTIES = KENYA_COUNTIES
 
-    age = forms.IntegerField(
-        min_value=12,
-        max_value=28,
-        widget=forms.NumberInput(
+    date_of_birth = forms.DateField(
+        input_formats=['%Y-%m-%d'],
+        widget=forms.DateInput(
+            format='%Y-%m-%d',
             attrs={
-                'placeholder': 'Your age (12-28)',
-                'min': 12,
-                'max': 28,
-            }
+                'class': 'dob-picker-input',
+                'placeholder': 'Select your date of birth',
+                'autocomplete': 'off',
+            },
         ),
         help_text='Allowed age range: 12 to 28 years.',
     )
@@ -111,7 +128,7 @@ class PlayerOnboardingForm(forms.ModelForm):
         model = PlayerProfile
 
         fields = [
-            'age',
+            'date_of_birth',
             'position',
             'location',
         ]
@@ -129,6 +146,13 @@ class PlayerOnboardingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['location'].help_text = 'Choose or type a county name from the 47 counties list.'
+
+    def clean_date_of_birth(self):
+        dob = self.cleaned_data['date_of_birth']
+        age = _calculate_age(dob)
+        if age < 12 or age > 28:
+            raise forms.ValidationError('Age must be between 12 and 28 years old.')
+        return dob
 
     def clean_location(self):
         entered_location = (self.cleaned_data.get('location') or '').strip()

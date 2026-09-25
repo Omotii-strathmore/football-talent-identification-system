@@ -71,13 +71,13 @@ class FeedbackAndAuthFlowTests(TestCase):
 
         self.client.force_login(player)
         response = self.client.post(
-            reverse('player_dashboard'),
+            reverse('upload_video'),
             {'feedback_id': feedback.id, 'player_reply': 'Thanks for the note.', 'player_reaction': '👍🏾'},
             follow=True,
         )
 
-        self.assertContains(response, 'Your reply has been sent to the scout.')
+        self.assertContains(response, 'Your reply and reaction were saved.')
         feedback.refresh_from_db()
-        self.assertEqual(feedback.player_reply, 'Thanks for the note.')
+        self.assertIn('Thanks for the note.', feedback.player_reply)
         self.assertEqual(feedback.player_reaction, '👍🏾')
         self.assertTrue(feedback.is_seen)

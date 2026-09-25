@@ -345,7 +345,7 @@ def complete_profile_view(request):
                     user=user,
                     defaults={
                         'full_name': user.full_name,
-                        'age': form.cleaned_data['age'],
+                        'date_of_birth': form.cleaned_data['date_of_birth'],
                         'position': form.cleaned_data['position'],
                         'location': form.cleaned_data['location'],
                     }

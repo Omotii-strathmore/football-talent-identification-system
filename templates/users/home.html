@@ -6,28 +6,56 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Talanta Soka | Home</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        (function () {
+            try {
+                if (localStorage.getItem('talantaSokaTheme') === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                }
+            } catch (e) {}
+        })();
+    </script>
     <style>
         :root {
             --green:#006B3F;
             --red:#BB1600;
             --gold:#F5C400;
-            --black:#0D0D0D;
-            --off:#141414;
-            --mid:#1E1E1E;
-            --border:#2A2A2A;
-            --muted:#8f8f8f;
-            --white:#F5F5F5;
+            --ink-on-accent:#111827;
             --font-display:'Bebas Neue', sans-serif;
             --font-body:'Inter', sans-serif;
+
+            /* Dark theme is the default palette */
+            --bg:#0D0D0D;
+            --surface-1:#141414;
+            --surface-2:#1E1E1E;
+            --border:#2A2A2A;
+            --muted:#8f8f8f;
+            --ink:#F5F5F5;
+            --nav-bg:rgba(13,13,13,.92);
+            --frame-bg:rgba(20,20,20,.9);
+            --tile-border:rgba(255,255,255,.08);
+        }
+
+        :root[data-theme="light"] {
+            --bg:#FBF9F3;
+            --surface-1:#F1EEE2;
+            --surface-2:#FFFFFF;
+            --border:#E3DECC;
+            --muted:#6B675C;
+            --ink:#17160F;
+            --nav-bg:rgba(251,249,243,.92);
+            --frame-bg:rgba(255,255,255,.85);
+            --tile-border:rgba(0,0,0,.08);
         }
 
         * { box-sizing:border-box; margin:0; padding:0; }
 
         body {
-            background:var(--black);
-            color:var(--white);
+            background:var(--bg);
+            color:var(--ink);
             font-family:var(--font-body);
             line-height:1.6;
+            transition:background .25s ease, color .25s ease;
         }
 
         a { text-decoration:none; color:inherit; }
@@ -43,9 +71,10 @@
             display:flex;
             align-items:center;
             justify-content:space-between;
-            background:rgba(13,13,13,.92);
+            background:var(--nav-bg);
             backdrop-filter:blur(12px);
             border-bottom:1px solid var(--border);
+            transition:background .25s ease, border-color .25s ease;
         }
 
         .logo {
@@ -55,7 +84,7 @@
             color:var(--gold);
         }
 
-        .logo span { color:var(--white); }
+        .logo span { color:var(--ink); }
 
         .links {
             list-style:none;
@@ -84,13 +113,64 @@
 
         .links .cta {
             background:var(--green);
-            color:var(--white);
+            color:#fff;
         }
 
         .links .cta:hover {
             background:#008A50;
-            color:var(--white);
+            color:#fff;
             border-color:transparent;
+        }
+
+        .lang-toggle,
+        .theme-toggle {
+            display:inline-flex;
+            align-items:center;
+            gap:5px;
+            background:rgba(128,128,128,.08);
+            border:1px solid var(--border);
+            border-radius:999px;
+            padding:6px 12px;
+            cursor:pointer;
+            font-family:var(--font-body);
+            color:var(--muted);
+            transition:.2s;
+        }
+
+        .theme-toggle {
+            padding:6px 10px;
+            font-size:1rem;
+            line-height:1;
+        }
+
+        .theme-toggle:hover {
+            border-color:var(--gold);
+            color:var(--gold);
+        }
+
+        .lang-toggle-option {
+            font-size:.74rem;
+            font-weight:700;
+            letter-spacing:.06em;
+            color:var(--muted);
+            transition:.2s;
+        }
+
+        .lang-toggle-option.is-active {
+            color:var(--gold);
+        }
+
+        .lang-toggle-sep {
+            font-size:.7rem;
+            color:var(--border);
+        }
+
+        .lang-toggle:hover .lang-toggle-option {
+            color:var(--ink);
+        }
+
+        .lang-toggle:hover .lang-toggle-option.is-active {
+            color:var(--gold);
         }
 
         .hero {
@@ -154,7 +234,7 @@
             border:1px solid var(--border);
             border-radius:12px;
             padding:8px;
-            background:rgba(20,20,20,.9);
+            background:var(--frame-bg);
             box-shadow:0 20px 40px rgba(0,0,0,.28);
             justify-self:end;
             margin-top:14px;
@@ -165,7 +245,7 @@
             height:100%;
             display:block;
             border-radius:8px;
-            border:1px solid rgba(255,255,255,.08);
+            border:1px solid var(--tile-border);
             object-fit:cover;
         }
 
@@ -191,7 +271,7 @@
 
         .sub {
             margin-top:22px;
-            color:#a9a9a9;
+            color:var(--muted);
             max-width:560px;
             font-size:1rem;
         }
@@ -215,14 +295,14 @@
 
         .btn-primary {
             background:var(--gold);
-            color:var(--black);
+            color:var(--ink-on-accent);
         }
 
         .btn-primary:hover { background:#ffd533; transform:translateY(-2px); }
 
         .btn-secondary {
             border:1px solid var(--border);
-            color:var(--white);
+            color:var(--ink);
         }
 
         .btn-secondary:hover { border-color:var(--gold); color:var(--gold); }
@@ -236,7 +316,7 @@
         }
 
         .mini-card {
-            background:var(--off);
+            background:var(--surface-1);
             border:1px solid var(--border);
             border-radius:8px;
             padding:18px;
@@ -245,7 +325,7 @@
         .mini-card h3 {
             font-size:.98rem;
             margin-bottom:6px;
-            color:var(--white);
+            color:var(--ink);
         }
 
         .mini-card p {
@@ -284,7 +364,7 @@
 
         .offers {
             padding:24px 6vw 70px;
-            background:var(--off);
+            background:var(--surface-1);
             border-top:1px solid var(--border);
         }
 
@@ -303,7 +383,7 @@
 
         .offer-card {
             border:1px solid var(--border);
-            background:var(--mid);
+            background:var(--surface-2);
             border-radius:10px;
             overflow:hidden;
         }
@@ -325,7 +405,7 @@
         }
 
         .offer-body p {
-            color:#b9b9b9;
+            color:var(--muted);
             font-size:.88rem;
         }
 
@@ -337,9 +417,9 @@
 
         footer {
             border-top:1px solid var(--border);
-            background:var(--off);
+            background:var(--surface-1);
             padding:24px 6vw;
-            color:#6f6f6f;
+            color:var(--muted);
             font-size:.8rem;
             display:flex;
             justify-content:space-between;
@@ -396,7 +476,7 @@
             position:fixed;
             z-index:1310;
             width:min(320px, 86vw);
-            background:var(--off);
+            background:var(--surface-1);
             border:1px solid var(--border);
             border-radius:12px;
             padding:18px;
@@ -425,12 +505,12 @@
             font-size:1.35rem;
             letter-spacing:.5px;
             margin-bottom:8px;
-            color:var(--white);
+            color:var(--ink);
         }
 
         .tour-desc {
             font-size:.88rem;
-            color:#c7c7c7;
+            color:var(--muted);
             margin-bottom:16px;
             line-height:1.55;
         }
@@ -452,7 +532,7 @@
         }
 
         .tour-skip-btn:hover {
-            color:var(--white);
+            color:var(--ink);
         }
 
         .tour-nav-btns {
@@ -463,7 +543,7 @@
         .tour-nav-btn {
             border:1px solid var(--border);
             background:transparent;
-            color:var(--white);
+            color:var(--ink);
             font-size:.82rem;
             font-weight:700;
             padding:7px 16px;
@@ -473,7 +553,7 @@
 
         .tour-nav-btn.tour-next-btn {
             background:var(--gold);
-            color:var(--black);
+            color:var(--ink-on-accent);
             border-color:var(--gold);
         }
 
@@ -493,7 +573,7 @@
             align-items:center;
             justify-content:center;
             background:var(--gold);
-            color:var(--black);
+            color:var(--ink-on-accent);
             border:0;
             border-radius:50%;
             padding:0;
@@ -524,23 +604,35 @@
     <nav>
         <div class="logo">Talanta <span>Soka</span></div>
         <ul class="links">
-            <li><a href="{% url 'home' %}">Home</a></li>
-            <li><a href="{% url 'public_opportunities' %}" id="tour-trials">Trials/Tournaments(fursa)</a></li>
-            <li><a href="{% url 'login' %}" id="tour-login">Login/ingia</a></li>
-            <li><a href="{% url 'register' %}" class="cta" id="tour-signup">Sign Up/Jisajili</a></li>
+            <li><a href="{% url 'home' %}" data-i18n="nav.home">Home</a></li>
+            <li><a href="{% url 'public_opportunities' %}" id="tour-trials" data-i18n="nav.trials">Trials &amp; Tournaments</a></li>
+            <li><a href="{% url 'login' %}" id="tour-login" data-i18n="nav.login">Login</a></li>
+            <li><a href="{% url 'register' %}" class="cta" id="tour-signup" data-i18n="nav.signup">Sign Up</a></li>
+            <li>
+                <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language">
+                    <span class="lang-toggle-option is-active" data-lang-label="en">EN</span>
+                    <span class="lang-toggle-sep">/</span>
+                    <span class="lang-toggle-option" data-lang-label="sw">SW</span>
+                </button>
+            </li>
+            <li>
+                <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch light/dark mode" title="Toggle theme (press T)">
+                    <span id="theme-toggle-icon">🌙</span>
+                </button>
+            </li>
         </ul>
     </nav>
 
     <section class="hero">
         <div class="hero-layout">
             <div class="hero-copy">
-                <p class="eyebrow">Kenya Football Talent Exposure Platform</p>
-                <h1>YOUR TALENT<br><span class="accent">DESERVES</span><br>TO BE <span class="red">SEEN.</span></h1>
-                <p class="sub">Talanta Soka connects players with verified scouts through structured profiles, videos, and real football opportunities.</p>
+                <p class="eyebrow" data-i18n="hero.eyebrow">Kenya Football Talent Exposure Platform</p>
+                <h1 data-i18n="hero.title">YOUR TALENT<br><span class="accent">DESERVES</span><br>TO BE <span class="red">SEEN.</span></h1>
+                <p class="sub" data-i18n="hero.sub">Talanta Soka connects players with verified scouts through structured profiles, videos, and real football opportunities.</p>
 
                 <div class="actions">
-                    <a href="{% url 'register' %}?role=player" class="btn-primary" id="tour-register-player">Register as Player</a>
-                    <a href="{% url 'register' %}?role=scout" class="btn-secondary" id="tour-register-scout">Join as Scout</a>
+                    <a href="{% url 'register' %}?role=player" class="btn-primary" id="tour-register-player" data-i18n="hero.registerPlayer">Register as Player</a>
+                    <a href="{% url 'register' %}?role=scout" class="btn-secondary" id="tour-register-scout" data-i18n="hero.joinScout">Join as Scout</a>
                 </div>
             </div>
 
@@ -551,35 +643,35 @@
 
         <div class="mini-cards">
             <article class="mini-card">
-                <h3>Players</h3>
-                <p>Create a profile, upload videos, view and apply for trials and tournaments.</p>
+                <h3 data-i18n="mini.players.title">Players</h3>
+                <p data-i18n="mini.players.desc">Create a profile, upload videos, view and apply for trials and tournaments.</p>
             </article>
             <article class="mini-card">
-                <h3>Scouts</h3>
-                <p>Get verified, post opportunities, and review player applications.</p>
+                <h3 data-i18n="mini.scouts.title">Scouts</h3>
+                <p data-i18n="mini.scouts.desc">Get verified, post opportunities, and review player applications.</p>
             </article>
             <article class="mini-card">
-                <h3>Trials/Tournaments Page</h3>
-                <p>Discover open trial sessions and youth tournaments in one place. See where to find your next football opportunity begins.</p>
+                <h3 data-i18n="mini.trials.title">Trials &amp; Tournaments</h3>
+                <p data-i18n="mini.trials.desc">Discover open trial sessions and youth tournaments in one place. See where to find your next football opportunity begins.</p>
             </article>
         </div>
     </section>
 
     <section class="offers">
-        <h2 class="offers-title">What Our System Offers</h2>
+        <h2 class="offers-title" data-i18n="offers.title">What Our System Offers</h2>
         <div class="offer-grid">
             <article class="offer-card">
                 <img src="{% static 'homephoto.jpeg' %}" alt="Players in action" class="offer-image">
                 <div class="offer-body">
-                    <h3>For Players</h3>
-                    <p>Build your football profile, upload highlight videos, and apply directly to trials and tournaments posted by verified scouts.</p>
+                    <h3 data-i18n="offers.players.title">For Players</h3>
+                    <p data-i18n="offers.players.desc">Build your football profile, upload highlight videos, and apply directly to trials and tournaments posted by verified scouts.</p>
                 </div>
             </article>
             <article class="offer-card">
                 <img src="{% static 'coach2.jpeg' %}" alt="Coach evaluating players" class="offer-image">
                 <div class="offer-body">
-                    <h3>For Scouts</h3>
-                    <p>Post trial and tournament opportunities, review player applications, and view player profiles and videos by position, location, or age to identify talented football players more efficiently.</p>
+                    <h3 data-i18n="offers.scouts.title">For Scouts</h3>
+                    <p data-i18n="offers.scouts.desc">Post trial and tournament opportunities, review player applications, and view player profiles and videos by position, location, or age to identify talented football players more efficiently.</p>
                 </div>
             </article>
         </div>
@@ -587,12 +679,12 @@
 
     <footer>
         <div class="footer-col">
-            <p>Talanta Soka | Football Talent Identification and Exposure System</p>
-            <p>Connecting grassroots players and verified scouts across Kenya.</p>
+            <p data-i18n="footer.line1">Talanta Soka | Football Talent Identification and Exposure System</p>
+            <p data-i18n="footer.line2">Connecting grassroots players and verified scouts across Kenya.</p>
         </div>
         <div class="footer-col" style="text-align:right;">
-            <p>Contact us</p>
-            <p>Email: support@talantasoka.co.ke</p>
+            <p data-i18n="footer.contact">Contact us</p>
+            <p><span data-i18n="footer.emailLabel">Email:</span> support@talantasoka.co.ke</p>
         </div>
     </footer>
     <script>
@@ -608,6 +700,150 @@
                 card.textContent = message;
                 container.appendChild(card);
                 setTimeout(function () { card.remove(); }, 4000);
+            });
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const TRANSLATIONS = {
+                en: {
+                    'nav.home': 'Home',
+                    'nav.trials': 'Trials &amp; Tournaments',
+                    'nav.login': 'Login',
+                    'nav.signup': 'Sign Up',
+                    'hero.eyebrow': 'Kenya Football Talent Exposure Platform',
+                    'hero.title': 'YOUR TALENT<br><span class="accent">DESERVES</span><br>TO BE <span class="red">SEEN.</span>',
+                    'hero.sub': 'Talanta Soka connects players with verified scouts through structured profiles, videos, and real football opportunities.',
+                    'hero.registerPlayer': 'Register as Player',
+                    'hero.joinScout': 'Join as Scout',
+                    'mini.players.title': 'Players',
+                    'mini.players.desc': 'Create a profile, upload videos, view and apply for trials and tournaments.',
+                    'mini.scouts.title': 'Scouts',
+                    'mini.scouts.desc': 'Get verified, post opportunities, and review player applications.',
+                    'mini.trials.title': 'Trials &amp; Tournaments',
+                    'mini.trials.desc': 'Discover open trial sessions and youth tournaments in one place. See where to find your next football opportunity begins.',
+                    'offers.title': 'What Our System Offers',
+                    'offers.players.title': 'For Players',
+                    'offers.players.desc': 'Build your football profile, upload highlight videos, and apply directly to trials and tournaments posted by verified scouts.',
+                    'offers.scouts.title': 'For Scouts',
+                    'offers.scouts.desc': 'Post trial and tournament opportunities, review player applications, and view player profiles and videos by position, location, or age to identify talented football players more efficiently.',
+                    'footer.line1': 'Talanta Soka | Football Talent Identification and Exposure System',
+                    'footer.line2': 'Connecting grassroots players and verified scouts across Kenya.',
+                    'footer.contact': 'Contact us',
+                    'footer.emailLabel': 'Email:'
+                },
+                sw: {
+                    'nav.home': 'Nyumbani',
+                    'nav.trials': 'Fursa za Soka',
+                    'nav.login': 'Ingia',
+                    'nav.signup': 'Jiunge Sasa!',
+                    'hero.eyebrow': 'Sehemu ya Vipaji vya Mpira Kenya',
+                    'hero.title': 'TALENT YAKO<br><span class="accent">INASTAHILI</span><br>KUONEKANA <span class="red">SASA.</span>',
+                    'hero.sub': 'Talanta Soka inaunganisha wachezaji na ma-scout walio-verified kupitia profile, video, na fursa halisi za mpira.',
+                    'hero.registerPlayer': 'Jisajili Kama Player',
+                    'hero.joinScout': 'Jiunge Kama Scout',
+                    'mini.players.title': 'Wachezaji',
+                    'mini.players.desc': 'Tengeneza profile yako, pakia video, angalia na u-apply fursa za mashindano.',
+                    'mini.scouts.title': 'Ma-Scout',
+                    'mini.scouts.desc': 'Pata verification, chapisha fursa, na uangalie application za wachezaji.',
+                    'mini.trials.title': 'Page ya Fursa/Mashindano',
+                    'mini.trials.desc': 'Gundua fursa za trials na mashindano ya vijana mahali pamoja. Hapa ndipo safari yako ya mpira inaanzia.',
+                    'offers.title': 'Mfumo Wetu Unatoa Nini',
+                    'offers.players.title': 'Kwa Wachezaji',
+                    'offers.players.desc': 'Jenga profile yako ya mpira, pakia video za highlight, na u-apply moja kwa moja kwa fursa zilizowekwa na ma-scout walio-verified.',
+                    'offers.scouts.title': 'Kwa Ma-Scout',
+                    'offers.scouts.desc': 'Chapisha fursa za trials na mashindano, angalia application za wachezaji, na uone profile na video za wachezaji kwa position, mahali, au umri ili kupata vipaji kwa urahisi.',
+                    'footer.line1': 'Talanta Soka | Mfumo wa Kutambua na Kuonyesha Vipaji vya Mpira',
+                    'footer.line2': 'Tunaunganisha wachezaji wa mtaa na ma-scout walio-verified kote Kenya.',
+                    'footer.contact': 'Wasiliana Nasi',
+                    'footer.emailLabel': 'Barua pepe:'
+                }
+            };
+
+            const STORAGE_KEY = 'talantaSokaLang';
+            const toggleBtn = document.getElementById('lang-toggle');
+            const targets = document.querySelectorAll('[data-i18n]');
+            const labels = toggleBtn ? toggleBtn.querySelectorAll('.lang-toggle-option') : [];
+
+            function applyLang(lang) {
+                const dict = TRANSLATIONS[lang] || TRANSLATIONS.en;
+                targets.forEach(function (el) {
+                    const key = el.getAttribute('data-i18n');
+                    if (dict[key]) {
+                        el.innerHTML = dict[key];
+                    }
+                });
+                labels.forEach(function (label) {
+                    label.classList.toggle('is-active', label.getAttribute('data-lang-label') === lang);
+                });
+                document.documentElement.setAttribute('lang', lang);
+                try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
+            }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', function () {
+                    const current = document.documentElement.getAttribute('lang') === 'sw' ? 'sw' : 'en';
+                    applyLang(current === 'en' ? 'sw' : 'en');
+                });
+            }
+
+            let savedLang = 'en';
+            try { savedLang = localStorage.getItem(STORAGE_KEY) || 'en'; } catch (e) {}
+            if (savedLang === 'sw') {
+                applyLang('sw');
+            }
+        })();
+    </script>
+
+    <script>
+        (function () {
+            const STORAGE_KEY = 'talantaSokaTheme';
+            const toggleBtn = document.getElementById('theme-toggle');
+            const icon = document.getElementById('theme-toggle-icon');
+
+            function currentTheme() {
+                return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+            }
+
+            function updateIcon() {
+                if (icon) {
+                    icon.textContent = currentTheme() === 'light' ? '☀️' : '🌙';
+                }
+            }
+
+            function setTheme(theme) {
+                if (theme === 'light') {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                }
+                try { localStorage.setItem(STORAGE_KEY, theme); } catch (e) {}
+                updateIcon();
+            }
+
+            function toggleTheme() {
+                setTheme(currentTheme() === 'light' ? 'dark' : 'light');
+            }
+
+            updateIcon();
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleTheme);
+            }
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 't' && e.key !== 'T') {
+                    return;
+                }
+                const tag = (e.target && e.target.tagName || '').toLowerCase();
+                if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) {
+                    return;
+                }
+                if (e.metaKey || e.ctrlKey || e.altKey) {
+                    return;
+                }
+                toggleTheme();
             });
         })();
     </script>
@@ -640,7 +876,7 @@
                 },
                 {
                     target: '#tour-signup',
-                    title: 'Sign Up / Jisajili',
+                    title: 'Sign Up',
                     desc: 'Start here to create a brand new account, either as a Player or a Scout.'
                 },
                 {
@@ -655,12 +891,12 @@
                 },
                 {
                     target: '#tour-trials',
-                    title: 'Trials/Tournaments (Fursa)',
+                    title: 'Trials & Tournaments',
                     desc: 'Browse open trials and tournaments from verified scouts — no account needed to look, only to apply.'
                 },
                 {
                     target: '#tour-login',
-                    title: 'Login / Ingia',
+                    title: 'Login',
                     desc: 'Already have an account? Sign in here to reach your dashboard, profile, or scouting tools.'
                 }
             ];

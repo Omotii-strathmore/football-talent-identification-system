@@ -1,9 +1,13 @@
 {% extends 'auth_base.html' %}
 {% load crispy_forms_tags %}
+{% load static %}
 
 {% block title %}Complete profile | Talanta Soka{% endblock %}
 
 {% block content %}
+    {% if role == 'player' %}
+        <link rel="stylesheet" href="{% static 'css/dob-picker.css' %}">
+    {% endif %}
     <style>
         .scout-photo-preview-wrap {
             margin-bottom: 12px;
@@ -78,6 +82,17 @@
                     };
                     reader.readAsDataURL(file);
                 });
+            })();
+        </script>
+    {% endif %}
+    {% if role == 'player' %}
+        <script src="{% static 'js/dob-picker.js' %}"></script>
+        <script>
+            (function () {
+                const input = document.getElementById('id_date_of_birth');
+                if (input && window.DobPicker) {
+                    window.DobPicker.attach(input, { minAge: 12, maxAge: 28, theme: 'dark' });
+                }
             })();
         </script>
     {% endif %}

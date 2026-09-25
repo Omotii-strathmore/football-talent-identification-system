@@ -1,0 +1,182 @@
+.dob-picker-wrap {
+    position: relative;
+}
+
+input.dob-picker-input {
+    cursor: pointer;
+    background-color: #fff;
+}
+
+.dob-picker-panel {
+    display: none;
+    position: absolute;
+    z-index: 1200;
+    top: calc(100% + 8px);
+    left: 0;
+    width: min(320px, 90vw);
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.25);
+    border-radius: 16px;
+    box-shadow: 0 20px 44px rgba(15, 23, 42, 0.18);
+    padding: 16px;
+    color: #0f172a;
+}
+
+.dob-picker-panel.is-open {
+    display: block;
+}
+
+.dob-picker-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+.dob-picker-close {
+    background: none;
+    border: 0;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.6;
+}
+
+.dob-picker-close:hover {
+    opacity: 1;
+}
+
+.dob-picker-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #64748b;
+    margin: 12px 0 6px;
+}
+
+.dob-picker-range {
+    text-transform: none;
+    letter-spacing: normal;
+}
+
+.dob-picker-year-boxes {
+    display: flex;
+    gap: 8px;
+}
+
+.dob-picker-digit {
+    width: 44px;
+    height: 48px;
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    border: 0;
+    border-bottom: 2px solid rgba(148, 163, 184, 0.4);
+    background: transparent;
+    color: inherit;
+}
+
+.dob-picker-digit:focus {
+    outline: none;
+    border-bottom-color: #0d6efd;
+}
+
+.dob-picker-months {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+}
+
+.dob-picker-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    max-height: 190px;
+    overflow-y: auto;
+}
+
+.dob-picker-chip {
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    background: #f8fafc;
+    color: inherit;
+    border-radius: 8px;
+    padding: 6px 0;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.dob-picker-chip:hover {
+    border-color: #0d6efd;
+}
+
+.dob-picker-chip.is-active {
+    background: #0d6efd;
+    border-color: #0d6efd;
+    color: #fff;
+    font-weight: 700;
+}
+
+.dob-picker-done {
+    width: 100%;
+    margin-top: 14px;
+    padding: 10px;
+    border-radius: 10px;
+    border: 0;
+    background: #0d6efd;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.dob-picker-done:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Dark variant, used on the registration / auth-themed pages */
+.dob-picker-panel--dark {
+    background: #10192b;
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #edf2f7;
+}
+
+.dob-picker-panel--dark .dob-picker-label {
+    color: #9aa7bd;
+}
+
+.dob-picker-panel--dark .dob-picker-digit {
+    border-bottom-color: rgba(255, 255, 255, 0.25);
+}
+
+.dob-picker-panel--dark .dob-picker-digit:focus {
+    border-bottom-color: #f59e0b;
+}
+
+.dob-picker-panel--dark .dob-picker-chip {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 255, 255, 0.14);
+    color: #edf2f7;
+}
+
+.dob-picker-panel--dark .dob-picker-chip:hover {
+    border-color: #f59e0b;
+}
+
+.dob-picker-panel--dark .dob-picker-chip.is-active {
+    background: #f59e0b;
+    border-color: #f59e0b;
+    color: #111827;
+}
+
+.dob-picker-panel--dark .dob-picker-done {
+    background: #f59e0b;
+    color: #111827;
+}
+
+@media (max-width: 380px) {
+    .dob-picker-digit {
+        width: 38px;
+    }
+}

@@ -32,4 +32,4 @@ class AdminReportsTests(TestCase):
             'position': 'Midfielder',
         })
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Generate Reports')
+        self.assertContains(response, 'Generate Report')

@@ -1,9 +1,11 @@
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
+{% load static %}
 
 {% block title %}Player Profile{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/dob-picker.css' %}">
 <style>
     .profile-hero {
         background: linear-gradient(120deg, #0f172a, #1e293b);
@@ -518,7 +520,7 @@
                     <p class="edit-section-title mb-0">Personal details</p>
                     <div class="row">
                         <div class="col-md-8">{{ form.full_name|as_crispy_field }}</div>
-                        <div class="col-md-4">{{ form.age|as_crispy_field }}</div>
+                        <div class="col-md-4">{{ form.date_of_birth|as_crispy_field }}</div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">{{ form.location|as_crispy_field }}</div>
@@ -567,4 +569,18 @@
         </div>
     {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if edit_mode %}
+<script src="{% static 'js/dob-picker.js' %}"></script>
+<script>
+    (function () {
+        const input = document.getElementById('id_date_of_birth');
+        if (input && window.DobPicker) {
+            window.DobPicker.attach(input, { minAge: 12, maxAge: 28, theme: 'light' });
+        }
+    })();
+</script>
+{% endif %}
 {% endblock %}
