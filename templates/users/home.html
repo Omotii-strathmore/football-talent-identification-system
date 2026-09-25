@@ -615,7 +615,7 @@
             <li><a href="{% url 'login' %}" id="tour-login" data-i18n="nav.login">Login</a></li>
             <li><a href="{% url 'register' %}" class="cta" id="tour-signup" data-i18n="nav.signup">Sign Up</a></li>
             <li>
-                <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language">
+                <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language (shortcut: L)" title="Switch language (press L)">
                     <span class="lang-toggle-option is-active" data-lang-label="en">EN</span>
                     <span class="lang-toggle-sep">/</span>
                     <span class="lang-toggle-option" data-lang-label="sw">SW</span>
@@ -738,7 +738,7 @@
                     'offers.players.title': 'For Players',
                     'offers.players.desc': 'Get seen by verified scouts. Show your skills on video and apply free to real trials. No connections needed, just your game.',
                     'offers.scouts.title': 'For Scouts',
-                    'offers.scouts.desc': 'Find your next star faster. Watch players' videos, filter by position, location, or age, and post trials in minutes.',
+                    'offers.scouts.desc': 'Find your next star faster. Watch players’ videos, filter by position, location, or age, and post trials in minutes.',
                     'footer.line1': 'Talanta Soka | Football Talent Identification and Exposure System',
                     'footer.line2': 'Connecting grassroots players and verified scouts across Kenya.',
                     'footer.contact': 'Contact us',
@@ -796,12 +796,29 @@
                 try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) {}
             }
 
-            if (toggleBtn) {
-                toggleBtn.addEventListener('click', function () {
-                    const current = document.documentElement.getAttribute('lang') === 'sw' ? 'sw' : 'en';
-                    applyLang(current === 'en' ? 'sw' : 'en');
-                });
+            function toggleLang() {
+                const current = document.documentElement.getAttribute('lang') === 'sw' ? 'sw' : 'en';
+                applyLang(current === 'en' ? 'sw' : 'en');
             }
+
+            if (toggleBtn) {
+                toggleBtn.addEventListener('click', toggleLang);
+            }
+
+            // Press "L" to switch language (ignored while typing in a field).
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 'l' && e.key !== 'L') {
+                    return;
+                }
+                const tag = (e.target && e.target.tagName || '').toLowerCase();
+                if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) {
+                    return;
+                }
+                if (e.metaKey || e.ctrlKey || e.altKey) {
+                    return;
+                }
+                toggleLang();
+            });
 
             let savedLang = 'en';
             try { savedLang = localStorage.getItem(STORAGE_KEY) || 'en'; } catch (e) {}
