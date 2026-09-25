@@ -76,3 +76,59 @@ class OneTimeCode(models.Model):
 
     def __str__(self):
         return f'OTP for {self.user.email} via {self.method} ({self.code})'
+
+class SiteFeedback(models.Model):
+    RATING_CHOICES = [
+        ('bad', 'Bad'),
+        ('fine', 'Fine'),
+        ('good', 'Good'),
+    ]
+    # Options offered in the popup after each rating; kept here so the view can reject anything else.
+    REASON_CHOICES = {
+        'bad': [
+            ('slow', 'Pages are slow to load'),
+            ('error', 'Something did not work or showed an error'),
+            ('hard_to_find', 'Hard to find what I need'),
+            ('video_upload', 'Problems uploading videos'),
+            ('phone', 'Hard to use on my phone'),
+            ('few_opportunities', 'Not enough trials or players'),
+            ('other', 'Something else'),
+        ],
+        'fine': [
+            ('faster', 'Faster pages'),
+            ('simpler', 'Simpler, clearer design'),
+            ('more_opportunities', 'More trials or players'),
+            ('phone', 'Better on my phone'),
+            ('alerts', 'Alerts when something new happens'),
+            ('other', 'Something else'),
+        ],
+        'good': [
+            ('easy', 'Easy to use'),
+            ('looks', 'It looks great'),
+            ('opportunities', 'Finding trials and opportunities'),
+            ('videos', 'Showing off my football videos'),
+            ('scout_feedback', 'Feedback between players and scouts'),
+            ('find_players', 'Finding talented players'),
+            ('other', 'Something else'),
+        ],
+    }
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='site_feedback')
+    role = models.CharField(max_length=20, blank=True)
+    rating = models.CharField(max_length=10, choices=RATING_CHOICES)
+    reasons = models.JSONField(default=list, blank=True)
+    comment = models.TextField(blank=True)
+    page = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.get_rating_display()} from {self.user}'
+
+    @property
+    def reason_labels(self):
+        labels = dict(self.REASON_CHOICES.get(self.rating, []))
+        return [labels.get(code, code) for code in self.reasons]

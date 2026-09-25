@@ -4,7 +4,8 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Count, Q
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 from django.core.mail import send_mail
@@ -44,7 +45,7 @@ from .forms import (
     PasswordResetRequestForm,
     PasswordResetConfirmForm,
 )
-from .models import User, OneTimeCode
+from .models import User, OneTimeCode, SiteFeedback
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +62,31 @@ def privacy_view(request):
 
 def terms_view(request):
     return render(request, 'users/terms.html', {'support_email': settings.SUPPORT_EMAIL})
+
+
+@login_required
+@require_POST
+def submit_feedback_view(request):
+    rating = request.POST.get('rating', '')
+    if rating not in dict(SiteFeedback.RATING_CHOICES):
+        return JsonResponse({'ok': False, 'error': 'Choose Bad, Fine, or Good.'}, status=400)
+
+    allowed = {code for code, _ in SiteFeedback.REASON_CHOICES[rating]}
+    reasons = [code for code in request.POST.getlist('reasons') if code in allowed]
+    comment = request.POST.get('comment', '').strip()[:1000]
+
+    feedback = None
+    feedback_id = request.POST.get('feedback_id')
+    if feedback_id and feedback_id.isdigit():
+        feedback = SiteFeedback.objects.filter(id=feedback_id, user=request.user).first()
+    if feedback is None:
+        feedback = SiteFeedback(user=request.user, role=request.user.role)
+    feedback.rating = rating
+    feedback.reasons = reasons
+    feedback.comment = comment
+    feedback.page = request.POST.get('page', '')[:255]
+    feedback.save()
+    return JsonResponse({'ok': True, 'feedback_id': feedback.id})
 
 
 def send_otp_to_user(user, method='email', purpose='verify'):
@@ -477,6 +503,7 @@ def admin_dashboard_view(request):
     pending_verifications = Scout.objects.filter(verification_status='pending').count()
     opportunities_count = Opportunity.objects.count()
     applications_count = Application.objects.count()
+    feedback_count = SiteFeedback.objects.count()
 
     return render(
         request,
@@ -489,6 +516,38 @@ def admin_dashboard_view(request):
             'pending_verifications': pending_verifications,
             'opportunities_count': opportunities_count,
             'applications_count': applications_count,
+            'feedback_count': feedback_count,
+        },
+    )
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_feedback_view(request):
+    all_feedback = SiteFeedback.objects.select_related('user')
+    counts = {row['rating']: row['total'] for row in all_feedback.order_by().values('rating').annotate(total=Count('id'))}
+    rating_filter = request.GET.get('rating', '').strip().lower()
+    feedback_list = all_feedback
+    if rating_filter in dict(SiteFeedback.RATING_CHOICES):
+        feedback_list = feedback_list.filter(rating=rating_filter)
+
+    reason_counts = []
+    for rating, choices in SiteFeedback.REASON_CHOICES.items():
+        tally = Counter()
+        for reasons in all_feedback.filter(rating=rating).values_list('reasons', flat=True):
+            tally.update(reasons or [])
+        labels = dict(choices)
+        reason_counts.append((rating, [(labels.get(code, code), total) for code, total in tally.most_common()]))
+
+    return render(
+        request,
+        'users/admin_feedback.html',
+        {
+            'feedback_list': feedback_list[:200],
+            'counts': {rating: counts.get(rating, 0) for rating, _ in SiteFeedback.RATING_CHOICES},
+            'total': sum(counts.values()),
+            'rating_filter': rating_filter,
+            'reason_counts': reason_counts,
         },
     )
 

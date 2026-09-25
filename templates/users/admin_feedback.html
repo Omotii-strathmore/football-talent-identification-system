@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}User Feedback{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-hero mb-4">
+        <h2 class="fw-bold mb-1">User Feedback</h2>
+        <p class="text-muted mb-0">What players and scouts said when asked "How is Talanta Soka?"</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <a href="{% url 'admin_feedback' %}" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center {% if not rating_filter %}border border-primary{% endif %}">
+                    <div class="card-body"><div class="stat-value">{{ total }}</div><p class="text-muted mb-0">All answers</p></div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a href="?rating=good" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center {% if rating_filter == 'good' %}border border-primary{% endif %}">
+                    <div class="card-body"><div class="stat-value">👌🏾 {{ counts.good }}</div><p class="text-muted mb-0">Good</p></div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a href="?rating=fine" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center {% if rating_filter == 'fine' %}border border-primary{% endif %}">
+                    <div class="card-body"><div class="stat-value">🙂 {{ counts.fine }}</div><p class="text-muted mb-0">Fine</p></div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a href="?rating=bad" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center {% if rating_filter == 'bad' %}border border-primary{% endif %}">
+                    <div class="card-body"><div class="stat-value">😡 {{ counts.bad }}</div><p class="text-muted mb-0">Bad</p></div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        {% for rating, rows in reason_counts %}
+            <div class="col-md-4">
+                <div class="panel-soft p-3 h-100">
+                    <h4 class="section-title">
+                        {% if rating == 'bad' %}😡 Biggest problems{% elif rating == 'fine' %}🙂 What would make it better{% else %}👌🏾 What people like{% endif %}
+                    </h4>
+                    {% for label, total in rows %}
+                        <div class="d-flex justify-content-between border-bottom py-1 small">
+                            <span>{{ label }}</span><strong>{{ total }}</strong>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted small mb-0">No answers yet.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="panel-soft p-3 p-md-4">
+        <h4 class="section-title">Answers</h4>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr><th>Date</th><th>User</th><th>Rating</th><th>Chosen options</th><th>Comment</th></tr>
+                </thead>
+                <tbody>
+                    {% for item in feedback_list %}
+                        <tr>
+                            <td class="small text-nowrap">{{ item.created_at|date:"d M Y, H:i" }}</td>
+                            <td class="small">{{ item.user.full_name }}<br><span class="text-muted">{{ item.role|capfirst }}</span></td>
+                            <td class="text-nowrap">
+                                {% if item.rating == 'bad' %}😡 Bad{% elif item.rating == 'fine' %}🙂 Fine{% else %}👌🏾 Good{% endif %}
+                            </td>
+                            <td class="small">
+                                {% for label in item.reason_labels %}<span class="badge bg-light text-dark border me-1 mb-1">{{ label }}</span>{% empty %}<span class="text-muted">None</span>{% endfor %}
+                            </td>
+                            <td class="small">{{ item.comment|default:"—"|linebreaksbr }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="text-muted">No feedback yet. People are asked after about 4 minutes of using the site.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

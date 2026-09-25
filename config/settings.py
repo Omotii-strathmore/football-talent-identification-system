@@ -106,6 +106,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'users.context_processors.site_extras',
             ],
         },
     },
@@ -213,7 +214,7 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = 'login'
 
-SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL', 'support@talantasoka.co.ke')
+SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL', 'anelmcall@gmail.com')
 
 # Email settings for OTP delivery
 EMAIL_BACKEND = os.environ.get('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')

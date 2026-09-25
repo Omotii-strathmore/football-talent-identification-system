@@ -6,6 +6,7 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('privacy/', views.privacy_view, name='privacy'),
     path('terms/', views.terms_view, name='terms'),
+    path('feedback/', views.submit_feedback_view, name='submit_feedback'),
 
     path('register/', views.register_view, name='register'),
 
@@ -30,5 +31,6 @@ urlpatterns = [
     path('management/users/', views.admin_users_view, name='admin_users'),
     path('management/users/<int:user_id>/update/', views.admin_update_user_view, name='admin_update_user'),
     path('management/users/<int:user_id>/delete/', views.admin_delete_user_view, name='admin_delete_user'),
+    path('management/feedback/', views.admin_feedback_view, name='admin_feedback'),
     path('management/reports/', views.admin_reports_view, name='admin_reports'),
 ]

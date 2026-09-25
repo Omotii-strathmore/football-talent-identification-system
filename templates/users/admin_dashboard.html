@@ -73,7 +73,7 @@
     </div>
 
     <div class="row g-3 mt-1">
-        <div class="col-md-6">
+        <div class="col-md-4">
             <a href="{% url 'admin_reports' %}" class="text-decoration-none">
                 <div class="card stat-card h-100 text-center">
                     <div class="card-body">
@@ -83,12 +83,22 @@
                 </div>
             </a>
         </div>
-        <div class="col-md-6">
+        <div class="col-md-4">
             <a href="{% url 'admin_reports' %}" class="text-decoration-none">
                 <div class="card stat-card h-100 text-center">
                     <div class="card-body">
                         <div class="stat-value">{{ applications_count }}</div>
                         <p class="text-muted mb-0">Applications Submitted</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a href="{% url 'admin_feedback' %}" class="text-decoration-none">
+                <div class="card stat-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="stat-value">{{ feedback_count }}</div>
+                        <p class="text-muted mb-0">User Feedback</p>
                     </div>
                 </div>
             </a>

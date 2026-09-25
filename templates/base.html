@@ -213,5 +213,7 @@
 {% block extra_js %}
 {% endblock %}
 
+{% if ask_site_feedback %}{% include 'includes/feedback_prompt.html' %}{% endif %}
+
 </body>
 </html>
