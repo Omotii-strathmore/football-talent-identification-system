@@ -35,7 +35,7 @@ urlpatterns = [
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-elif os.environ.get('SERVE_MEDIA') == 'True':
+elif os.environ.get('SERVE_MEDIA') == 'True' and not settings.USE_R2:
     # Stopgap until uploads move to object storage.
     urlpatterns += [
         re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
