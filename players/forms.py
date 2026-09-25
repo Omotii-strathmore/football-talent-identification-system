@@ -122,6 +122,14 @@ class PlayerOnboardingForm(forms.ModelForm):
         ),
         help_text='Allowed age range: 12 to 28 years.',
     )
+    guardian_consent = forms.BooleanField(
+        required=False,
+        label=(
+            'I am under 18, and my parent or guardian has read the Terms of Use and '
+            'Privacy Policy and agrees to me creating this account and sharing my '
+            'profile and videos with verified scouts.'
+        ),
+    )
 
     class Meta:
 
@@ -160,6 +168,16 @@ class PlayerOnboardingForm(forms.ModelForm):
             if entered_location.lower() == county.lower():
                 return county
         raise forms.ValidationError('Please select or type one of Kenya\'s 47 counties.')
+
+    def clean(self):
+        cleaned_data = super().clean()
+        dob = cleaned_data.get('date_of_birth')
+        if dob and _calculate_age(dob) < 18 and not cleaned_data.get('guardian_consent'):
+            self.add_error(
+                'guardian_consent',
+                'Players under 18 need a parent or guardian\'s agreement before creating an account.',
+            )
+        return cleaned_data
 
 
 class PlayerVideoForm(forms.ModelForm):

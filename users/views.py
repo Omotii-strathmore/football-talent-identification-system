@@ -55,6 +55,14 @@ def home(request):
     return render(request, 'users/home.html')
 
 
+def privacy_view(request):
+    return render(request, 'users/privacy.html', {'support_email': settings.SUPPORT_EMAIL})
+
+
+def terms_view(request):
+    return render(request, 'users/terms.html', {'support_email': settings.SUPPORT_EMAIL})
+
+
 def send_otp_to_user(user, method='email', purpose='verify'):
     # generate 6-digit code
     code = f"{random.randint(0, 999999):06d}"
@@ -348,6 +356,7 @@ def complete_profile_view(request):
                         'date_of_birth': form.cleaned_data['date_of_birth'],
                         'position': form.cleaned_data['position'],
                         'location': form.cleaned_data['location'],
+                        'guardian_consent_at': timezone.now() if form.cleaned_data.get('guardian_consent') else None,
                     }
                 )
             else:
@@ -627,9 +636,30 @@ def admin_delete_user_view(request, user_id):
         messages.error(request, 'You cannot delete your own admin account.')
         return redirect('admin_users')
 
+    _delete_user_files(target_user)
     target_user.delete()
-    messages.success(request, 'User deleted successfully.')
+    messages.success(request, 'User and their uploaded files deleted successfully.')
     return redirect('admin_users')
+
+
+def _delete_user_files(user):
+    # Cascading row deletes leave files in storage; remove them so deleted accounts leave no personal data behind.
+    files = []
+    profile = PlayerProfile.objects.filter(user=user).first()
+    if profile:
+        files.append(profile.profile_photo)
+        files.extend(video.video_file for video in profile.videos.all())
+    scout = Scout.objects.filter(user=user).first()
+    if scout:
+        files.extend([scout.verification_document, scout.profile_photo])
+    files.extend(opportunity.poster_image for opportunity in Opportunity.objects.filter(scout=user))
+
+    for file_field in files:
+        if file_field:
+            try:
+                file_field.delete(save=False)
+            except Exception:
+                logger.exception('Could not delete file %s for user %s', file_field.name, user.pk)
 
 
 def _normalize_position_filter(position_value):

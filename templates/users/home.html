@@ -409,6 +409,12 @@
             font-size:.88rem;
         }
 
+        .footer-link {
+            color:var(--gold);
+            text-decoration:underline;
+            text-underline-offset:3px;
+        }
+
         .footer-col {
             display:flex;
             flex-direction:column;
@@ -681,6 +687,11 @@
         <div class="footer-col">
             <p data-i18n="footer.line1">Talanta Soka | Football Talent Identification and Exposure System</p>
             <p data-i18n="footer.line2">Connecting grassroots players and verified scouts across Kenya.</p>
+            <p>
+                <a href="{% url 'privacy' %}" class="footer-link" data-i18n="footer.privacy">Privacy Policy</a>
+                &middot;
+                <a href="{% url 'terms' %}" class="footer-link" data-i18n="footer.terms">Terms of Use</a>
+            </p>
         </div>
         <div class="footer-col" style="text-align:right;">
             <p data-i18n="footer.contact">Contact us</p>
@@ -731,7 +742,9 @@
                     'footer.line1': 'Talanta Soka | Football Talent Identification and Exposure System',
                     'footer.line2': 'Connecting grassroots players and verified scouts across Kenya.',
                     'footer.contact': 'Contact us',
-                    'footer.emailLabel': 'Email:'
+                    'footer.emailLabel': 'Email:',
+                    'footer.privacy': 'Privacy Policy',
+                    'footer.terms': 'Terms of Use'
                 },
                 sw: {
                     'nav.home': 'Nyumbani',
@@ -757,7 +770,9 @@
                     'footer.line1': 'Talanta Soka | Mfumo wa Kutambua na Kuonyesha Vipaji vya Mpira',
                     'footer.line2': 'Tunaunganisha wachezaji wa mtaa na ma-scout walio-verified kote Kenya.',
                     'footer.contact': 'Wasiliana Nasi',
-                    'footer.emailLabel': 'Barua pepe:'
+                    'footer.emailLabel': 'Barua pepe:',
+                    'footer.privacy': 'Sera ya Faragha',
+                    'footer.terms': 'Masharti ya Matumizi'
                 }
             };
 

@@ -20,6 +20,8 @@ class ScoutShortlistTests(TestCase):
             organization='Talent FC',
             specialization='General',
             verification_document=ContentFile(b'pdf-bytes', name='verification.pdf'),
+            verified=True,
+            verification_status='approved',
         )
         self.player_user = User.objects.create_user(
             email='player@example.com',
@@ -66,3 +68,16 @@ class ScoutShortlistTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, self.player_profile.full_name)
+
+    def test_unverified_scout_cannot_view_players(self):
+        self.scout_profile.verified = False
+        self.scout_profile.verification_status = 'pending'
+        self.scout_profile.save()
+        self.client.force_login(self.scout_user)
+
+        for url_name in ['scout_player_directory', 'scout_shortlist', 'scout_player_recommendations']:
+            response = self.client.get(reverse(url_name))
+            self.assertRedirects(response, reverse('scout_dashboard'), fetch_redirect_response=False)
+
+        self.client.post(reverse('scout_toggle_shortlist'), {'profile_id': self.player_profile.id})
+        self.assertFalse(ScoutPlayerShortlist.objects.filter(scout=self.scout_user).exists())

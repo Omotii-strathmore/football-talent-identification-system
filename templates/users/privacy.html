@@ -1,0 +1,90 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Privacy Policy | Talanta Soka{% endblock %}
+
+{% block content %}
+<style>
+    .legal { line-height: 1.7; }
+    .legal h2 { font-size: 1.15rem; margin: 28px 0 8px; color: var(--text); }
+    .legal p, .legal li { color: var(--muted); }
+    .legal ul { padding-left: 1.2rem; }
+    .legal strong { color: var(--text); }
+</style>
+
+<div class="d-flex justify-content-end gap-2 mb-2">
+    <a href="{% url 'terms' %}" class="btn btn-outline-light btn-sm">Terms of Use</a>
+    <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Home</a>
+</div>
+<p class="eyebrow">Legal</p>
+<h1 class="title">Privacy Policy</h1>
+<p class="auth-note">Last updated: 25 September 2026</p>
+
+<div class="legal">
+    <p>Talanta Soka connects football players in Kenya with verified scouts. This policy explains what personal information we collect, why, who can see it, and the choices you have. It is written to meet the Kenya Data Protection Act, 2019.</p>
+
+    <h2>1. Who we are</h2>
+    <p>Talanta Soka is a football talent identification platform developed as a Strathmore University project. For any privacy question or request, contact us at <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+
+    <h2>2. Information we collect</h2>
+    <ul>
+        <li><strong>Account details:</strong> full name, email address, password (stored only in encrypted, hashed form), and whether you are a player or scout.</li>
+        <li><strong>Player profiles:</strong> date of birth and age, playing position, county, height, weight, clubs, achievements, bio, profile photo, and the videos you upload.</li>
+        <li><strong>Scout profiles:</strong> organization, specialization, profile photo, and the verification document you submit.</li>
+        <li><strong>Optional contact details:</strong> an email or phone number you choose to share with scouts.</li>
+        <li><strong>Activity:</strong> opportunities posted, applications made, scout feedback, replies, and the players a scout marks as interested.</li>
+        <li><strong>Technical data:</strong> login sessions and verification codes needed to keep your account secure.</li>
+    </ul>
+
+    <h2>3. Why we use it</h2>
+    <ul>
+        <li>To create and secure your account, including sending verification and password-reset codes by email.</li>
+        <li>To show player profiles and videos to verified scouts, so players can be discovered.</li>
+        <li>To let scouts post trials and tournaments, and players apply to them.</li>
+        <li>To verify that scouts are genuine before they can post opportunities.</li>
+        <li>To produce reports that help administrators run and improve the platform.</li>
+    </ul>
+    <p>We rely on your consent to process this information. You can withdraw it at any time by asking us to delete your account.</p>
+
+    <h2>4. Players under 18</h2>
+    <p>Players can join from age 12. A player under 18 may only create an account after confirming that a parent or guardian has read this policy and the Terms of Use and agrees to the account. We record when this consent was given. A parent or guardian can contact us at any time to see, correct, or delete a child's information.</p>
+
+    <h2>5. Who can see your information</h2>
+    <ul>
+        <li><strong>Verified scouts</strong> can see player profiles and videos. Your email or phone number is only shown to scouts if you choose to share it.</li>
+        <li><strong>Administrators</strong> can see account details and scout verification documents, to manage and protect the platform.</li>
+        <li><strong>Scout verification documents are never public.</strong> Only administrators review them.</li>
+        <li><strong>The public</strong> (visitors who are not logged in) can only see the trials and tournaments page.</li>
+    </ul>
+    <p>We do not sell your personal information or share it for advertising.</p>
+
+    <h2>6. Service providers and where data is stored</h2>
+    <p>We use these providers to run the platform. They process data only on our behalf:</p>
+    <ul>
+        <li><strong>Render</strong>: hosts the website (Frankfurt, Germany).</li>
+        <li><strong>Neon</strong>: stores the database (Frankfurt, Germany).</li>
+        <li><strong>Cloudflare R2</strong>: stores photos, videos, and documents privately (Western Europe).</li>
+        <li><strong>Google (Gmail)</strong>: delivers verification and password-reset emails.</li>
+    </ul>
+    <p>This means your information is stored outside Kenya, in the European Union, which has data protection laws at least as strong as Kenya's. Files are kept in private storage and are only viewable through short-lived links shown to logged-in users.</p>
+
+    <h2>7. How long we keep it</h2>
+    <p>We keep your information while your account is active. When an account is deleted, we delete its profile, uploaded photos, videos, and documents. Verification codes expire after 15 minutes.</p>
+
+    <h2>8. Your rights</h2>
+    <p>Under the Kenya Data Protection Act, 2019, you have the right to:</p>
+    <ul>
+        <li>be informed about how your data is used;</li>
+        <li>access the personal information we hold about you;</li>
+        <li>correct information that is wrong, most of which you can edit yourself on your profile;</li>
+        <li>have your information deleted;</li>
+        <li>object to or withdraw consent for its use.</li>
+    </ul>
+    <p>To use any of these rights, email <a href="mailto:{{ support_email }}">{{ support_email }}</a>. If you are not satisfied with our response, you can complain to the Office of the Data Protection Commissioner (ODPC) of Kenya.</p>
+
+    <h2>9. Security</h2>
+    <p>Passwords are hashed, the site only runs over encrypted HTTPS connections, accounts are verified by email, and uploaded files are stored privately. No system is completely secure, so please use a strong password and keep it to yourself.</p>
+
+    <h2>10. Changes to this policy</h2>
+    <p>If we make important changes, we will update the date at the top of this page and let registered users know.</p>
+</div>
+{% endblock %}

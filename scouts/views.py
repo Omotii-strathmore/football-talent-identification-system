@@ -8,7 +8,7 @@ from django.utils import timezone
 from opportunities.models import Application, Opportunity
 from players.models import PlayerProfile, PlayerVideo
 from scouts.forms import ScoutEditDetailsForm
-from scouts.models import ScoutPlayerShortlist, ScoutVideoFeedback
+from scouts.models import Scout, ScoutPlayerShortlist, ScoutVideoFeedback
 
 
 def _recommended_position_from_specialization(specialization):
@@ -67,11 +67,25 @@ def dashboard(request):
     )
 
 
+def _unverified_scout_redirect(request):
+    # Player profiles include minors' photos and videos, so only admin-approved scouts may see them.
+    if request.user.is_staff:
+        return None
+    scout_profile = Scout.objects.filter(user=request.user).first()
+    if scout_profile and scout_profile.verification_status == 'approved':
+        return None
+    messages.info(request, 'Player profiles and videos become available once an administrator approves your verification.')
+    return redirect('scout_dashboard')
+
+
 @login_required
 def player_directory(request):
     if request.user.role != 'scout':
         messages.error(request, 'Only scouts can view player profiles.')
         return redirect('player_dashboard')
+    blocked = _unverified_scout_redirect(request)
+    if blocked:
+        return blocked
 
     scout_specialization = (request.user.scout_profile.specialization or '').strip().lower()
     is_general_scout = scout_specialization == 'general'
@@ -177,6 +191,9 @@ def scout_toggle_shortlist(request):
     if request.user.role != 'scout':
         messages.error(request, 'Only scouts can manage their interests list.')
         return redirect('player_dashboard')
+    blocked = _unverified_scout_redirect(request)
+    if blocked:
+        return blocked
 
     if request.method != 'POST':
         return redirect('scout_player_directory')
@@ -200,6 +217,9 @@ def scout_shortlist(request):
     if request.user.role != 'scout':
         messages.error(request, 'Only scouts can view their interests list.')
         return redirect('player_dashboard')
+    blocked = _unverified_scout_redirect(request)
+    if blocked:
+        return blocked
 
     if request.method == 'POST':
         if 'notes' in request.POST:
@@ -292,6 +312,9 @@ def player_recommendations(request):
     if request.user.role != 'scout':
         messages.error(request, 'Only scouts can view player recommendations.')
         return redirect('player_dashboard')
+    blocked = _unverified_scout_redirect(request)
+    if blocked:
+        return blocked
 
     scout_profile = request.user.scout_profile
     recommended_position = _recommended_position_from_specialization(scout_profile.specialization)

@@ -213,6 +213,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 LOGIN_URL = 'login'
 
+SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL', 'support@talantasoka.co.ke')
+
 # Email settings for OTP delivery
 EMAIL_BACKEND = os.environ.get('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')

@@ -42,6 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='player')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
+    terms_accepted_at = models.DateTimeField(blank=True, null=True)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['full_name']

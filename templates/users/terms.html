@@ -1,0 +1,73 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Terms of Use | Talanta Soka{% endblock %}
+
+{% block content %}
+<style>
+    .legal { line-height: 1.7; }
+    .legal h2 { font-size: 1.15rem; margin: 28px 0 8px; color: var(--text); }
+    .legal p, .legal li { color: var(--muted); }
+    .legal ul { padding-left: 1.2rem; }
+    .legal strong { color: var(--text); }
+</style>
+
+<div class="d-flex justify-content-end gap-2 mb-2">
+    <a href="{% url 'privacy' %}" class="btn btn-outline-light btn-sm">Privacy Policy</a>
+    <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Home</a>
+</div>
+<p class="eyebrow">Legal</p>
+<h1 class="title">Terms of Use</h1>
+<p class="auth-note">Last updated: 25 September 2026</p>
+
+<div class="legal">
+    <p>These terms are the rules for using Talanta Soka. By creating an account, you agree to them and to our <a href="{% url 'privacy' %}">Privacy Policy</a>.</p>
+
+    <h2>1. Who can join</h2>
+    <ul>
+        <li><strong>Players</strong> must be between 12 and 28 years old.</li>
+        <li><strong>Players under 18</strong> need a parent or guardian to agree before creating an account.</li>
+        <li><strong>Scouts</strong> must represent a genuine club, academy, or football organization and submit a valid verification document. Scouts can only view player profiles and post opportunities after an administrator approves them.</li>
+    </ul>
+
+    <h2>2. Your account</h2>
+    <ul>
+        <li>Give true and accurate information, including your real name and date of birth.</li>
+        <li>Keep your password private. You are responsible for activity on your account.</li>
+        <li>One person, one account. Do not create accounts for other people without their permission.</li>
+    </ul>
+
+    <h2>3. Videos and content you upload</h2>
+    <ul>
+        <li>Only upload videos and photos that you have the right to share, and that show you playing football.</li>
+        <li>No violent, sexual, hateful, or abusive content, and no content that shows other children without their guardian's permission.</li>
+        <li>You keep ownership of what you upload. You allow Talanta Soka to store it and show it to logged-in users of the platform, only for talent identification. This stops when you delete the content or your account.</li>
+    </ul>
+
+    <h2>4. Rules for scouts</h2>
+    <ul>
+        <li>Only post real trials and tournaments, with accurate details and deadlines.</li>
+        <li><strong>Never ask a player or their family for money</strong> to be scouted, to attend a trial, or to join a club.</li>
+        <li>Contact players under 18 only through the platform or in the presence of their parent or guardian.</li>
+        <li>Use player information only for scouting, and never share it outside the platform.</li>
+    </ul>
+
+    <h2>5. Safety and reporting</h2>
+    <p>If anyone asks you for money, makes you feel unsafe, or behaves inappropriately, stop contacting them and report it to <a href="mailto:{{ support_email }}">{{ support_email }}</a>. For anything involving a risk to a child, also contact the police or Childline Kenya on 116.</p>
+
+    <h2>6. What we can and cannot promise</h2>
+    <ul>
+        <li>Talanta Soka helps players get seen. We do not guarantee trials, selection, contracts, or payment.</li>
+        <li>We verify scouts' documents, but we cannot guarantee every scout's intentions. Always use care, especially when meeting in person.</li>
+        <li>The platform may sometimes be slow or unavailable, especially while it runs on free hosting.</li>
+    </ul>
+
+    <h2>7. Suspending or removing accounts</h2>
+    <p>We may suspend or delete accounts that break these terms, post false information, or put other users at risk. You can ask us to delete your account at any time.</p>
+
+    <h2>8. Changes and governing law</h2>
+    <p>We may update these terms and will change the date at the top when we do. These terms are governed by the laws of Kenya.</p>
+
+    <h2>9. Contact</h2>
+    <p>Questions about these terms: <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+</div>
+{% endblock %}

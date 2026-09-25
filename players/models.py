@@ -31,6 +31,11 @@ class PlayerProfile(models.Model):
         help_text='Used to keep your age accurate automatically.'
     )
     age = models.PositiveIntegerField()
+    guardian_consent_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text='When a parent/guardian consent was confirmed for a player under 18.'
+    )
     position = models.CharField(
         max_length=50,
         choices=POSITION_CHOICES

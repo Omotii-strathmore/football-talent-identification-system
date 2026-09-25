@@ -1,5 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
+from django.utils import timezone
+from django.utils.safestring import mark_safe
 from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 import re
@@ -16,6 +18,15 @@ class RegistrationForm(forms.ModelForm):
 	confirm_password = forms.CharField(
 		label='Confirm password',
 		widget=forms.PasswordInput(attrs={'placeholder': 'Repeat the password'}),
+	)
+	accept_terms = forms.BooleanField(
+		required=True,
+		label=mark_safe(
+			'I have read and agree to the '
+			'<a href="/terms/" target="_blank" rel="noopener">Terms of Use</a> and '
+			'<a href="/privacy/" target="_blank" rel="noopener">Privacy Policy</a>.'
+		),
+		error_messages={'required': 'You must agree to the Terms of Use and Privacy Policy to create an account.'},
 	)
 
 	class Meta:
@@ -38,6 +49,7 @@ class RegistrationForm(forms.ModelForm):
 			'role',
 			'password',
 			'confirm_password',
+			'accept_terms',
 		)
 
 	def clean(self):
@@ -68,6 +80,7 @@ class RegistrationForm(forms.ModelForm):
 	def save(self, commit=True):
 		user = super().save(commit=False)
 		user.set_password(self.cleaned_data['password'])
+		user.terms_accepted_at = timezone.now()
 		if commit:
 			user.save()
 		return user
