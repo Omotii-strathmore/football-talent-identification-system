@@ -1,0 +1,31 @@
+{% extends 'emails/base_email.html' %}
+{% block preheader %}Your documents are approved. Start discovering Kenya's next football stars.{% endblock %}
+{% block headline %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px 0;">
+  <tr><td style="background:#e6f6ec;border:1px solid #9fd8b4;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:bold;color:#006b3f;">&#9989; Verified scout</td></tr>
+</table>
+Karibu, Coach {{ first_name }}! &#128301;
+{% endblock %}
+{% block body %}
+<p style="margin:0 0 14px 0;">Good news: our team has reviewed your documents and your scout account for <strong>{{ organization }}</strong> is now verified.</p>
+<p style="margin:0 0 14px 0;">Across Kenya there are players with magic in their feet who have never had a scout watch them play. <strong>Thank you for helping them get seen.</strong></p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 16px 0;background:#f1faf4;border-left:4px solid #f6c453;border-radius:8px;">
+  <tr><td style="padding:14px 16px;font-size:14px;line-height:1.7;">
+    <strong style="color:#006b3f;">You can now</strong><br>
+    <span style="color:#006b3f;font-weight:bold;">1.</span> Browse players by position, age and county<br>
+    <span style="color:#006b3f;font-weight:bold;">2.</span> Watch their videos and give feedback<br>
+    <span style="color:#006b3f;font-weight:bold;">3.</span> Save players to your Interests list<br>
+    <span style="color:#006b3f;font-weight:bold;">4.</span> Post trials and tournaments
+  </td></tr>
+</table>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;background:#fff8e1;border-radius:8px;">
+  <tr><td style="padding:12px 16px;font-size:13px;line-height:1.6;color:#5b4a00;">
+    &#128737;&#65039; <strong>Keeping players safe:</strong> never ask players for money, and contact players under 18 only through Talanta Soka or with a parent present.
+  </td></tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px auto;">
+  <tr><td align="center" bgcolor="#006b3f" style="border-radius:999px;">
+    <a href="{{ link }}" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:999px;">Start scouting &#128301;</a>
+  </td></tr>
+</table>
+{% endblock %}

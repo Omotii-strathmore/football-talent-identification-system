@@ -104,3 +104,22 @@ class ScoutEditDetailsForm(forms.ModelForm):
 
 	def clean_organization(self):
 		return clean_organization_name(self.cleaned_data.get('organization'))
+
+
+class ScoutResubmitForm(forms.ModelForm):
+	"""Lets a rejected scout send a new verification document for another review."""
+	verification_document = forms.FileField(
+		required=True,
+		label='New verification document',
+		help_text='A coaching licence, a signed club or academy letter, or an official accreditation. PDF or Word.',
+		validators=[FileExtensionValidator(['pdf', 'doc', 'docx'])],
+		widget=forms.ClearableFileInput(attrs={'accept': '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
+	)
+
+	class Meta:
+		model = Scout
+		fields = ["organization", "verification_document"]
+		labels = {"organization": "Who do you scout for?"}
+
+	def clean_organization(self):
+		return clean_organization_name(self.cleaned_data.get('organization'))

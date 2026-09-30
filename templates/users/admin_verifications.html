@@ -108,8 +108,9 @@
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-success" {% if scout.verification_status == 'approved' %}disabled{% endif %}>Approve</button>
                                     </form>
-                                    <form method="post" action="{% url 'admin_reject_scout' scout.id %}">
+                                    <form method="post" action="{% url 'admin_reject_scout' scout.id %}" class="d-flex gap-1">
                                         {% csrf_token %}
+                                        <input type="text" name="reason" maxlength="300" class="form-control form-control-sm" placeholder="Reason (optional, emailed)" style="min-width:170px" {% if scout.verification_status == 'rejected' %}disabled{% endif %}>
                                         <button type="submit" class="btn btn-sm btn-outline-danger" {% if scout.verification_status == 'rejected' %}disabled{% endif %}>Reject</button>
                                     </form>
                                 </div>

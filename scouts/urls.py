@@ -13,5 +13,6 @@ urlpatterns = [
     path('players/interests/', views.scout_shortlist, name='scout_shortlist'),
     path('player-recommendations/', views.player_recommendations, name='scout_player_recommendations'),
     path('details/edit/', views.edit_details, name='scout_edit_details'),
+    path('verification/resubmit/', views.resubmit_verification, name='scout_resubmit_verification'),
 
 ]

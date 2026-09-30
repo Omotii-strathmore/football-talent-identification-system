@@ -8,7 +8,8 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
-from users.emails import send_branded_email, send_welcome_email
+from django.utils.http import url_has_allowed_host_and_scheme
+from users.emails import send_branded_email, send_scout_decision_email, send_welcome_email
 from django.conf import settings
 from datetime import timedelta
 import logging
@@ -131,7 +132,7 @@ def send_otp_to_user(user, method='email', purpose='verify'):
                 subject, message, 'code.html',
                 {'code': code, 'purpose': purpose, 'full_name': user.full_name,
                  'first_name': (user.full_name or '').split(' ')[0] or 'there'},
-                [user.email], from_email=from_email, banner='player' if purpose != 'reset' else 'team',
+                [user.email], from_email=from_email, banner='player' if purpose != 'reset' else 'reset',
             )
             logger.info('OTP email sent to %s using backend %s', user.email, settings.EMAIL_BACKEND)
             return True
@@ -483,6 +484,11 @@ def login_view(request):
                 login(request, user)
                 messages.success(request, 'Login successful. Welcome back!')
 
+                # Links in emails (for example "Try again") send people back to the right page after login.
+                next_url = request.POST.get('next') or request.GET.get('next')
+                if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+                    return redirect(next_url)
+
                 if user.role == 'player':
                     return redirect('player_dashboard')
 
@@ -507,6 +513,7 @@ def login_view(request):
         'users/login.html',
         {
             'form': form,
+            'next': request.POST.get('next') or request.GET.get('next', ''),
         }
     )
 
@@ -615,7 +622,8 @@ def admin_approve_scout_view(request, scout_id):
     scout.verified = True
     scout.verification_status = 'approved'
     scout.save(update_fields=['verified', 'verification_status'])
-    messages.success(request, f'Scout {scout.user.full_name} has been approved.')
+    emailed = send_scout_decision_email(scout, approved=True)
+    messages.success(request, f'Scout {scout.user.full_name} has been approved.' + (' They have been emailed.' if emailed else ' (The email could not be sent.)'))
     return redirect('admin_verifications')
 
 
@@ -629,7 +637,9 @@ def admin_reject_scout_view(request, scout_id):
     scout.verified = False
     scout.verification_status = 'rejected'
     scout.save(update_fields=['verified', 'verification_status'])
-    messages.info(request, f'Scout {scout.user.full_name} has been rejected.')
+    reason = request.POST.get('reason', '').strip()[:300]
+    emailed = send_scout_decision_email(scout, approved=False, reason=reason)
+    messages.info(request, f'Scout {scout.user.full_name} has been rejected.' + (' They have been emailed with a link to try again.' if emailed else ' (The email could not be sent.)'))
     return redirect('admin_verifications')
 
 

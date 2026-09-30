@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Try Verification Again{% endblock %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 760px;">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="mb-0">Let&rsquo;s try that again &#8635;</h2>
+        <a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    <div class="alert alert-warning">
+        {% if scout_profile.verification_status == 'rejected' %}
+            We could not verify the document you sent before. Upload a clear one below and our team will review it again.
+        {% else %}
+            Your document is waiting for review. You can replace it below if you have a clearer one.
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <p class="mb-2"><strong>Documents we accept</strong></p>
+            <ul class="mb-3">
+                <li>A coaching licence (for example CAF or FKF)</li>
+                <li>A signed letter from your club or academy</li>
+                <li>An official accreditation or ID from your organisation</li>
+            </ul>
+            <form method="post" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                {{ form|crispy }}
+                <button type="submit" class="btn btn-primary mt-2">Send for review</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

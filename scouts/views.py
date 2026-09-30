@@ -7,7 +7,7 @@ from django.utils import timezone
 
 from opportunities.models import Application, Opportunity
 from players.models import PlayerProfile, PlayerVideo
-from scouts.forms import ScoutEditDetailsForm
+from scouts.forms import ScoutEditDetailsForm, ScoutResubmitForm
 from players.guardian import visible_to_scouts_q
 from scouts.models import Scout, ScoutPlayerShortlist, ScoutVideoFeedback
 
@@ -362,3 +362,27 @@ def edit_details(request):
             'scout_profile': scout_profile,
         },
     )
+
+@login_required
+def resubmit_verification(request):
+    """A scout whose documents were rejected uploads new ones; the review starts again."""
+    if request.user.role != 'scout' or not hasattr(request.user, 'scout_profile'):
+        return redirect('home')
+    scout_profile = request.user.scout_profile
+    if scout_profile.verification_status == 'approved':
+        messages.info(request, 'Your account is already verified.')
+        return redirect('scout_dashboard')
+
+    if request.method == 'POST':
+        form = ScoutResubmitForm(request.POST, request.FILES, instance=scout_profile)
+        if form.is_valid():
+            scout = form.save(commit=False)
+            scout.verified = False
+            scout.verification_status = 'pending'
+            scout.save()
+            messages.success(request, 'Thank you! Your new document has been sent. Our team will review it and email you.')
+            return redirect('scout_dashboard')
+    else:
+        form = ScoutResubmitForm(instance=scout_profile)
+
+    return render(request, 'scouts/resubmit_verification.html', {'form': form, 'scout_profile': scout_profile})

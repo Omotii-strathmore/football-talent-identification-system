@@ -20,6 +20,8 @@
                     <span class="badge bg-success mt-2">Status: Verified</span>
                 {% elif scout_profile.verification_status == 'rejected' %}
                     <span class="badge bg-danger mt-2">Status: Rejected</span>
+                    <p class="mt-2 mb-1">We could not verify your document. Upload a clearer one and we will review it again.</p>
+                    <a href="{% url 'scout_resubmit_verification' %}" class="btn btn-sm btn-warning">Try again &#8635;</a>
                 {% else %}
                     <span class="badge bg-warning text-dark mt-2">Status: Pending Verification</span>
                 {% endif %}

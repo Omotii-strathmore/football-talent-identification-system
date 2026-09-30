@@ -15,6 +15,9 @@ BANNERS = {
     'player': 'email/banner-player.jpg',
     'team': 'email/banner-team.jpg',
     'welcome': 'email/banner-welcome.jpg',
+    'reset': 'email/banner-reset.jpg',
+    'coach': 'email/banner-coach.jpg',
+    'coach_group': 'email/banner-coach-group.jpg',
 }
 
 
@@ -72,4 +75,49 @@ def send_welcome_email(user):
         return True
     except Exception:
         logger.exception('Failed to send welcome email to %s', user.email)
+        return False
+
+
+def send_scout_decision_email(scout, approved, reason=''):
+    """Tell a scout the result of the document review. A failure here must never block the admin."""
+    user = scout.user
+    first_name = (user.full_name or '').split(' ')[0] or 'there'
+    site = settings.SITE_URL
+    if approved:
+        subject = "You're verified, Coach! Start discovering talent ✅"
+        link = f'{site}/login/'
+        text = (
+            f'Hello {first_name},\n\n'
+            f'Good news: your documents have been approved and your scout account for {scout.organization} is verified.\n\n'
+            'You can now:\n'
+            '- Browse players by position, age and county\n'
+            '- Watch their videos and give feedback\n'
+            '- Save players to your Interests list\n'
+            '- Post trials and tournaments\n\n'
+            'Please remember: never ask players for money, and contact players under 18 only through the platform '
+            'or with a parent present.\n\n'
+            f'Start scouting: {link}\n\nTalanta Soka'
+        )
+        template, banner = 'scout_approved.html', 'coach'
+    else:
+        subject = 'Action needed: we could not verify your scout documents'
+        link = f'{site}/login/?next=/scout/verification/resubmit/'
+        text = (
+            f'Hello {first_name},\n\n'
+            'Thank you for applying to scout on Talanta Soka. Unfortunately we could not verify the documents you sent.\n\n'
+            + (f'Reason from our team: {reason}\n\n' if reason else '')
+            + 'This is not the end. Upload a clear coaching licence, club letter or accreditation and we will review it again.\n\n'
+            f'Try again: {link}\n\n'
+            f'Questions? Write to us at {settings.SUPPORT_EMAIL}.\n\nTalanta Soka'
+        )
+        template, banner = 'scout_rejected.html', 'coach_group'
+    try:
+        send_branded_email(
+            subject, text, template,
+            {'first_name': first_name, 'organization': scout.organization, 'reason': reason, 'link': link},
+            [user.email], from_email=f'{settings.EMAIL_FROM_NAME} <{settings.DEFAULT_FROM_EMAIL}>', banner=banner,
+        )
+        return True
+    except Exception:
+        logger.exception('Failed to send scout decision email to %s', user.email)
         return False

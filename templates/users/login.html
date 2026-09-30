@@ -13,6 +13,7 @@
 
     <form method="post" novalidate>
         {% csrf_token %}
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
         {{ form|crispy }}
         <div class="form-check mt-2">
             <input class="form-check-input" type="checkbox" id="toggle-login-password">
