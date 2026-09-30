@@ -2,22 +2,18 @@
 
 {% block title %}Terms of Use | Talanta Soka{% endblock %}
 
-{% block content %}
-<style>
-    .legal { line-height: 1.7; }
-    .legal h2 { font-size: 1.15rem; margin: 28px 0 8px; color: var(--text); }
-    .legal p, .legal li { color: var(--muted); }
-    .legal ul { padding-left: 1.2rem; }
-    .legal strong { color: var(--text); }
-</style>
+{% block extra_head %}{% include 'includes/legal_theme_head.html' %}{% endblock %}
 
-<div class="d-flex justify-content-end gap-2 mb-2">
+{% block content %}
+
+<div class="legal-toolbar">
     <a href="{% url 'privacy' %}" class="btn btn-outline-light btn-sm">Privacy Policy</a>
     <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Home</a>
+    <button type="button" class="legal-theme-toggle" id="legal-theme-toggle" aria-label="Switch light/dark mode" title="Switch light/dark mode (press T)">&#127769;</button>
 </div>
 <p class="eyebrow">Legal</p>
 <h1 class="title">Terms of Use</h1>
-<p class="auth-note">Last updated: 25 September 2026</p>
+<p><span class="legal-updated">&#128197; Last updated: 30 September 2026</span></p>
 
 <div class="legal">
     <p>These terms are the rules for using Talanta Soka. By creating an account, you agree to them and to our <a href="{% url 'privacy' %}">Privacy Policy</a>.</p>
@@ -70,4 +66,5 @@
     <h2>9. Contact</h2>
     <p>Questions about these terms: <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>.</p>
 </div>
+{% include 'includes/legal_theme_toggle.html' %}
 {% endblock %}

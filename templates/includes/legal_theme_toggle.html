@@ -1,0 +1,36 @@
+<script>
+    // Light/dark switch for the legal pages: the button or the "T" key.
+    (function () {
+        const STORAGE_KEY = 'talantaSokaTheme';
+        const toggleBtn = document.getElementById('legal-theme-toggle');
+
+        function currentTheme() {
+            return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        }
+
+        function updateIcon() {
+            if (toggleBtn) toggleBtn.textContent = currentTheme() === 'light' ? '☀️' : '🌙';
+        }
+
+        function toggleTheme() {
+            const next = currentTheme() === 'light' ? 'dark' : 'light';
+            if (next === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            try { localStorage.setItem(STORAGE_KEY, next); } catch (e) {}
+            updateIcon();
+        }
+
+        updateIcon();
+        if (toggleBtn) toggleBtn.addEventListener('click', toggleTheme);
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 't' && e.key !== 'T') return;
+            const tag = (e.target && e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) return;
+            if (e.metaKey || e.ctrlKey || e.altKey) return;
+            toggleTheme();
+        });
+    })();
+</script>

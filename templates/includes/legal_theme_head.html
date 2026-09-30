@@ -1,0 +1,93 @@
+<script>
+    // Apply the saved light/dark choice before the page paints (shared with the landing and trials pages).
+    (function () {
+        try {
+            if (localStorage.getItem('talantaSokaTheme') === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        } catch (e) {}
+    })();
+</script>
+<style>
+    /* ---------- Shared look for the Privacy Policy and Terms of Use ---------- */
+    .legal { line-height: 1.75; }
+    .legal h2 {
+        position: relative;
+        font-size: 1.15rem;
+        font-weight: 800;
+        margin: 30px 0 10px;
+        padding-left: 14px;
+        color: #4ade80;
+    }
+    .legal h2::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: .2em;
+        bottom: .2em;
+        width: 4px;
+        border-radius: 4px;
+        background: linear-gradient(180deg, #f5c400, #4ade80);
+    }
+    .legal p, .legal li { color: var(--muted); }
+    .legal ul { padding-left: 1.2rem; }
+    .legal li::marker { color: #4ade80; }
+    .legal strong { color: var(--text); }
+    .legal em { color: #fde68a; font-style: italic; }
+    .legal-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+    .legal-theme-toggle {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, .25);
+        background: rgba(255, 255, 255, .06);
+        font-size: 1rem;
+        line-height: 1;
+        cursor: pointer;
+        transition: transform .2s ease;
+    }
+    .legal-theme-toggle:hover { transform: rotate(-12deg) scale(1.06); }
+    .legal-updated {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .82rem;
+        padding: 4px 12px;
+        border-radius: 999px;
+        background: rgba(74, 222, 128, .1);
+        border: 1px solid rgba(74, 222, 128, .3);
+        color: #86efac;
+    }
+    body, .card-shell, .legal h2, .legal p, .legal li { transition: background .35s ease, color .35s ease, border-color .35s ease; }
+
+    /* ---------- Light mode ---------- */
+    html[data-theme="light"] {
+        --panel: rgba(255, 255, 255, .92);
+        --line: rgba(0, 107, 63, .14);
+        --text: #13231a;
+        --muted: #3f4f46;
+        --accent: #006b3f;
+    }
+    html[data-theme="light"] body {
+        background:
+            radial-gradient(circle at top left, rgba(245, 196, 0, .22), transparent 32%),
+            radial-gradient(circle at bottom right, rgba(0, 107, 63, .16), transparent 36%),
+            linear-gradient(135deg, #fbf9f3, #f4f1e6 60%, #eef3ec);
+    }
+    html[data-theme="light"] .card-shell { box-shadow: 0 30px 70px rgba(19, 35, 26, .12); }
+    html[data-theme="light"] .eyebrow { color: #b58900; }
+    html[data-theme="light"] .legal h2 { color: #006b3f; }
+    html[data-theme="light"] .legal h2::before { background: linear-gradient(180deg, #f5c400, #006b3f); }
+    html[data-theme="light"] .legal li::marker { color: #006b3f; }
+    html[data-theme="light"] .legal a { color: #006b3f; font-weight: 600; }
+    html[data-theme="light"] .legal em { color: #8a6d00; }
+    html[data-theme="light"] .legal-updated { background: rgba(0, 107, 63, .08); border-color: rgba(0, 107, 63, .25); color: #006b3f; }
+    html[data-theme="light"] .legal-toolbar .btn-outline-light { color: #006b3f; border-color: #006b3f; }
+    html[data-theme="light"] .legal-toolbar .btn-outline-light:hover { background: #006b3f; color: #fff; }
+    html[data-theme="light"] .legal-theme-toggle { background: #fff; border-color: rgba(0, 107, 63, .25); box-shadow: 0 4px 12px rgba(19, 35, 26, .1); }
+    html[data-theme="light"] .message-list li { background: rgba(0, 107, 63, .06); }
+
+    @media (prefers-reduced-motion: reduce) {
+        body, .card-shell, .legal h2, .legal p, .legal li { transition: none; }
+    }
+</style>

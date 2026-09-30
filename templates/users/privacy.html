@@ -2,22 +2,18 @@
 
 {% block title %}Privacy Policy | Talanta Soka{% endblock %}
 
-{% block content %}
-<style>
-    .legal { line-height: 1.7; }
-    .legal h2 { font-size: 1.15rem; margin: 28px 0 8px; color: var(--text); }
-    .legal p, .legal li { color: var(--muted); }
-    .legal ul { padding-left: 1.2rem; }
-    .legal strong { color: var(--text); }
-</style>
+{% block extra_head %}{% include 'includes/legal_theme_head.html' %}{% endblock %}
 
-<div class="d-flex justify-content-end gap-2 mb-2">
+{% block content %}
+
+<div class="legal-toolbar">
     <a href="{% url 'terms' %}" class="btn btn-outline-light btn-sm">Terms of Use</a>
     <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Home</a>
+    <button type="button" class="legal-theme-toggle" id="legal-theme-toggle" aria-label="Switch light/dark mode" title="Switch light/dark mode (press T)">&#127769;</button>
 </div>
 <p class="eyebrow">Legal</p>
 <h1 class="title">Privacy Policy</h1>
-<p class="auth-note">Last updated: 25 September 2026</p>
+<p><span class="legal-updated">&#128197; Last updated: 30 September 2026</span></p>
 
 <div class="legal">
     <p>Talanta Soka connects football players with verified scouts through structured football opportunities. This policy explains what personal information we collect, why, who can see it, and the choices you have. It is written to meet the Kenya Data Protection Act, 2019.</p>
@@ -64,7 +60,7 @@
         <li><strong>Render</strong>: hosts the website (Frankfurt, Germany).</li>
         <li><strong>Neon</strong>: stores the database (Frankfurt, Germany).</li>
         <li><strong>Cloudflare R2</strong>: stores photos, videos, and documents privately (Western Europe).</li>
-        <li><strong>Google (Gmail)</strong>: delivers verification and password-reset emails.</li>
+        <li><strong>Brevo</strong> (France) and <strong>Google (Gmail)</strong>: deliver verification, password-reset, and parent-approval emails.</li>
     </ul>
     <p>This means your information is stored outside Kenya, in the European Union, which has data protection laws at least as strong as Kenya's. Files are kept in private storage and are only viewable through short-lived links shown to logged-in users.</p>
 
@@ -90,4 +86,5 @@
     <h2>10. Changes to this policy</h2>
     <p>If we make important changes, we will update the date at the top of this page and let registered users know.</p>
 </div>
+{% include 'includes/legal_theme_toggle.html' %}
 {% endblock %}
