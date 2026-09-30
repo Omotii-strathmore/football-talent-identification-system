@@ -130,6 +130,9 @@ DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
+        # Neon's free database sleeps when idle, which silently kills kept-open connections.
+        # Check each reused connection first so a sleeping database never shows users an error page.
+        conn_health_checks=True,
     )
 }
 

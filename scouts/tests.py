@@ -81,3 +81,19 @@ class ScoutShortlistTests(TestCase):
 
         self.client.post(reverse('scout_toggle_shortlist'), {'profile_id': self.player_profile.id})
         self.assertFalse(ScoutPlayerShortlist.objects.filter(scout=self.scout_user).exists())
+
+
+class OrganizationNameTests(TestCase):
+    def test_real_names_are_accepted_and_tidied(self):
+        from scouts.forms import clean_organization_name
+        self.assertEqual(clean_organization_name('Gor Mahia Youth Academy'), 'Gor Mahia Youth Academy')
+        self.assertEqual(clean_organization_name('  gor   mahia '), 'Gor Mahia')
+        self.assertEqual(clean_organization_name('Bandari F.C.'), 'Bandari F.C.')
+        self.assertEqual(clean_organization_name('Tusker'), 'Tusker')
+
+    def test_nonsense_names_are_rejected(self):
+        from django import forms
+        from scouts.forms import clean_organization_name
+        for bad in ['a', 'ab', '123', 'asdfgh', 'test', 'aaaaa', 'xyz', 'Club', '!!!', 'kjhgf']:
+            with self.assertRaises(forms.ValidationError, msg=bad):
+                clean_organization_name(bad)
