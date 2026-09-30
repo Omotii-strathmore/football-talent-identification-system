@@ -4,11 +4,12 @@ from django.core.validators import FileExtensionValidator
 from scouts.models import Scout
 
 
+# Ordered from goal to attack, as they appear on a pitch.
 SPECIALIZATION_CHOICES = (
-	('midfield', 'midfield'),
 	('goalkeeping', 'goalkeeping'),
-	('attacking', 'attacking'),
 	('defence', 'defence'),
+	('midfield', 'midfield'),
+	('attacking', 'attacking'),
 	('general', 'general'),
 )
 

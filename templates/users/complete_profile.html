@@ -1,5 +1,4 @@
 {% extends 'auth_base.html' %}
-{% load crispy_forms_tags %}
 {% load static %}
 
 {% block title %}Complete profile | Talanta Soka{% endblock %}
@@ -11,82 +10,445 @@
     <style>
         [hidden] { display: none !important; }
 
-        .scout-photo-preview-wrap {
-            margin-bottom: 12px;
-            display: none;
-            align-items: center;
-            gap: 10px;
+        /* ---------- Numbered question cards ---------- */
+        .step-card {
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .03);
+            border-radius: 18px;
+            padding: 16px 18px 18px;
+            margin-bottom: 14px;
+            transition: border-color .25s ease, background .25s ease;
+        }
+        .step-card.is-done { border-color: rgba(52, 211, 153, .45); background: rgba(52, 211, 153, .04); }
+        .step-head { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .step-num {
+            width: 30px;
+            height: 30px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: .9rem;
+            color: #111827;
+            background: var(--accent);
+            transition: background .25s ease;
+        }
+        .step-card.is-done .step-num { background: #34d399; font-size: 0; }
+        .step-card.is-done .step-num::after { content: "\2713"; font-size: .95rem; }
+        .step-title { font-weight: 800; font-size: 1.05rem; margin: 0; color: var(--text); }
+        .step-sub { font-size: .84rem; color: var(--muted); margin: 2px 0 0; }
+        .optional-tag {
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: var(--muted);
+            border: 1px solid rgba(255, 255, 255, .18);
+            border-radius: 999px;
+            padding: 2px 8px;
+            margin-left: 6px;
+            vertical-align: middle;
         }
 
-        .scout-photo-preview {
-            width: 84px;
-            height: 84px;
+        .field-input {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, .2);
+            background: rgba(255, 255, 255, .96);
+            color: #0f172a;
+            padding: 11px 14px 11px 42px;
+            font-size: 1rem;
+        }
+        .field-input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+        .input-icon { position: relative; }
+        .input-icon > .icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.05rem;
+            pointer-events: none;
+            z-index: 2;
+        }
+        .dob-picker-wrap .field-input { cursor: pointer; }
+        .field-error { color: #fca5a5; font-size: .85rem; margin-top: 6px; }
+
+        /* ---------- Choice cards (positions / specialisations) ---------- */
+        .choice-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+        .choice-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+        .choice { position: relative; margin: 0; cursor: pointer; }
+        .choice input { position: absolute; opacity: 0; pointer-events: none; }
+        .choice-body {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 6px 10px;
+            border-radius: 14px;
+            border: 1.5px solid rgba(255, 255, 255, .14);
+            background: rgba(255, 255, 255, .04);
+            text-align: center;
+            transition: all .2s ease;
+        }
+        .choice:hover .choice-body { transform: translateY(-2px); border-color: rgba(245, 158, 11, .5); }
+        .choice input:focus-visible + .choice-body { outline: 2px solid var(--accent); outline-offset: 3px; }
+        .choice input:checked + .choice-body {
+            border-color: var(--accent);
+            background: linear-gradient(160deg, rgba(245, 158, 11, .18), rgba(20, 184, 166, .08));
+            box-shadow: 0 8px 22px rgba(245, 158, 11, .15);
+        }
+        .choice-name { font-weight: 800; font-size: .9rem; color: var(--text); }
+        .choice-hint { font-size: .72rem; color: var(--muted); line-height: 1.3; }
+
+        .mini-pitch { width: 40px; height: 54px; }
+        .mini-pitch .line { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: 1.4; }
+        .mini-pitch .zone { fill: rgba(20, 184, 166, .28); transition: fill .2s ease; }
+        .mini-pitch .dot { fill: #f8fafc; }
+        .choice input:checked + .choice-body .mini-pitch .zone { fill: rgba(245, 158, 11, .55); }
+        .choice input:checked + .choice-body .mini-pitch .dot { fill: #fde68a; }
+
+        /* ---------- County quick picks ---------- */
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .chip {
+            border: 1px solid rgba(255, 255, 255, .18);
+            background: rgba(255, 255, 255, .05);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 5px 12px;
+            font-size: .8rem;
+            cursor: pointer;
+            transition: all .15s ease;
+        }
+        .chip:hover { border-color: var(--accent); }
+        .chip.is-active { background: var(--accent); border-color: var(--accent); color: #111827; font-weight: 700; }
+
+        /* ---------- Guardian card (under-18s only) ---------- */
+        .guardian-card {
+            border: 1px solid rgba(245, 158, 11, .5);
+            background: linear-gradient(160deg, rgba(245, 158, 11, .14), rgba(245, 158, 11, .04));
+            border-radius: 18px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            animation: pop-in .3s ease-out;
+        }
+        .guardian-card h3 { font-size: 1rem; font-weight: 800; margin: 0 0 4px; color: var(--text); }
+        .guardian-card p { font-size: .86rem; color: var(--muted); margin: 0 0 10px; }
+        .guardian-card .form-check-label { font-size: .9rem; color: var(--text); }
+        .guardian-card a { color: var(--accent); }
+        @keyframes pop-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+        /* ---------- Scout uploads ---------- */
+        .dropzone {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 18px;
+            border-radius: 16px;
+            border: 2px dashed rgba(255, 255, 255, .25);
+            background: rgba(255, 255, 255, .03);
+            transition: all .2s ease;
+            cursor: pointer;
+        }
+        .dropzone:hover, .dropzone.is-drag { border-color: var(--accent); background: rgba(245, 158, 11, .07); }
+        .dropzone.has-file { border-style: solid; border-color: rgba(52, 211, 153, .6); background: rgba(52, 211, 153, .06); }
+        .dropzone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .dz-icon {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+            border-radius: 12px;
+            display: grid;
+            place-items: center;
+            font-size: 1.5rem;
+            background: rgba(255, 255, 255, .08);
+        }
+        .dz-title { font-weight: 700; color: var(--text); }
+        .dz-sub { font-size: .8rem; color: var(--muted); }
+
+        .photo-picker { display: flex; align-items: center; gap: 16px; }
+        .avatar {
+            position: relative;
+            width: 88px;
+            height: 88px;
+            flex-shrink: 0;
             border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, .28);
+            border: 2px dashed rgba(255, 255, 255, .3);
+            background: rgba(255, 255, 255, .05) center / cover no-repeat;
+            display: grid;
+            place-items: center;
+            font-size: 1.8rem;
+            cursor: pointer;
+            overflow: hidden;
+            transition: border-color .2s ease;
+        }
+        .avatar:hover { border-color: var(--accent); }
+        .avatar.has-photo { border-style: solid; border-color: var(--accent); }
+        .avatar.has-photo .avatar-empty { display: none; }
+        .avatar input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+        .next-note {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            font-size: .85rem;
+            color: var(--muted);
+            border-radius: 14px;
+            padding: 12px 14px;
+            background: rgba(20, 184, 166, .08);
+            border: 1px solid rgba(20, 184, 166, .25);
+            margin: 4px 0 14px;
+        }
+
+        @media (max-width: 560px) {
+            .choice-grid { grid-template-columns: repeat(2, 1fr); }
+            .choice-grid.cols-5 { grid-template-columns: repeat(2, 1fr); }
+            .step-card { padding: 14px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .guardian-card { animation: none; }
+            .choice-body, .step-card { transition: none; }
         }
     </style>
 
     <p class="eyebrow">Complete Profile</p>
     {% if role == 'player' %}
-        <h1 class="title">Player registration</h1>
-        <p class="lead">Step 2 of 3: provide your position, age, and location to complete your player registration. You can add the rest of your details later while editing your player profile.</p>
+        <h1 class="title">Tell us about your game &#9917;</h1>
+        <p class="lead">Step 2 of 3: three quick questions and you're in. You can add your club, height, videos and more later from your profile.</p>
     {% else %}
-        <h1 class="title">Scout registration</h1>
-        <p class="lead">Step 2 of 3: provide your organization, specialization, and verification document to complete your scout registration.</p>
+        <h1 class="title">Set up your scout profile &#128301;</h1>
+        <p class="lead">Step 2 of 3: tell us who you scout for, what you look for, and upload a document so our admin can verify you.</p>
     {% endif %}
 
     <form method="post" enctype="multipart/form-data" novalidate>
         {% csrf_token %}
-        {% if role == 'scout' %}
-            <div id="scout-photo-preview-wrap" class="scout-photo-preview-wrap">
-                <img id="scout-photo-preview" class="scout-photo-preview" alt="Selected scout photo preview">
-                <span class="auth-note">Photo preview</span>
+        {% for error in form.non_field_errors %}<div class="field-error mb-2">{{ error }}</div>{% endfor %}
+
+        {% if role == 'player' %}
+            <!-- 1. Date of birth -->
+            <section class="step-card" data-step="dob">
+                <div class="step-head">
+                    <span class="step-num">1</span>
+                    <div>
+                        <p class="step-title">When were you born?</p>
+                        <p class="step-sub">Players aged 12 to 28 can join. Your age updates automatically every year.</p>
+                    </div>
+                </div>
+                <label for="id_date_of_birth" class="visually-hidden">Date of birth</label>
+                <div class="input-icon">
+                    <span class="icon" aria-hidden="true">&#128197;</span>
+                    <input type="text" name="date_of_birth" id="id_date_of_birth" class="field-input"
+                           value="{{ form.date_of_birth.value|default_if_none:'' }}" autocomplete="off"
+                           placeholder="Tap to choose your date of birth" required>
+                </div>
+                {% for error in form.date_of_birth.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </section>
+
+            <!-- Guardian agreement: shown only when the date of birth makes the player under 18 -->
+            <div class="guardian-card" id="div_id_guardian_consent" hidden>
+                <h3>&#128106; A parent or guardian needs to agree</h3>
+                <p>Because you're under 18, please ask your parent or guardian to read our
+                    <a href="{% url 'terms' %}" target="_blank" rel="noopener">Terms of Use</a> and
+                    <a href="{% url 'privacy' %}" target="_blank" rel="noopener">Privacy Policy</a> with you.</p>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="guardian_consent" id="id_guardian_consent" {% if form.guardian_consent.value %}checked{% endif %}>
+                    <label class="form-check-label" for="id_guardian_consent">{{ form.guardian_consent.label }}</label>
+                </div>
+                {% for error in form.guardian_consent.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </div>
+
+            <!-- 2. Position -->
+            <section class="step-card" data-step="position">
+                <div class="step-head">
+                    <span class="step-num">2</span>
+                    <div>
+                        <p class="step-title">Where do you play?</p>
+                        <p class="step-sub">Pick your main position. You can add a second one later.</p>
+                    </div>
+                </div>
+                <div class="choice-grid" role="radiogroup" aria-label="Position">
+                    {% for value, label in form.fields.position.choices %}{% if value %}
+                        <label class="choice">
+                            <input type="radio" name="position" value="{{ value }}" {% if form.position.value == value %}checked{% endif %} required>
+                            <span class="choice-body">
+                                {% if value == 'Goalkeeper' %}{% include 'includes/mini_pitch.html' with zone='gk' %}
+                                {% elif value == 'Defender' %}{% include 'includes/mini_pitch.html' with zone='def' %}
+                                {% elif value == 'Midfielder' %}{% include 'includes/mini_pitch.html' with zone='mid' %}
+                                {% else %}{% include 'includes/mini_pitch.html' with zone='fwd' %}{% endif %}
+                                <span class="choice-name">{{ label }}</span>
+                                <span class="choice-hint">
+                                    {% if value == 'Goalkeeper' %}Guards the goal
+                                    {% elif value == 'Defender' %}Stops attacks
+                                    {% elif value == 'Midfielder' %}Runs the game
+                                    {% else %}Scores goals{% endif %}
+                                </span>
+                            </span>
+                        </label>
+                    {% endif %}{% endfor %}
+                </div>
+                {% for error in form.position.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </section>
+
+            <!-- 3. County -->
+            <section class="step-card" data-step="location">
+                <div class="step-head">
+                    <span class="step-num">3</span>
+                    <div>
+                        <p class="step-title">Where are you from?</p>
+                        <p class="step-sub">Type your county, or tap one below. Scouts search players by county.</p>
+                    </div>
+                </div>
+                <label for="id_location" class="visually-hidden">County</label>
+                <div class="input-icon">
+                    <span class="icon" aria-hidden="true">&#128205;</span>
+                    <input type="text" name="location" id="id_location" class="field-input" list="kenya-counties"
+                           value="{{ form.location.value|default_if_none:'' }}" autocomplete="off"
+                           placeholder="e.g. Nairobi, Kisumu, Kakamega" required>
+                </div>
+                <div class="chips" aria-label="Popular counties">
+                    {% for county in popular_counties %}<button type="button" class="chip" data-county="{{ county }}">{{ county }}</button>{% endfor %}
+                </div>
+                {% for error in form.location.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+                <datalist id="kenya-counties">
+                    {% for county in kenya_counties %}<option value="{{ county }}"></option>{% endfor %}
+                </datalist>
+            </section>
+        {% else %}
+            <!-- 1. Organisation -->
+            <section class="step-card" data-step="organization">
+                <div class="step-head">
+                    <span class="step-num">1</span>
+                    <div>
+                        <p class="step-title">Who do you scout for?</p>
+                        <p class="step-sub">Your club, academy or football organisation.</p>
+                    </div>
+                </div>
+                <label for="id_organization" class="visually-hidden">Organisation</label>
+                <div class="input-icon">
+                    <span class="icon" aria-hidden="true">&#127967;&#65039;</span>
+                    <input type="text" name="organization" id="id_organization" class="field-input" maxlength="150"
+                           value="{{ form.organization.value|default_if_none:'' }}" placeholder="e.g. Gor Mahia Youth Academy" required>
+                </div>
+                {% for error in form.organization.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </section>
+
+            <!-- 2. Specialisation -->
+            <section class="step-card" data-step="specialization">
+                <div class="step-head">
+                    <span class="step-num">2</span>
+                    <div>
+                        <p class="step-title">What do you look for?</p>
+                        <p class="step-sub">We'll recommend players who match your speciality.</p>
+                    </div>
+                </div>
+                <div class="choice-grid cols-5" role="radiogroup" aria-label="Specialisation">
+                    {% for value, label in form.fields.specialization.choices %}
+                        <label class="choice">
+                            <input type="radio" name="specialization" value="{{ value }}" {% if form.specialization.value == value %}checked{% endif %} required>
+                            <span class="choice-body">
+                                {% if value == 'goalkeeping' %}{% include 'includes/mini_pitch.html' with zone='gk' %}
+                                {% elif value == 'defence' %}{% include 'includes/mini_pitch.html' with zone='def' %}
+                                {% elif value == 'midfield' %}{% include 'includes/mini_pitch.html' with zone='mid' %}
+                                {% elif value == 'attacking' %}{% include 'includes/mini_pitch.html' with zone='fwd' %}
+                                {% else %}{% include 'includes/mini_pitch.html' with zone='all' %}{% endif %}
+                                <span class="choice-name">{{ label|capfirst }}</span>
+                                <span class="choice-hint">
+                                    {% if value == 'goalkeeping' %}Keepers
+                                    {% elif value == 'defence' %}Defenders
+                                    {% elif value == 'midfield' %}Midfielders
+                                    {% elif value == 'attacking' %}Forwards
+                                    {% else %}All positions{% endif %}
+                                </span>
+                            </span>
+                        </label>
+                    {% endfor %}
+                </div>
+                {% for error in form.specialization.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </section>
+
+            <!-- 3. Verification document -->
+            <section class="step-card" data-step="document">
+                <div class="step-head">
+                    <span class="step-num">3</span>
+                    <div>
+                        <p class="step-title">Prove you're a real scout</p>
+                        <p class="step-sub">A coaching licence, club letter or accreditation. PDF or Word.</p>
+                    </div>
+                </div>
+                <div class="dropzone" id="doc-dropzone">
+                    <span class="dz-icon" id="doc-icon" aria-hidden="true">&#128196;</span>
+                    <span>
+                        <span class="dz-title d-block" id="doc-title">Tap to upload, or drag your file here</span>
+                        <span class="dz-sub d-block" id="doc-sub">PDF, DOC or DOCX</span>
+                    </span>
+                    <input type="file" name="verification_document" id="id_verification_document"
+                           accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                           aria-label="Verification document" required>
+                </div>
+                {% for error in form.verification_document.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </section>
+
+            <!-- 4. Photo (optional) -->
+            <section class="step-card" data-step="photo">
+                <div class="step-head">
+                    <span class="step-num">4</span>
+                    <div>
+                        <p class="step-title">Add your photo <span class="optional-tag">Optional</span></p>
+                        <p class="step-sub">Players trust scouts they can put a face to.</p>
+                    </div>
+                </div>
+                <div class="photo-picker">
+                    <label class="avatar" id="photo-avatar" title="Choose a photo">
+                        <span class="avatar-empty" aria-hidden="true">&#128247;</span>
+                        <input type="file" name="profile_photo" id="id_profile_photo" accept="image/*" aria-label="Profile photo">
+                    </label>
+                    <span class="dz-sub" id="photo-note">Tap the circle to choose a clear photo of your face.</span>
+                </div>
+                {% for error in form.profile_photo.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </section>
+
+            <div class="next-note">
+                <span aria-hidden="true">&#128737;&#65039;</span>
+                <span>To keep young players safe, our admin reviews your document first. Once you're approved, you can browse players, watch their videos and post trials.</span>
             </div>
         {% endif %}
 
-        {{ form|crispy }}
-
-        {% if role == 'player' %}
-            <datalist id="kenya-counties">
-                {% for county in kenya_counties %}
-                    <option value="{{ county }}"></option>
-                {% endfor %}
-            </datalist>
-        {% endif %}
-
-        <button type="submit" class="btn btn-brand mt-3">Finish setup</button>
+        <button type="submit" class="btn btn-brand mt-2">Finish setup &rarr;</button>
     </form>
-    <p class="auth-note mt-3">Step 3 of 3: verify the code sent to your email, then login.</p>
-    {% if role == 'scout' %}
-        <script>
-            (function () {
-                const input = document.getElementById('id_profile_photo');
-                const wrap = document.getElementById('scout-photo-preview-wrap');
-                const preview = document.getElementById('scout-photo-preview');
+    <p class="auth-note mt-3">Step 3 of 3: verify the code sent to your email, then log in.</p>
 
-                if (!input || !wrap || !preview) {
-                    return;
+    <script>
+        // Tick each numbered card green once it has been answered.
+        (function () {
+            function markDone(name, done) {
+                const card = document.querySelector('.step-card[data-step="' + name + '"]');
+                if (card) card.classList.toggle('is-done', !!done);
+            }
+            window.TalantaStep = markDone;
+            document.querySelectorAll('.step-card').forEach(function (card) {
+                const name = card.getAttribute('data-step');
+                const inputs = card.querySelectorAll('input');
+                function check() {
+                    let done = false;
+                    inputs.forEach(function (el) {
+                        if ((el.type === 'radio' && el.checked) || (el.type === 'file' && el.files && el.files.length) ||
+                            (el.type === 'text' && el.value.trim())) {
+                            done = true;
+                        }
+                    });
+                    markDone(name, done);
                 }
-
-                input.addEventListener('change', function () {
-                    const file = this.files && this.files[0];
-                    if (!file) {
-                        wrap.style.display = 'none';
-                        preview.removeAttribute('src');
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        preview.src = e.target.result;
-                        wrap.style.display = 'flex';
-                    };
-                    reader.readAsDataURL(file);
+                inputs.forEach(function (el) {
+                    el.addEventListener('change', check);
+                    el.addEventListener('input', check);
                 });
-            })();
-        </script>
-    {% endif %}
+                check();
+            });
+        })();
+    </script>
+
     {% if role == 'player' %}
         <script src="{% static 'js/dob-picker.js' %}"></script>
         <script>
@@ -96,12 +458,11 @@
                     window.DobPicker.attach(input, { minAge: 12, maxAge: 28, theme: 'dark' });
                 }
 
+                // Guardian card appears only for players under 18.
                 const consentWrap = document.getElementById('div_id_guardian_consent');
                 function ageFrom(iso) {
                     const parts = (iso || '').split('-').map(Number);
-                    if (parts.length !== 3 || !parts[0]) {
-                        return null;
-                    }
+                    if (parts.length !== 3 || !parts[0]) return null;
                     const today = new Date();
                     let age = today.getFullYear() - parts[0];
                     if (today.getMonth() + 1 < parts[1] || (today.getMonth() + 1 === parts[1] && today.getDate() < parts[2])) {
@@ -110,16 +471,94 @@
                     return age;
                 }
                 function syncConsent() {
-                    if (!consentWrap || !input) {
-                        return;
-                    }
+                    if (!consentWrap || !input) return;
                     const age = ageFrom(input.value);
                     consentWrap.hidden = !(age !== null && age < 18);
                 }
                 if (input) {
-                    input.addEventListener('change', syncConsent);
+                    input.addEventListener('change', function () {
+                        syncConsent();
+                        window.TalantaStep('dob', !!input.value);
+                    });
                 }
                 syncConsent();
+
+                // County quick picks fill the box.
+                const location = document.getElementById('id_location');
+                const chips = document.querySelectorAll('.chip[data-county]');
+                function syncChips() {
+                    chips.forEach(function (chip) {
+                        chip.classList.toggle('is-active', chip.getAttribute('data-county').toLowerCase() === location.value.trim().toLowerCase());
+                    });
+                }
+                chips.forEach(function (chip) {
+                    chip.addEventListener('click', function () {
+                        location.value = chip.getAttribute('data-county');
+                        location.dispatchEvent(new Event('input', { bubbles: true }));
+                    });
+                });
+                if (location) {
+                    location.addEventListener('input', syncChips);
+                    syncChips();
+                }
+            })();
+        </script>
+    {% else %}
+        <script>
+            (function () {
+                // Verification document: show the chosen file's name and size.
+                const docInput = document.getElementById('id_verification_document');
+                const zone = document.getElementById('doc-dropzone');
+                const title = document.getElementById('doc-title');
+                const sub = document.getElementById('doc-sub');
+                const icon = document.getElementById('doc-icon');
+                if (docInput) {
+                    docInput.addEventListener('change', function () {
+                        const file = this.files && this.files[0];
+                        if (!file) {
+                            zone.classList.remove('has-file');
+                            title.textContent = 'Tap to upload, or drag your file here';
+                            sub.textContent = 'PDF, DOC or DOCX';
+                            icon.textContent = '📄';
+                            return;
+                        }
+                        const ok = /\.(pdf|docx?)$/i.test(file.name);
+                        zone.classList.toggle('has-file', ok);
+                        title.textContent = file.name;
+                        sub.textContent = ok ? (file.size / 1024 / 1024).toFixed(2) + ' MB · tap to change'
+                                             : 'This file type is not accepted. Please choose a PDF or Word file.';
+                        icon.textContent = ok ? '✅' : '⚠️';
+                    });
+                    ['dragenter', 'dragover'].forEach(function (ev) {
+                        zone.addEventListener(ev, function () { zone.classList.add('is-drag'); });
+                    });
+                    ['dragleave', 'drop'].forEach(function (ev) {
+                        zone.addEventListener(ev, function () { zone.classList.remove('is-drag'); });
+                    });
+                }
+
+                // Photo: show a round preview.
+                const photoInput = document.getElementById('id_profile_photo');
+                const avatar = document.getElementById('photo-avatar');
+                const note = document.getElementById('photo-note');
+                if (photoInput) {
+                    photoInput.addEventListener('change', function () {
+                        const file = this.files && this.files[0];
+                        if (!file) {
+                            avatar.classList.remove('has-photo');
+                            avatar.style.backgroundImage = '';
+                            note.textContent = 'Tap the circle to choose a clear photo of your face.';
+                            return;
+                        }
+                        const reader = new FileReader();
+                        reader.onload = function (e) {
+                            avatar.style.backgroundImage = 'url(' + e.target.result + ')';
+                            avatar.classList.add('has-photo');
+                            note.textContent = 'Looking good! Tap the photo to change it.';
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
             })();
         </script>
     {% endif %}

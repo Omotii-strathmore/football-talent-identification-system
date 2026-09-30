@@ -424,6 +424,7 @@ def complete_profile_view(request):
             'total_steps': 3,
             'step_title': template_title,
             'kenya_counties': PlayerOnboardingForm.KENYA_COUNTIES if user.role == 'player' else [],
+            'popular_counties': ['Nairobi', 'Mombasa', 'Kisumu', 'Nakuru', 'Kiambu', 'Kakamega', 'Uasin Gishu'] if user.role == 'player' else [],
         }
     )
 

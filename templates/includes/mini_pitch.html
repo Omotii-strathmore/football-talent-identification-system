@@ -1,0 +1,17 @@
+<svg class="mini-pitch" viewBox="0 0 44 60" aria-hidden="true">
+    {% if zone == 'all' %}<rect class="zone" x="2" y="2" width="40" height="56" rx="3"/>
+    {% elif zone == 'gk' %}<rect class="zone" x="12" y="47" width="20" height="11"/>
+    {% elif zone == 'def' %}<rect class="zone" x="2" y="38" width="40" height="15"/>
+    {% elif zone == 'mid' %}<rect class="zone" x="2" y="22" width="40" height="16"/>
+    {% elif zone == 'fwd' %}<rect class="zone" x="2" y="5" width="40" height="17"/>{% endif %}
+    <rect class="line" x="2" y="2" width="40" height="56" rx="3"/>
+    <line class="line" x1="2" y1="30" x2="42" y2="30"/>
+    <circle class="line" cx="22" cy="30" r="6"/>
+    <rect class="line" x="12" y="2" width="20" height="9"/>
+    <rect class="line" x="12" y="49" width="20" height="9"/>
+    {% if zone == 'gk' %}<circle class="dot" cx="22" cy="54" r="3.2"/>
+    {% elif zone == 'def' %}<circle class="dot" cx="14" cy="44" r="3"/><circle class="dot" cx="30" cy="44" r="3"/>
+    {% elif zone == 'mid' %}<circle class="dot" cx="22" cy="30" r="3.2"/><circle class="dot" cx="11" cy="27" r="2.6"/><circle class="dot" cx="33" cy="27" r="2.6"/>
+    {% elif zone == 'fwd' %}<circle class="dot" cx="22" cy="12" r="3.2"/>
+    {% elif zone == 'all' %}<circle class="dot" cx="22" cy="54" r="2.4"/><circle class="dot" cx="15" cy="42" r="2.4"/><circle class="dot" cx="29" cy="42" r="2.4"/><circle class="dot" cx="22" cy="30" r="2.4"/><circle class="dot" cx="22" cy="14" r="2.4"/>{% endif %}
+</svg>
