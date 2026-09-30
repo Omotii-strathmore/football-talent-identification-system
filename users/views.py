@@ -335,7 +335,10 @@ def register_view(request):
 
     else:
 
-        form = RegistrationForm()
+        # The landing page's "Register as Player" / "Join as Scout" buttons pass ?role=... to pre-select a card.
+        requested_role = request.GET.get('role', '')
+        initial = {'role': requested_role} if requested_role in dict(User.ROLE_CHOICES) else {}
+        form = RegistrationForm(initial=initial)
 
     return render(
         request,

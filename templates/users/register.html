@@ -5,8 +5,126 @@
 
 {% block content %}
 	<style>
-		#hint_id_password {
-			color: #ff4d4f !important;
+		/* The live checklist below replaces the plain help text. */
+		#hint_id_password, #id_password_helptext { display: none; }
+
+		/* ---------- Role cards ---------- */
+		.role-picker { border: 0; padding: 0; margin: 0 0 1rem; }
+		.role-picker legend { font-size: 1rem; margin-bottom: .5rem; }
+		.role-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+		.role-card { position: relative; display: block; cursor: pointer; margin: 0; }
+		.role-card input { position: absolute; opacity: 0; pointer-events: none; }
+		.role-card-body {
+			height: 100%;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			text-align: center;
+			gap: 6px;
+			padding: 18px 12px 16px;
+			border-radius: 18px;
+			border: 1.5px solid rgba(255, 255, 255, .14);
+			background: rgba(255, 255, 255, .04);
+			transition: border-color .2s ease, background .2s ease, transform .2s ease, box-shadow .2s ease;
+		}
+		.role-card:hover .role-card-body { transform: translateY(-2px); border-color: rgba(245, 158, 11, .5); }
+		.role-card input:focus-visible + .role-card-body { outline: 2px solid var(--accent); outline-offset: 3px; }
+		.role-card input:checked + .role-card-body {
+			border-color: var(--accent);
+			background: linear-gradient(160deg, rgba(245, 158, 11, .16), rgba(20, 184, 166, .08));
+			box-shadow: 0 10px 26px rgba(245, 158, 11, .16);
+		}
+		.role-icon {
+			width: 76px;
+			height: 76px;
+			border-radius: 50%;
+			display: grid;
+			place-items: center;
+			background: rgba(255, 255, 255, .06);
+			transition: background .2s ease, transform .3s ease;
+		}
+		.role-icon svg { width: 52px; height: 52px; }
+		.role-card input:checked + .role-card-body .role-icon { background: rgba(245, 158, 11, .2); transform: scale(1.06); }
+		.role-title { font-weight: 800; font-size: 1.05rem; color: var(--text); }
+		.role-desc { font-size: .84rem; color: var(--muted); line-height: 1.45; }
+		.role-check {
+			position: absolute;
+			top: 10px;
+			right: 10px;
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			display: grid;
+			place-items: center;
+			font-size: .8rem;
+			font-weight: 800;
+			color: #111827;
+			background: var(--accent);
+			opacity: 0;
+			transform: scale(.6);
+			transition: opacity .2s ease, transform .2s ease;
+		}
+		.role-card input:checked + .role-card-body .role-check { opacity: 1; transform: scale(1); }
+		.role-error { color: #fca5a5; font-size: .85rem; margin-top: 6px; }
+
+		/* Player icon: the ball rolls a little when the card is chosen */
+		.role-card input:checked + .role-card-body .kick-ball { animation: kick .6s ease-out; }
+		@keyframes kick { 0% { transform: translate(-6px, 2px); } 60% { transform: translate(3px, -3px); } 100% { transform: none; } }
+		.role-card input:checked + .role-card-body .scope { animation: scan .8s ease-in-out; transform-origin: 30px 40px; }
+		@keyframes scan { 0%, 100% { transform: rotate(0); } 35% { transform: rotate(-8deg); } 70% { transform: rotate(5deg); } }
+
+		/* ---------- Password checklist ---------- */
+		.pw-meter { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 10px 0 6px; }
+		.pw-meter span { height: 6px; border-radius: 999px; background: rgba(255, 255, 255, .12); transition: background .25s ease; }
+		.pw-meter[data-score="1"] span:nth-child(-n+1),
+		.pw-meter[data-score="2"] span:nth-child(-n+2) { background: #f87171; }
+		.pw-meter[data-score="3"] span:nth-child(-n+3) { background: #fbbf24; }
+		.pw-meter[data-score="4"] span:nth-child(-n+4) { background: #a3e635; }
+		.pw-meter[data-score="5"] span { background: #34d399; }
+		.pw-status { font-size: .88rem; font-weight: 700; color: var(--muted); min-height: 1.3em; }
+		.pw-status.is-strong { color: #34d399; }
+		.pw-rules { list-style: none; padding: 0; margin: 6px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; }
+		.pw-rules li { font-size: .84rem; color: var(--muted); display: flex; align-items: center; gap: 7px; transition: color .2s ease; }
+		.pw-rules li::before {
+			content: "";
+			width: 16px;
+			height: 16px;
+			flex-shrink: 0;
+			border-radius: 50%;
+			border: 1.5px solid rgba(255, 255, 255, .3);
+			transition: all .2s ease;
+		}
+		.pw-rules li.is-met { color: var(--text); }
+		.pw-rules li.is-met::before {
+			border-color: #34d399;
+			background: #34d399 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.5 2.5L12 5.5' fill='none' stroke='%23062016' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 12px no-repeat;
+		}
+
+		/* ---------- Confirm password: appears once the password is strong ---------- */
+		.confirm-step {
+			display: grid;
+			grid-template-rows: 0fr;
+			opacity: 0;
+			transition: grid-template-rows .4s ease, opacity .35s ease, margin .4s ease;
+			margin-top: 0;
+		}
+		.confirm-step > div { overflow: hidden; }
+		.confirm-step.is-open { grid-template-rows: 1fr; opacity: 1; margin-top: 12px; }
+		.confirm-hint { font-size: .85rem; margin-top: 4px; min-height: 1.3em; font-weight: 600; }
+		.confirm-hint.ok { color: #34d399; }
+		.confirm-hint.no { color: #fca5a5; }
+		.locked-note { font-size: .84rem; color: var(--muted); margin-top: 10px; }
+
+		@media (max-width: 460px) {
+			.role-grid { grid-template-columns: 1fr; }
+			.role-card-body { flex-direction: row; text-align: left; padding: 12px 14px; }
+			.role-icon { width: 60px; height: 60px; flex-shrink: 0; }
+			.role-icon svg { width: 42px; height: 42px; }
+			.pw-rules { grid-template-columns: 1fr; }
+		}
+		@media (prefers-reduced-motion: reduce) {
+			.confirm-step, .role-card-body, .role-icon { transition: none; }
+			.kick-ball, .scope { animation: none !important; }
 		}
 	</style>
 
@@ -22,18 +140,92 @@
 		{{ form.non_field_errors }}
 		{{ form.full_name|as_crispy_field }}
 		{{ form.email|as_crispy_field }}
-		{{ form.role|as_crispy_field }}
+
+		<fieldset class="role-picker">
+			<legend>I am joining as a…<span class="asteriskField">*</span></legend>
+			<div class="role-grid">
+				<label class="role-card">
+					<input type="radio" name="role" value="player" {% if form.role.value == 'player' %}checked{% endif %} required>
+					<span class="role-card-body">
+						<span class="role-check" aria-hidden="true">&#10003;</span>
+						<span class="role-icon" aria-hidden="true">
+							<!-- A player striking the ball -->
+							<svg viewBox="0 0 64 64" fill="none" stroke="#f8fafc" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+								<circle cx="27" cy="11" r="5.2" fill="#f59e0b" stroke="none"/>
+								<path d="M27 17 L24 33"/>
+								<path d="M26 21 L15 27"/>
+								<path d="M26 21 L37 17"/>
+								<path d="M24 33 L18 45 L13 50"/>
+								<path d="M24 33 L35 40 L43 36"/>
+								<g class="kick-ball">
+									<circle cx="51" cy="37" r="6" fill="#f8fafc" stroke="#f8fafc"/>
+									<path d="M51 33.5 L54 36 L52.8 39.6 L49.2 39.6 L48 36 Z" fill="#0f172a" stroke="none"/>
+								</g>
+								<path d="M45 46 L55 46" stroke="#14b8a6" stroke-width="2.4"/>
+								<path d="M47 51 L59 51" stroke="#14b8a6" stroke-width="2.4"/>
+							</svg>
+						</span>
+						<span>
+							<span class="role-title d-block">I'm a Player</span>
+							<span class="role-desc d-block">Show your skills and get seen by verified scouts.</span>
+						</span>
+					</span>
+				</label>
+
+				<label class="role-card">
+					<input type="radio" name="role" value="scout" {% if form.role.value == 'scout' %}checked{% endif %} required>
+					<span class="role-card-body">
+						<span class="role-check" aria-hidden="true">&#10003;</span>
+						<span class="role-icon" aria-hidden="true">
+							<!-- A scout's telescope on a tripod -->
+							<svg viewBox="0 0 64 64" fill="none" stroke="#f8fafc" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+								<g class="scope">
+									<path d="M12 30 L44 18 L47 26 L15 38 Z" fill="rgba(248,250,252,.12)"/>
+									<path d="M44 18 L52 15 L55 24 L47 26"/>
+									<path d="M9 31 L13 29.5 L16 37.5 L12 39 Z" fill="#f59e0b" stroke="#f59e0b"/>
+								</g>
+								<path d="M31 32 L23 56"/>
+								<path d="M31 32 L39 56"/>
+								<path d="M31 32 L31 56"/>
+								<circle cx="55" cy="10" r="2.2" fill="#14b8a6" stroke="none"/>
+								<circle cx="60" cy="18" r="1.6" fill="#14b8a6" stroke="none"/>
+							</svg>
+						</span>
+						<span>
+							<span class="role-title d-block">I'm a Scout</span>
+							<span class="role-desc d-block">Discover talent and post trials for your club.</span>
+						</span>
+					</span>
+				</label>
+			</div>
+			{% for error in form.role.errors %}<div class="role-error">{{ error }}</div>{% endfor %}
+		</fieldset>
+
 		{{ form.password|as_crispy_field }}
-		<div id="password-requirements" class="auth-note mt-2" aria-live="polite">
-			<div class="fw-semibold mb-1">Password requirements</div>
-			<p id="password-requirements-message" class="mb-1 text-muted">Start typing to see what is missing.</p>
-			<ul id="password-missing-list" class="mb-0 ps-3"></ul>
+		<div id="password-requirements" aria-live="polite">
+			<div class="pw-meter" id="pw-meter" data-score="0" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+			<div class="pw-status" id="pw-status">Your password needs:</div>
+			<ul class="pw-rules" id="pw-rules">
+				<li data-rule="length">8 or more characters</li>
+				<li data-rule="upper">An uppercase letter (A-Z)</li>
+				<li data-rule="lower">A lowercase letter (a-z)</li>
+				<li data-rule="number">A number (0-9)</li>
+				<li data-rule="special">A symbol (e.g. ! @ # $)</li>
+			</ul>
 		</div>
-		<div class="form-check mt-1 mb-2">
+		<div class="form-check mt-2 mb-0">
 			<input class="form-check-input" type="checkbox" id="toggle-register-passwords">
 			<label class="form-check-label" for="toggle-register-passwords">Show passwords</label>
 		</div>
-		{{ form.confirm_password|as_crispy_field }}
+
+		<p class="locked-note" id="confirm-locked-note">&#128274; Once your password is strong, you'll confirm it here.</p>
+		<div class="confirm-step{% if form.confirm_password.errors %} is-open{% endif %}" id="confirm-step">
+			<div>
+				{{ form.confirm_password|as_crispy_field }}
+				<div class="confirm-hint" id="confirm-hint" aria-live="polite"></div>
+			</div>
+		</div>
+
 		<div class="mt-3">{{ form.accept_terms|as_crispy_field }}</div>
 		<button type="submit" class="btn btn-brand mt-3">Create account</button>
 	</form>
@@ -46,56 +238,67 @@
 			const toggle = document.getElementById('toggle-register-passwords');
 			const passwordInput = document.getElementById('id_password');
 			const confirmInput = document.getElementById('id_confirm_password');
-			const missingList = document.getElementById('password-missing-list');
-			const requirementsMessage = document.getElementById('password-requirements-message');
+			const meter = document.getElementById('pw-meter');
+			const statusEl = document.getElementById('pw-status');
+			const confirmStep = document.getElementById('confirm-step');
+			const lockedNote = document.getElementById('confirm-locked-note');
+			const confirmHint = document.getElementById('confirm-hint');
 
-			if (!passwordInput || !confirmInput || !missingList || !requirementsMessage) {
+			if (!passwordInput || !confirmInput) {
 				return;
 			}
 
-			function updateRequirements() {
-				const pwd = passwordInput.value;
+			const RULES = {
+				length: function (p) { return p.length >= 8; },
+				upper: function (p) { return /[A-Z]/.test(p); },
+				lower: function (p) { return /[a-z]/.test(p); },
+				number: function (p) { return /\d/.test(p); },
+				special: function (p) { return /[^A-Za-z0-9]/.test(p); }
+			};
+
+			function setConfirmOpen(open) {
+				confirmStep.classList.toggle('is-open', open);
+				lockedNote.hidden = open;
+				// Keep the hidden field out of the tab order until it is revealed.
+				confirmInput.tabIndex = open ? 0 : -1;
+			}
+
+			function updateMatch() {
 				const confirm = confirmInput.value;
-				const missing = [];
+				if (!confirm) {
+					confirmHint.textContent = '';
+					confirmHint.className = 'confirm-hint';
+				} else if (confirm === passwordInput.value) {
+					confirmHint.textContent = '✓ Passwords match';
+					confirmHint.className = 'confirm-hint ok';
+				} else {
+					confirmHint.textContent = 'Passwords do not match yet';
+					confirmHint.className = 'confirm-hint no';
+				}
+			}
 
-				if (pwd.length === 0) {
-					requirementsMessage.textContent = 'Start typing to see what is missing.';
-					requirementsMessage.className = 'mb-1 text-muted';
-					missingList.innerHTML = '';
-					return;
-				}
+			function update() {
+				const pwd = passwordInput.value;
+				let score = 0;
+				Object.keys(RULES).forEach(function (name) {
+					const met = RULES[name](pwd);
+					if (met) score += 1;
+					document.querySelector('#pw-rules [data-rule="' + name + '"]').classList.toggle('is-met', met);
+				});
+				meter.setAttribute('data-score', pwd ? score : 0);
 
-				if (pwd.length < 8) {
-					missing.push('At least 8 characters');
+				const strong = score === 5;
+				if (!pwd) {
+					statusEl.textContent = 'Your password needs:';
+				} else if (strong) {
+					statusEl.textContent = 'Strong password 💪';
+				} else {
+					statusEl.textContent = (5 - score) + ' more to go';
 				}
-				if (!/[A-Z]/.test(pwd)) {
-					missing.push('At least one uppercase letter');
-				}
-				if (!/[a-z]/.test(pwd)) {
-					missing.push('At least one lowercase letter');
-				}
-				if (!/\d/.test(pwd)) {
-					missing.push('At least one number');
-				}
-				if (!/[^A-Za-z0-9]/.test(pwd)) {
-					missing.push('At least one special character');
-				}
-				if (confirm.length > 0 && pwd !== confirm) {
-					missing.push('Passwords must match');
-				}
+				statusEl.classList.toggle('is-strong', strong);
 
-				if (missing.length === 0) {
-					requirementsMessage.textContent = 'Password looks strong.';
-					requirementsMessage.className = 'mb-1 text-success';
-					missingList.innerHTML = '';
-					return;
-				}
-
-				requirementsMessage.textContent = 'Still missing:';
-				requirementsMessage.className = 'mb-1 text-danger';
-				missingList.innerHTML = missing.map(function (item) {
-					return '<li class="text-danger">' + item + '</li>';
-				}).join('');
+				setConfirmOpen(strong || confirmStep.classList.contains('is-open') && !!confirmInput.value);
+				updateMatch();
 			}
 
 			if (toggle) {
@@ -106,9 +309,12 @@
 				});
 			}
 
-			passwordInput.addEventListener('input', updateRequirements);
-			confirmInput.addEventListener('input', updateRequirements);
-			updateRequirements();
+			// If the server sent back a confirm-password error, keep that field visible.
+			const startOpen = confirmStep.classList.contains('is-open');
+			passwordInput.addEventListener('input', update);
+			confirmInput.addEventListener('input', updateMatch);
+			update();
+			if (startOpen) setConfirmOpen(true);
 		})();
 	</script>
 {% endblock %}
