@@ -132,6 +132,11 @@ class PlayerOnboardingForm(forms.ModelForm):
             'profile and videos with verified scouts.'
         ),
     )
+    guardian_name = forms.CharField(required=False, max_length=100, label="Parent or guardian's name")
+    guardian_email = forms.EmailField(required=False, label="Parent or guardian's email")
+
+    # Set by the view so we can refuse the player's own email as the guardian's.
+    player_email = ''
 
     class Meta:
 
@@ -174,11 +179,19 @@ class PlayerOnboardingForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         dob = cleaned_data.get('date_of_birth')
-        if dob and _calculate_age(dob) < 18 and not cleaned_data.get('guardian_consent'):
-            self.add_error(
-                'guardian_consent',
-                'Players under 18 need a parent or guardian\'s agreement before creating an account.',
-            )
+        if dob and _calculate_age(dob) < 18:
+            if not cleaned_data.get('guardian_consent'):
+                self.add_error(
+                    'guardian_consent',
+                    'Players under 18 need a parent or guardian\'s agreement before creating an account.',
+                )
+            if not (cleaned_data.get('guardian_name') or '').strip():
+                self.add_error('guardian_name', 'Please enter your parent or guardian\'s name.')
+            guardian_email = (cleaned_data.get('guardian_email') or '').strip().lower()
+            if not guardian_email and 'guardian_email' not in self.errors:
+                self.add_error('guardian_email', 'Please enter your parent or guardian\'s email so they can approve your account.')
+            elif guardian_email and guardian_email == (self.player_email or '').strip().lower():
+                self.add_error('guardian_email', 'This must be your parent or guardian\'s own email, not yours.')
         return cleaned_data
 
 

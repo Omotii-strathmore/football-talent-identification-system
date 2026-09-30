@@ -1,0 +1,103 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Parent or guardian approval | Talanta Soka{% endblock %}
+
+{% block content %}
+    <style>
+        .g-card {
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .03);
+            border-radius: 18px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+        }
+        .g-player { display: flex; gap: 14px; align-items: center; }
+        .g-avatar {
+            width: 56px;
+            height: 56px;
+            flex-shrink: 0;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            font-size: 1.3rem;
+            color: #111827;
+            background: linear-gradient(135deg, #fde68a, #5eead4);
+        }
+        .g-name { font-weight: 800; font-size: 1.15rem; color: var(--text); }
+        .g-meta { color: var(--muted); font-size: .9rem; }
+        .g-list { margin: 0; padding-left: 1.1rem; color: var(--muted); font-size: .92rem; line-height: 1.7; }
+        .g-list strong { color: var(--text); }
+        .g-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+        .btn-decline { background: transparent; border: 1px solid rgba(255, 255, 255, .3); color: var(--text); font-weight: 700; }
+        .btn-decline:hover { border-color: #fca5a5; color: #fca5a5; }
+        .g-status {
+            border-radius: 18px;
+            padding: 18px;
+            margin-bottom: 14px;
+            font-size: .95rem;
+        }
+        .g-status.ok { background: rgba(52, 211, 153, .1); border: 1px solid rgba(52, 211, 153, .45); }
+        .g-status.no { background: rgba(248, 113, 113, .08); border: 1px solid rgba(248, 113, 113, .4); }
+        .g-status h2 { font-size: 1.15rem; font-weight: 800; margin-bottom: 6px; color: var(--text); }
+        .legal a, .g-card a, .g-status a, .auth-note a { color: var(--accent); }
+    </style>
+
+    <p class="eyebrow">Parent or guardian</p>
+
+    {% if invalid %}
+        <h1 class="title">This link is not valid</h1>
+        <p class="lead">The approval link may have expired (links last 30 days) or been replaced by a newer one. Please ask your child to send a new approval email from their Talanta Soka dashboard.</p>
+        <p class="auth-note">Need help? Email <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>.</p>
+    {% else %}
+        <h1 class="title">Your permission is needed &#128106;</h1>
+        <p class="lead">{{ profile.full_name }} has joined Talanta Soka, a Kenyan platform that helps young footballers get seen by verified scouts from clubs and academies. Because they are under 18, nothing is shown to scouts until you decide.</p>
+
+        {% if profile.guardian_approved_at %}
+            <div class="g-status ok">
+                <h2>&#9989; Thank you, you approved this account</h2>
+                <p class="mb-0">Verified scouts can now see {{ profile.full_name }}'s profile and videos, and they can apply for trials. If you change your mind, you can withdraw your approval below at any time.</p>
+            </div>
+        {% elif profile.guardian_declined_at %}
+            <div class="g-status no">
+                <h2>You declined this account</h2>
+                <p class="mb-0">{{ profile.full_name }}'s profile stays hidden from scouts, and they cannot apply for trials. If you would like the account deleted completely, email us at <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>.</p>
+            </div>
+        {% endif %}
+
+        <div class="g-card">
+            <div class="g-player">
+                <div class="g-avatar" aria-hidden="true">{{ profile.full_name|slice:':1'|upper }}</div>
+                <div>
+                    <div class="g-name">{{ profile.full_name }}</div>
+                    <div class="g-meta">Age {{ profile.age }} &middot; {{ profile.position }} &middot; {{ profile.location }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="g-card">
+            <p class="fw-bold mb-2" style="color: var(--text);">If you approve:</p>
+            <ul class="g-list">
+                <li><strong>Only verified scouts</strong> can see their name, age, county, position, photo and football videos. Our team checks every scout's documents first.</li>
+                <li>They can <strong>apply for trials and tournaments</strong> posted on the platform.</li>
+                <li>Scouts are <strong>never allowed to ask for money</strong>, and must contact players under 18 through the platform or with a parent present.</li>
+                <li>You can <strong>withdraw approval</strong> at any time using this same link, or ask us to delete the account.</li>
+            </ul>
+            <p class="auth-note mt-2 mb-0">Please read our <a href="{% url 'privacy' %}" target="_blank" rel="noopener">Privacy Policy</a> and <a href="{% url 'terms' %}" target="_blank" rel="noopener">Terms of Use</a>.</p>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            <div class="g-actions">
+                {% if not profile.guardian_approved_at %}
+                    <button type="submit" name="decision" value="approve" class="btn btn-brand">&#10003; I approve</button>
+                {% endif %}
+                {% if not profile.guardian_declined_at %}
+                    <button type="submit" name="decision" value="decline" class="btn btn-decline">{% if profile.guardian_approved_at %}Withdraw my approval{% else %}I do not approve{% endif %}</button>
+                {% endif %}
+            </div>
+        </form>
+
+        <p class="auth-note mt-3">Questions? Email <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>. For anything involving a child's safety, you can also call Childline Kenya on 116.</p>
+    {% endif %}
+{% endblock %}

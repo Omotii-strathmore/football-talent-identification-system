@@ -56,6 +56,8 @@ class LegalPagesAndConsentTests(TestCase):
             'position': 'Forward',
             'location': 'Nairobi',
             'guardian_consent': 'on',
+            'guardian_name': 'Mary Mum',
+            'guardian_email': 'mum@example.com',
         })
         profile = PlayerProfile.objects.get(user__email='minor@example.com')
         self.assertIsNotNone(profile.guardian_consent_at)

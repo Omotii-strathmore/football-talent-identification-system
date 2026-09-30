@@ -4,6 +4,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
 from .forms import ApplicationForm, OpportunityForm
+from players.models import PlayerProfile
 from .models import Application, Opportunity
 
 
@@ -78,6 +79,11 @@ def apply_opportunity(request, opportunity_id):
 	today = timezone.localdate()
 	if (not opportunity.is_active) or (opportunity.deadline < today):
 		messages.error(request, 'This opportunity is expired. You can view it but cannot apply.')
+		return redirect('view_opportunities')
+
+	profile = PlayerProfile.objects.filter(user=request.user).first()
+	if profile and profile.needs_guardian_approval:
+		messages.error(request, 'Your parent or guardian needs to approve your account before you can apply for trials.')
 		return redirect('view_opportunities')
 
 	existing = Application.objects.filter(opportunity=opportunity, player=request.user).exists()

@@ -5,6 +5,18 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/site-tour.css' %}">
+<style>
+    .guardian-banner {
+        border-radius: 18px;
+        padding: 16px 18px;
+        background: linear-gradient(135deg, #fff8e1, #fff3cd);
+        border: 1px solid #f5c400;
+        color: #3d2e00;
+        box-shadow: 0 10px 24px rgba(245, 196, 0, .15);
+    }
+    .guardian-banner.is-declined { background: #fff1f2; border-color: #fca5a5; color: #7f1d1d; }
+    .guardian-banner-icon { font-size: 1.8rem; line-height: 1; }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -27,6 +39,33 @@
             {% endif %}
         </div>
     </div>
+
+    {% if guardian_pending %}
+        <div class="guardian-banner mb-4 {% if profile.guardian_declined_at %}is-declined{% endif %}">
+            <div class="d-flex gap-3 align-items-start">
+                <span class="guardian-banner-icon" aria-hidden="true">{% if profile.guardian_declined_at %}&#9888;&#65039;{% else %}&#9203;{% endif %}</span>
+                <div class="flex-grow-1">
+                    {% if profile.guardian_declined_at %}
+                        <h5 class="fw-bold mb-1">Your parent or guardian did not approve your account</h5>
+                        <p class="mb-2">Scouts cannot see your profile and you cannot apply for trials. Talk to them, and if they change their mind, send the request again.</p>
+                    {% elif guardian_email_masked %}
+                        <h5 class="fw-bold mb-1">Waiting for your parent or guardian to approve</h5>
+                        <p class="mb-2">We emailed <strong>{{ guardian_email_masked }}</strong>. Until they approve, scouts cannot see your profile and you cannot apply for trials. Ask them to check their inbox (and spam folder).</p>
+                    {% else %}
+                        <h5 class="fw-bold mb-1">Your parent or guardian needs to approve your account</h5>
+                        <p class="mb-2">Because you're under 18, enter their email below and we'll send them an approval link.</p>
+                    {% endif %}
+                    <form method="post" action="{% url 'guardian_resend' %}" class="d-flex flex-wrap gap-2 align-items-center">
+                        {% csrf_token %}
+                        <input type="email" name="guardian_email" class="form-control form-control-sm" style="max-width: 280px;"
+                               placeholder="{% if guardian_email_masked %}New email (only if the old one was wrong){% else %}Parent or guardian's email{% endif %}"
+                               {% if not guardian_email_masked %}required{% endif %} aria-label="Parent or guardian's email">
+                        <button type="submit" class="btn btn-sm btn-warning fw-bold">{% if guardian_email_masked %}Resend approval email{% else %}Send approval email{% endif %}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     <div class="row g-3 mb-4">
         <div class="col-md-6 col-lg-3">

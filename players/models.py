@@ -36,6 +36,12 @@ class PlayerProfile(models.Model):
         null=True,
         help_text='When a parent/guardian consent was confirmed for a player under 18.'
     )
+    # Players under 18 stay hidden from scouts until the parent/guardian approves by email.
+    guardian_name = models.CharField(max_length=100, blank=True)
+    guardian_email = models.EmailField(blank=True)
+    guardian_email_sent_at = models.DateTimeField(blank=True, null=True)
+    guardian_approved_at = models.DateTimeField(blank=True, null=True)
+    guardian_declined_at = models.DateTimeField(blank=True, null=True)
     position = models.CharField(
         max_length=50,
         choices=POSITION_CHOICES
@@ -123,6 +129,16 @@ class PlayerProfile(models.Model):
     updated_at = models.DateTimeField(
         auto_now=True
     )
+
+    @property
+    def is_minor(self):
+        if self.date_of_birth:
+            return _calculate_age(self.date_of_birth) < 18
+        return (self.age or 0) < 18
+
+    @property
+    def needs_guardian_approval(self):
+        return self.is_minor and not self.guardian_approved_at
 
     def save(self, *args, **kwargs):
         if self.date_of_birth:

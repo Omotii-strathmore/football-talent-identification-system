@@ -1,3 +1,4 @@
+from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
@@ -5,6 +6,7 @@ from django.utils import timezone
 
 from opportunities.models import Application
 from players.forms import PlayerProfileForm, PlayerVideoForm
+from players.guardian import can_resend, mask_email, profile_from_token, send_guardian_email
 from players.models import PlayerProfile, PlayerVideo
 from scouts.models import ScoutVideoFeedback
 
@@ -41,6 +43,8 @@ def dashboard(request):
             'applications_count': applications_count,
             'videos_count': videos_count,
             'videos': videos,
+            'guardian_pending': bool(profile and profile.needs_guardian_approval),
+            'guardian_email_masked': mask_email(profile.guardian_email) if profile and profile.guardian_email else '',
         }
     )
 
@@ -194,3 +198,57 @@ def delete_video(request, video_id):
 
     messages.success(request, f'Video "{video_title}" deleted successfully.')
     return redirect('upload_video')
+
+def guardian_review(request, token):
+    """Public page a parent/guardian opens from the email to approve or decline a player under 18."""
+    profile = profile_from_token(token)
+    if profile is None:
+        return render(request, 'players/guardian_review.html', {'invalid': True}, status=404)
+
+    if request.method == 'POST':
+        decision = request.POST.get('decision')
+        if decision == 'approve':
+            profile.guardian_approved_at = timezone.now()
+            profile.guardian_declined_at = None
+        elif decision == 'decline':
+            profile.guardian_approved_at = None
+            profile.guardian_declined_at = timezone.now()
+        profile.save(update_fields=['guardian_approved_at', 'guardian_declined_at'])
+        return redirect('guardian_review', token=token)
+
+    return render(request, 'players/guardian_review.html', {'profile': profile, 'token': token})
+
+
+@login_required
+def guardian_resend(request):
+    """Let a player under 18 resend the approval email, optionally to a corrected address."""
+    if request.method != 'POST' or request.user.role != 'player':
+        return redirect('player_dashboard')
+    profile = get_object_or_404(PlayerProfile, user=request.user)
+    if not profile.needs_guardian_approval:
+        return redirect('player_dashboard')
+
+    new_email = request.POST.get('guardian_email', '').strip().lower()
+    if new_email and new_email != profile.guardian_email:
+        field = forms.EmailField()
+        try:
+            new_email = field.clean(new_email)
+        except forms.ValidationError:
+            messages.error(request, 'Please enter a valid email address for your parent or guardian.')
+            return redirect('player_dashboard')
+        if new_email == request.user.email.lower():
+            messages.error(request, 'This must be your parent or guardian\'s own email, not yours.')
+            return redirect('player_dashboard')
+        profile.guardian_email = new_email
+        profile.guardian_email_sent_at = None
+        profile.guardian_declined_at = None
+        profile.save(update_fields=['guardian_email', 'guardian_email_sent_at', 'guardian_declined_at'])
+    elif not can_resend(profile):
+        messages.info(request, 'We just sent it. Please wait two minutes before sending again.')
+        return redirect('player_dashboard')
+
+    if send_guardian_email(request, profile):
+        messages.success(request, f'Approval email sent to {mask_email(profile.guardian_email)}.')
+    else:
+        messages.error(request, 'We could not send the email right now. Please try again later.')
+    return redirect('player_dashboard')

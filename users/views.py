@@ -20,6 +20,8 @@ from io import BytesIO
 from opportunities.models import Application, Opportunity
 from players.models import PlayerProfile, PlayerVideo
 from players.forms import PlayerOnboardingForm
+from players.guardian import mask_email, send_guardian_email
+from players.models import _calculate_age
 from scouts.forms import ScoutOnboardingForm
 from scouts.models import Scout
 
@@ -375,10 +377,13 @@ def complete_profile_view(request):
 
     if request.method == 'POST':
         form = form_class(request.POST, request.FILES)
+        if user.role == 'player':
+            form.player_email = user.email
 
         if form.is_valid():
             if user.role == 'player':
-                PlayerProfile.objects.update_or_create(
+                is_minor = bool(form.cleaned_data.get('guardian_consent')) and _calculate_age(form.cleaned_data['date_of_birth']) < 18
+                profile, _ = PlayerProfile.objects.update_or_create(
                     user=user,
                     defaults={
                         'full_name': user.full_name,
@@ -386,8 +391,17 @@ def complete_profile_view(request):
                         'position': form.cleaned_data['position'],
                         'location': form.cleaned_data['location'],
                         'guardian_consent_at': timezone.now() if form.cleaned_data.get('guardian_consent') else None,
+                        'guardian_name': form.cleaned_data.get('guardian_name', '').strip() if is_minor else '',
+                        'guardian_email': form.cleaned_data.get('guardian_email', '').strip().lower() if is_minor else '',
+                        'guardian_approved_at': None,
+                        'guardian_declined_at': None,
                     }
                 )
+                if is_minor:
+                    if send_guardian_email(request, profile):
+                        messages.info(request, f'We emailed {mask_email(profile.guardian_email)} so your parent or guardian can approve your account.')
+                    else:
+                        messages.warning(request, 'We could not email your parent or guardian yet. You can resend it from your dashboard after logging in.')
             else:
                 Scout.objects.update_or_create(
                     user=user,
