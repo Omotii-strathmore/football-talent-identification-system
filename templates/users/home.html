@@ -1,9 +1,11 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- The page has its own EN/SW switch; stop the browser from auto-translating it. -->
+    <meta name="google" content="notranslate">
     <title>Talanta Soka | Home</title>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
@@ -608,7 +610,7 @@
         </script>
     {% endif %}
     <nav>
-        <div class="logo">Talanta <span>Soka</span></div>
+        <div class="logo notranslate" translate="no">Talanta <span>Soka</span></div>
         <ul class="links">
             <li><a href="{% url 'home' %}" data-i18n="nav.home">Home</a></li>
             <li><a href="{% url 'public_opportunities' %}" id="tour-trials" data-i18n="nav.trials">Trials &amp; Tournaments</a></li>

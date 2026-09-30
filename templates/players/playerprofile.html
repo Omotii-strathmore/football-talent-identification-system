@@ -462,8 +462,8 @@
                     With your consent, interested scouts could reach out directly.
                 </div>
                 {% if profile.consent_to_share_contact %}
-                    <p class="mb-1"><strong>Email:</strong> {{ profile.contact_email|default:'Not provided' }}</p>
-                    <p class="mb-0"><strong>Contact:</strong> {{ profile.contact_phone|default:'Not provided' }}</p>
+                    <p class="mb-1"><span aria-hidden="true">✉️</span> <strong>Email:</strong> {{ profile.contact_email|default:'Not provided' }}</p>
+                    <p class="mb-0"><span aria-hidden="true">📞</span> <strong>Phone:</strong> {{ profile.contact_phone|default:'Not provided' }}</p>
                 {% else %}
                     <p class="mb-0 text-muted">You have not shared communication options with scouts yet.</p>
                 {% endif %}

@@ -70,6 +70,8 @@ class PlayerProfileForm(forms.ModelForm):
         self.fields['previous_club_end_year'].required = False
         self.fields['special_traits'].required = False
         self.fields['football_experience'].required = False
+        self.fields['contact_email'].label = '✉️ Contact email'
+        self.fields['contact_phone'].label = '📞 Contact phone'
         self.fields['contact_email'].help_text = 'Optional. Interested scouts could reach out using this email.'
         self.fields['contact_phone'].help_text = 'Optional. Interested scouts could reach out using this phone number.'
         self.fields['consent_to_share_contact'].help_text = (

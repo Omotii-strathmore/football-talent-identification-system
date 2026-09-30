@@ -268,7 +268,139 @@
         margin-bottom: 8px;
         display: block;
     }
+
+    .trials-theme-toggle {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        background: rgba(255, 255, 255, 0.08);
+        font-size: 1.05rem;
+        line-height: 1;
+        cursor: pointer;
+        transition: transform .2s ease, background .2s ease;
+    }
+
+    .trials-theme-toggle:hover { transform: rotate(-12deg) scale(1.06); }
+
+    .trials-shell::before,
+    .trials-topbar,
+    .trial-card,
+    .trial-details,
+    .empty-note { transition: background .35s ease, color .35s ease, border-color .35s ease; }
+
+    /* ---------- Light mode: a cream wash over the same football photo ---------- */
+    html[data-theme="light"] .trials-shell::before {
+        background:
+            linear-gradient(180deg, rgba(251, 249, 243, 0.94) 0%, rgba(251, 249, 243, 0.80) 26%, rgba(251, 249, 243, 0.68) 100%),
+            radial-gradient(circle at 15% 0%, rgba(0, 107, 63, 0.10), transparent 55%),
+            radial-gradient(circle at 90% 100%, rgba(245, 196, 0, 0.16), transparent 50%);
+    }
+
+    html[data-theme="light"] .trials-topbar {
+        background: rgba(251, 249, 243, 0.82);
+        border-bottom-color: rgba(0, 107, 63, 0.16);
+    }
+
+    html[data-theme="light"] .trials-heading { color: #13231a; }
+    html[data-theme="light"] .trials-subtext { color: #4b5a51; }
+
+    html[data-theme="light"] .trials-count-pill {
+        background: rgba(0, 107, 63, 0.1);
+        border-color: rgba(0, 107, 63, 0.35);
+        color: #006b3f;
+    }
+
+    html[data-theme="light"] .trials-cta .btn-outline-light {
+        color: #006b3f;
+        border-color: #006b3f;
+    }
+
+    html[data-theme="light"] .trials-cta .btn-outline-light:hover {
+        background: #006b3f;
+        color: #fff;
+    }
+
+    html[data-theme="light"] .trials-switch {
+        background: rgba(255, 255, 255, 0.7);
+        border-color: rgba(0, 107, 63, 0.18);
+    }
+
+    html[data-theme="light"] .trials-switch .btn-outline-light,
+    html[data-theme="light"] .trials-switch .btn-outline-secondary { color: #3f4f46 !important; }
+
+    html[data-theme="light"] .trials-switch .btn-light,
+    html[data-theme="light"] .trials-switch .btn-secondary {
+        background: #006b3f !important;
+        color: #fff !important;
+    }
+
+    html[data-theme="light"] .trial-card {
+        background: rgba(255, 255, 255, 0.78);
+        border-color: rgba(0, 107, 63, 0.14);
+        color: #13231a;
+        box-shadow: 0 12px 28px rgba(19, 35, 26, 0.12);
+    }
+
+    html[data-theme="light"] .trial-card:hover {
+        border-color: rgba(245, 196, 0, 0.9);
+        box-shadow: 0 18px 36px rgba(19, 35, 26, 0.18);
+    }
+
+    html[data-theme="light"] .trial-summary-meta { color: #4b5a51; }
+    html[data-theme="light"] .trial-summary-note { color: #8a6d00; }
+    html[data-theme="light"] .trial-chevron { background: rgba(0, 107, 63, 0.1); color: #006b3f; }
+    html[data-theme="light"] .trial-summary-btn[aria-expanded="true"] .trial-chevron { background: #f5c400; color: #13231a; }
+
+    html[data-theme="light"] .badge-deadline.urgent { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+    html[data-theme="light"] .badge-deadline.soon { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+    html[data-theme="light"] .badge-deadline.normal { background: #dcfce7; color: #166534; border-color: #86efac; }
+    html[data-theme="light"] .badge-deadline.expired { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+
+    html[data-theme="light"] .trial-details {
+        background: rgba(251, 249, 243, 0.92);
+        border-top-color: rgba(0, 107, 63, 0.14);
+        color: #1f2d25;
+    }
+
+    html[data-theme="light"] .trial-details p strong { color: #006b3f; }
+    html[data-theme="light"] .trial-poster { border-color: rgba(0, 107, 63, 0.14); }
+
+    html[data-theme="light"] .empty-note {
+        background: rgba(255, 255, 255, 0.8);
+        color: #13231a;
+        border-color: rgba(0, 107, 63, 0.16);
+    }
+
+    html[data-theme="light"] .navbar.bg-dark {
+        background: rgba(251, 249, 243, 0.96) !important;
+        border-bottom: 1px solid rgba(0, 107, 63, 0.14);
+    }
+
+    html[data-theme="light"] .navbar-dark .navbar-brand { color: #006b3f; }
+    html[data-theme="light"] .navbar-dark .nav-link,
+    html[data-theme="light"] .navbar-dark .navbar-text { color: #3f4f46; }
+    html[data-theme="light"] .navbar-dark .nav-link:hover { color: #006b3f; }
+    html[data-theme="light"] .navbar-dark .navbar-toggler { border-color: rgba(0, 107, 63, 0.3); }
+    html[data-theme="light"] .navbar-dark .navbar-toggler-icon { filter: invert(1) brightness(0.4); }
+    html[data-theme="light"] .navbar .btn-outline-light { color: #006b3f; border-color: #006b3f; }
+
+    html[data-theme="light"] .trials-theme-toggle {
+        background: #fff;
+        border-color: rgba(0, 107, 63, 0.2);
+        box-shadow: 0 4px 12px rgba(19, 35, 26, 0.1);
+    }
 </style>
+<script>
+    // Apply the saved theme before the page paints, so it never flashes dark then light.
+    (function () {
+        try {
+            if (localStorage.getItem('talantaSokaTheme') === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        } catch (e) {}
+    })();
+</script>
 {% endblock %}
 
 {% block content %}
@@ -280,13 +412,16 @@
                     <h2 class="trials-heading mb-0">Trials & Tournaments</h2>
                     <p class="trials-subtext mt-1">Browse open trials and tournaments from verified scouts and organizations across Kenya.</p>
                 </div>
-                <span class="trials-count-pill">
-                    {% if selected_view == 'available' %}
-                        {{ available_opportunities|length }} open now
-                    {% else %}
-                        {{ history_opportunities|length }} in history
-                    {% endif %}
-                </span>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="trials-count-pill">
+                        {% if selected_view == 'available' %}
+                            {{ available_opportunities|length }} open now
+                        {% else %}
+                            {{ history_opportunities|length }} in history
+                        {% endif %}
+                    </span>
+                    <button type="button" class="trials-theme-toggle" id="trials-theme-toggle" aria-label="Switch light/dark mode" title="Switch light/dark mode (press T)">🌙</button>
+                </div>
             </div>
 
             <div class="trials-cta">
@@ -418,6 +553,42 @@
                 const expanded = btn.getAttribute('aria-expanded') === 'true';
                 btn.setAttribute('aria-expanded', String(!expanded));
             });
+        });
+    })();
+
+    // Light/dark mode, shared with the landing page (same saved setting and "T" shortcut).
+    (function () {
+        const STORAGE_KEY = 'talantaSokaTheme';
+        const toggleBtn = document.getElementById('trials-theme-toggle');
+
+        function currentTheme() {
+            return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+        }
+
+        function updateIcon() {
+            if (toggleBtn) toggleBtn.textContent = currentTheme() === 'light' ? '☀️' : '🌙';
+        }
+
+        function toggleTheme() {
+            const next = currentTheme() === 'light' ? 'dark' : 'light';
+            if (next === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+            }
+            try { localStorage.setItem(STORAGE_KEY, next); } catch (e) {}
+            updateIcon();
+        }
+
+        updateIcon();
+        if (toggleBtn) toggleBtn.addEventListener('click', toggleTheme);
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key !== 't' && e.key !== 'T') return;
+            const tag = (e.target && e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) return;
+            if (e.metaKey || e.ctrlKey || e.altKey) return;
+            toggleTheme();
         });
     })();
 </script>
