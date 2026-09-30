@@ -230,3 +230,13 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'otp@talantasoka.com')
 EMAIL_FROM_NAME = os.environ.get('EMAIL_FROM_NAME', 'Talanta Soka')
 SERVER_EMAIL = os.environ.get('SERVER_EMAIL', DEFAULT_FROM_EMAIL)
+# Never let a stuck mail server freeze a page (the web server would then show "Internal Server Error").
+EMAIL_TIMEOUT = int(os.environ.get('EMAIL_TIMEOUT', 10))
+
+# Render's free plan blocks outgoing SMTP, so in production we send through Brevo's HTTPS API instead.
+# Set BREVO_API_KEY (and BREVO_SENDER_EMAIL, a sender verified in Brevo) to switch it on.
+BREVO_API_KEY = os.environ.get('BREVO_API_KEY', '')
+BREVO_SENDER_EMAIL = os.environ.get('BREVO_SENDER_EMAIL', EMAIL_HOST_USER)
+if BREVO_API_KEY:
+    EMAIL_BACKEND = 'config.email_backends.BrevoEmailBackend'
+    DEFAULT_FROM_EMAIL = BREVO_SENDER_EMAIL
