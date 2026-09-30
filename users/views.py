@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
-from users.emails import send_branded_email
+from users.emails import send_branded_email, send_welcome_email
 from django.conf import settings
 from datetime import timedelta
 import logging
@@ -190,6 +190,7 @@ def verify_otp_view(request):
                     user.save(update_fields=['is_active'])
                     # clear pending id
                     request.session.pop('pending_user_id', None)
+                    send_welcome_email(user)
                     messages.success(request, 'Your account is verified. You may now sign in.')
                     return redirect('login')
     else:

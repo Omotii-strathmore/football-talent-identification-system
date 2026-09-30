@@ -1,0 +1,28 @@
+{% extends 'emails/base_email.html' %}
+{% block preheader %}Karibu sana, {{ first_name }}! Your account is verified and your journey starts now.{% endblock %}
+{% block headline %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px 0;">
+  <tr><td style="background:#e6f6ec;border:1px solid #9fd8b4;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:bold;color:#006b3f;">&#9989; Account verified</td></tr>
+</table>
+Karibu sana, {{ first_name }}! &#127881;
+{% endblock %}
+{% block body %}
+{% if is_scout %}
+<p style="margin:0 0 14px 0;">Your Talanta Soka account is ready. Thank you for joining us. Across Kenya there are players with magic in their feet who have never had a scout watch them play. <strong>You could be the one who changes that.</strong></p>
+{% else %}
+<p style="margin:0 0 14px 0;">Your Talanta Soka account is ready, and today you took your first step. Every great player started somewhere: on an estate pitch, a village field, or a dusty ground after school. <strong>Now it&rsquo;s your turn to be seen.</strong></p>
+<p style="margin:0 0 14px 0;">Keep training, keep believing, and show scouts what you can do. <em style="color:#b8860b;">Bidii yako italipa.</em> Your hard work will pay off.</p>
+{% endif %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 20px 0;background:#f1faf4;border-left:4px solid #f6c453;border-radius:8px;">
+  <tr><td style="padding:14px 16px;font-size:14px;line-height:1.7;">
+    <strong style="color:#006b3f;">Your next steps</strong><br>
+    {% for step in next_steps %}<span style="color:#006b3f;font-weight:bold;">{{ forloop.counter }}.</span> {{ step }}<br>{% endfor %}
+  </td></tr>
+</table>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px auto;">
+  <tr><td align="center" bgcolor="#006b3f" style="border-radius:999px;">
+    <a href="{{ login_url }}" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:999px;">{% if is_scout %}Sign in to Talanta Soka{% else %}Start my journey &#9917;{% endif %}</a>
+  </td></tr>
+</table>
+<p style="margin:14px 0 0 0;font-size:13px;color:#5b6b62;text-align:center;">We are with you every step of the way. Tuko pamoja! &#128170;&#127998;</p>
+{% endblock %}
