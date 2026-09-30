@@ -99,7 +99,7 @@ def send_otp_to_user(user, method='email', purpose='verify'):
     OneTimeCode.objects.create(user=user, code=code, method=method, purpose=purpose, expires_at=expires)
 
     if purpose == 'reset':
-        subject = 'Talanta Soka password reset code'
+        subject = '🔐 Password Reset Code | Talanta Soka'
         message = (
             f'Hello {user.full_name},\n\n'
             f'Your Talanta Soka password reset code is: {code}\n'
@@ -107,7 +107,7 @@ def send_otp_to_user(user, method='email', purpose='verify'):
             'If you did not request a password reset, please ignore this email.'
         )
     else:
-        subject = 'Talanta Soka verification code'
+        subject = '🔑 Verification Code | Talanta Soka'
         message = (
             f'Hello {user.full_name},\n\n'
             f'Your Talanta Soka verification code is: {code}\n'

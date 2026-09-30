@@ -25,7 +25,7 @@ class WelcomeEmailTests(TestCase):
 
     def test_player_gets_branded_welcome(self):
         email = self.verify('player')
-        self.assertIn('verified', email.subject)
+        self.assertIn('Verified', email.subject)
         html = email.alternatives[0][0]
         self.assertIn('Karibu sana, Amani!', html)
         self.assertIn('banner-welcome.jpg', html)

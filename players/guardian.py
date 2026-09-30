@@ -78,7 +78,7 @@ def send_guardian_email(request, profile):
         return False
     link = request.build_absolute_uri(reverse('guardian_review', args=[make_token(profile)]))
     guardian = profile.guardian_name or 'Parent or guardian'
-    subject = f'Please approve {profile.full_name}\'s Talanta Soka account'
+    subject = f'👪 Parent Approval Needed | {profile.full_name} on Talanta Soka'
     message = (
         f'Hello {guardian},\n\n'
         f'{profile.full_name} (age {profile.age}) has signed up to Talanta Soka, a Kenyan platform that '

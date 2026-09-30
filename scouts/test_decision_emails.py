@@ -26,17 +26,17 @@ class ScoutDecisionEmailTests(TestCase):
         self.client.post(reverse('admin_approve_scout', args=[self.scout.id]))
         email = mail.outbox[-1]
         self.assertEqual(email.to, ['coach@example.com'])
-        self.assertIn("verified, Coach", email.subject)
+        self.assertIn("Verified, Coach", email.subject)
         html = email.alternatives[0][0]
         self.assertIn('Karibu, Coach Otieno!', html)
-        self.assertIn('banner-coach.jpg', html)
+        self.assertIn('banner-coach-tall.jpg', html)
         self.assertIn('Start scouting', html)
 
     def test_rejection_emails_reason_and_try_again_link(self):
         self.client.force_login(self.admin)
         self.client.post(reverse('admin_reject_scout', args=[self.scout.id]), {'reason': 'The letter was not signed.'})
         email = mail.outbox[-1]
-        self.assertIn('could not verify', email.subject)
+        self.assertIn('Not Verified', email.subject)
         html = email.alternatives[0][0]
         self.assertIn('The letter was not signed.', html)
         self.assertIn('/login/?next=/scout/verification/resubmit/', html)

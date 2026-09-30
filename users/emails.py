@@ -16,7 +16,7 @@ BANNERS = {
     'team': 'email/banner-team.jpg',
     'welcome': 'email/banner-welcome.jpg',
     'reset': 'email/banner-reset.jpg',
-    'coach': 'email/banner-coach.jpg',
+    'coach': 'email/banner-coach-tall.jpg',
     'coach_group': 'email/banner-coach-group.jpg',
 }
 
@@ -67,7 +67,7 @@ def send_welcome_email(user):
     )
     try:
         send_branded_email(
-            'Welcome to Talanta Soka! Your account is verified ✅', text, 'welcome.html',
+            '🎉 Welcome to Talanta Soka! Account Verified ✅', text, 'welcome.html',
             {'first_name': first_name, 'is_scout': is_scout, 'next_steps': next_steps,
              'login_url': f'{settings.SITE_URL}/login/'},
             [user.email], from_email=f'{settings.EMAIL_FROM_NAME} <{settings.DEFAULT_FROM_EMAIL}>', banner='welcome',
@@ -84,7 +84,7 @@ def send_scout_decision_email(scout, approved, reason=''):
     first_name = (user.full_name or '').split(' ')[0] or 'there'
     site = settings.SITE_URL
     if approved:
-        subject = "You're verified, Coach! Start discovering talent ✅"
+        subject = "🔭 You're Verified, Coach! Start Discovering Talent ✅"
         link = f'{site}/login/'
         text = (
             f'Hello {first_name},\n\n'
@@ -100,7 +100,7 @@ def send_scout_decision_email(scout, approved, reason=''):
         )
         template, banner = 'scout_approved.html', 'coach'
     else:
-        subject = 'Action needed: we could not verify your scout documents'
+        subject = '⚠️ Action Needed | Scout Documents Not Verified'
         link = f'{site}/login/?next=/scout/verification/resubmit/'
         text = (
             f'Hello {first_name},\n\n'
