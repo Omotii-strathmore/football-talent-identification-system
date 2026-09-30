@@ -9,10 +9,11 @@ from datetime import date
 
 from django.conf import settings
 from django.core import signing
-from django.core.mail import send_mail
 from django.db.models import Q
 from django.urls import reverse
 from django.utils import timezone
+
+from users.emails import send_branded_email
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,11 @@ def send_guardian_email(request, profile):
     sender = getattr(settings, 'EMAIL_HOST_USER', None) or getattr(settings, 'DEFAULT_FROM_EMAIL', None)
     from_email = f"{getattr(settings, 'EMAIL_FROM_NAME', 'Talanta Soka')} <{sender}>" if sender else None
     try:
-        send_mail(subject, message, from_email, [profile.guardian_email], fail_silently=False)
+        send_branded_email(
+            subject, message, 'guardian.html',
+            {'link': link, 'guardian_name': guardian, 'player_name': profile.full_name, 'player_age': profile.age},
+            [profile.guardian_email], from_email=from_email, banner='team',
+        )
     except Exception:
         logger.exception('Failed to send guardian approval email for profile %s', profile.pk)
         return False

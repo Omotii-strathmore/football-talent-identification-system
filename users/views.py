@@ -8,7 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
-from django.core.mail import send_mail
+from users.emails import send_branded_email
 from django.conf import settings
 from datetime import timedelta
 import logging
@@ -127,7 +127,12 @@ def send_otp_to_user(user, method='email', purpose='verify'):
             logger.warning('SMTP EMAIL_HOST_USER is not configured; cannot send OTP email.')
             return False
         try:
-            send_mail(subject, message, from_email, [user.email], fail_silently=False)
+            send_branded_email(
+                subject, message, 'code.html',
+                {'code': code, 'purpose': purpose, 'full_name': user.full_name,
+                 'first_name': (user.full_name or '').split(' ')[0] or 'there'},
+                [user.email], from_email=from_email, banner='player' if purpose != 'reset' else 'team',
+            )
             logger.info('OTP email sent to %s using backend %s', user.email, settings.EMAIL_BACKEND)
             return True
         except Exception:

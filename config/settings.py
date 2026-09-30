@@ -218,6 +218,8 @@ MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = 'login'
 
 SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL', 'anelmcall@gmail.com')
+# Public address of the live site, used for images and links inside emails.
+SITE_URL = os.environ.get('SITE_URL', 'https://talanta-soka.onrender.com').rstrip('/')
 
 # Email settings for OTP delivery
 EMAIL_BACKEND = os.environ.get('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')

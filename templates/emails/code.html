@@ -1,0 +1,12 @@
+{% extends 'emails/base_email.html' %}
+{% block preheader %}Your code is {{ code }}. It expires in 15 minutes.{% endblock %}
+{% block headline %}{% if purpose == 'reset' %}Let&rsquo;s get you back in the game{% else %}Karibu, {{ first_name }}! You&rsquo;re one step away{% endif %}{% endblock %}
+{% block body %}
+<p style="margin:0 0 16px 0;">Hello {{ full_name }},</p>
+<p style="margin:0 0 18px 0;">{% if purpose == 'reset' %}Use this code to reset your Talanta Soka password:{% else %}Use this code to confirm your email and start your Talanta Soka journey:{% endif %}</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px auto;">
+  <tr><td align="center" style="background:#f1faf4;border:2px dashed #006b3f;border-radius:12px;padding:14px 26px;font-family:'Courier New',Courier,monospace;font-size:34px;font-weight:bold;letter-spacing:10px;color:#07170d;">{{ code }}</td></tr>
+</table>
+<p style="margin:0 0 16px 0;text-align:center;font-size:13px;color:#5b6b62;">&#9201; This code expires in <strong>15 minutes</strong>. Never share it with anyone.</p>
+<p style="margin:0 0 6px 0;font-size:13px;color:#5b6b62;">{% if purpose == 'reset' %}If you did not ask to reset your password, you can ignore this email. Your account is safe.{% else %}If you did not sign up for Talanta Soka, you can ignore this email.{% endif %}</p>
+{% endblock %}
