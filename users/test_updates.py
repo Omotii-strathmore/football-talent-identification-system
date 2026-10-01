@@ -101,3 +101,16 @@ class PasswordBoxTests(TestCase):
         self.assertContains(response, 'data-no-autofill')
         self.assertContains(response, 'js/password-eye.js')
         self.assertNotContains(response, 'toggle-login-password')
+
+
+class TemplateNoteTests(TestCase):
+    def test_programmer_notes_never_show_on_pages(self):
+        """Django only hides {# ... #} notes written on one line; longer notes must use {% comment %}."""
+        import pathlib
+        from django.conf import settings
+        bad = []
+        for path in pathlib.Path(settings.BASE_DIR, 'templates').rglob('*.html'):
+            for number, line in enumerate(path.read_text(encoding='utf-8').splitlines(), 1):
+                if '{#' in line and '#}' not in line:
+                    bad.append(f'{path.name}:{number}')
+        self.assertEqual(bad, [])

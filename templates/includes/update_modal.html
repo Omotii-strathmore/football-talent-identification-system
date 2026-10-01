@@ -1,5 +1,7 @@
-{# "What's new" pop-up. Needs `site_update`. Opens by itself and marks the update as seen when closed.
-   With `defer`, it waits until the page calls TalantaUpdateModal.open(), and shows only once per browser. #}
+{% comment %}
+"What's new" pop-up. Needs `site_update`. Opens by itself and marks the update as seen when closed.
+With `defer`, it waits until the page calls TalantaUpdateModal.open(), and shows only once per browser.
+{% endcomment %}
 <div class="ts-update" id="ts-update" role="dialog" aria-modal="true" aria-labelledby="ts-update-title" translate="no"
      data-update-id="{{ site_update.pk }}"{% if defer %} data-defer="1" hidden{% endif %}
      data-seen-url="{% if user.is_authenticated %}{% url 'update_seen' site_update.pk %}{% endif %}"
