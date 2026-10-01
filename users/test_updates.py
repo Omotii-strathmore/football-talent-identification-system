@@ -44,8 +44,11 @@ class SiteUpdateTests(TestCase):
         update = self.publish()
         self.client.force_login(self.player)
         self.assertContains(self.client.get(reverse('home')), 'id="ts-update"')
+        self.assertNotContains(self.client.get(reverse('home')), 'data-defer="1"')  # opens straight away
         self.client.post(reverse('update_seen', args=[update.pk]))
-        self.assertNotContains(self.client.get(reverse('home')), 'id="ts-update"')
+        # Afterwards it no longer opens by itself; the landing page only offers it after the tour,
+        # once per browser.
+        self.assertContains(self.client.get(reverse('home')), 'data-defer="1"')
 
     def test_email_link_opens_pop_up_on_landing_page(self):
         update = self.publish()
@@ -53,12 +56,18 @@ class SiteUpdateTests(TestCase):
         self.assertContains(response, 'Safer sign-up')
         self.assertContains(response, 'id="ts-update"')
 
-    def test_people_who_join_later_are_not_emailed_or_shown_old_updates(self):
+    def test_people_who_join_later_are_not_emailed_but_see_it_after_the_tour(self):
         self.publish()
         later = User.objects.create_user('later@example.com', 'Talanta#2026', full_name='Later User')
-        self.client.force_login(later)
-        self.assertNotContains(self.client.get(reverse('home')), 'id="ts-update"')
         self.assertFalse(UpdateReceipt.objects.filter(user=later).exists())
+        self.client.force_login(later)
+        self.assertContains(self.client.get(reverse('home')), 'data-defer="1"')
+
+    def test_new_visitors_get_the_latest_update_after_the_tour(self):
+        self.publish()
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'Safer sign-up')
+        self.assertContains(response, 'data-defer="1"')
 
     def test_unsubscribe_needs_a_click_and_can_be_undone(self):
         url = reverse('updates_unsubscribe', args=[unsubscribe_token(self.player)])

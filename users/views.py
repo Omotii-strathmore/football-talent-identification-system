@@ -65,7 +65,11 @@ def home(request):
         show_update = SiteUpdate.objects.filter(pk=int(update_id)).first()
         if show_update and request.user.is_authenticated:
             UpdateReceipt.objects.filter(update=show_update, user=request.user, seen_at__isnull=True).update(seen_at=timezone.now())
-    return render(request, 'users/home.html', {'show_update': show_update})
+    # Visitors (including brand-new users) see the latest update once, after the landing page tour.
+    latest_update = None
+    if show_update is None:
+        latest_update = SiteUpdate.objects.filter(created_at__gte=timezone.now() - timedelta(days=60)).first()
+    return render(request, 'users/home.html', {'show_update': show_update, 'latest_update': latest_update})
 
 
 def privacy_view(request):

@@ -1,5 +1,7 @@
-{# "What's new" pop-up. Needs `site_update`. Opens by itself; marks the update as seen when closed. #}
+{# "What's new" pop-up. Needs `site_update`. Opens by itself and marks the update as seen when closed.
+   With `defer`, it waits until the page calls TalantaUpdateModal.open(), and shows only once per browser. #}
 <div class="ts-update" id="ts-update" role="dialog" aria-modal="true" aria-labelledby="ts-update-title" translate="no"
+     data-update-id="{{ site_update.pk }}"{% if defer %} data-defer="1" hidden{% endif %}
      data-seen-url="{% if user.is_authenticated %}{% url 'update_seen' site_update.pk %}{% endif %}"
      data-email-url="{% if user.is_authenticated %}{% url 'update_email_me' site_update.pk %}{% endif %}">
     <div class="ts-update__panel">
@@ -63,12 +65,22 @@
 (function () {
     var box = document.getElementById('ts-update');
     if (!box) return;
-    var lastFocus = document.activeElement;
-    window.TalantaUpdateOpen = true;
-    document.body.style.overflow = 'hidden';
-    requestAnimationFrame(function () { box.classList.add('is-open'); });
+    var SEEN_KEY = 'talantaSokaUpdateSeen';
+    var lastFocus = null;
     var ok = box.querySelector('.ts-update__ok');
-    setTimeout(function () { ok.focus(); }, 60);
+
+    function alreadySeenHere() {
+        try { return localStorage.getItem(SEEN_KEY) === box.dataset.updateId; } catch (e) { return false; }
+    }
+    function open() {
+        if (!document.body.contains(box) || window.TalantaUpdateOpen) return;
+        lastFocus = document.activeElement;
+        box.hidden = false;
+        window.TalantaUpdateOpen = true;
+        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(function () { box.classList.add('is-open'); });
+        setTimeout(function () { ok.focus(); }, 60);
+    }
 
     function csrf() {
         var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
@@ -78,6 +90,7 @@
         return fetch(url, { method: 'POST', headers: { 'X-CSRFToken': csrf() }, credentials: 'same-origin' });
     }
     function close() {
+        try { localStorage.setItem(SEEN_KEY, box.dataset.updateId); } catch (e) {}
         box.classList.remove('is-open');
         document.body.style.overflow = '';
         window.TalantaUpdateOpen = false;
@@ -85,8 +98,13 @@
         setTimeout(function () { box.remove(); if (lastFocus && lastFocus.focus) lastFocus.focus(); }, 250);
         document.removeEventListener('keydown', onKey);
     }
-    function onKey(e) { if (e.key === 'Escape') close(); }
+    function onKey(e) { if (e.key === 'Escape' && window.TalantaUpdateOpen) close(); }
     document.addEventListener('keydown', onKey);
+    if (box.dataset.defer) {
+        window.TalantaUpdateModal = { open: function () { if (!alreadySeenHere()) open(); } };
+    } else {
+        open();
+    }
     Array.prototype.forEach.call(box.querySelectorAll('[data-close]'), function (b) { b.addEventListener('click', close); });
     box.addEventListener('click', function (e) { if (e.target === box) close(); });
 
