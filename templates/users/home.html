@@ -435,9 +435,35 @@
             flex-wrap:wrap;
         }
 
+        .nav-right { display:flex; align-items:center; gap:14px; }
+        .nav-tools { display:flex; align-items:center; gap:10px; }
+        .menu-toggle { display:none; }
+
+        /* Phones: page links move into a menu opened by the three-line button. */
         @media (max-width:700px) {
-            .links { display:none; }
+            nav { padding:0 16px; }
+            .menu-toggle {
+                display:inline-flex; flex-direction:column; justify-content:center; gap:5px;
+                width:44px; height:44px; padding:0 11px; border-radius:10px; cursor:pointer;
+                background:var(--surface-2); border:1px solid var(--border);
+            }
+            .menu-toggle span { display:block; height:2px; border-radius:2px; background:var(--ink); transition:transform .2s ease, opacity .2s ease; }
+            .menu-toggle[aria-expanded="true"] span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+            .menu-toggle[aria-expanded="true"] span:nth-child(2) { opacity:0; }
+            .menu-toggle[aria-expanded="true"] span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
+            .lang-toggle, .theme-toggle { min-height:44px; min-width:44px; }
+            .links {
+                display:none; position:fixed; top:64px; left:0; right:0;
+                flex-direction:column; align-items:stretch; gap:8px; padding:16px;
+                background:var(--nav-bg); backdrop-filter:blur(12px);
+                border-bottom:1px solid var(--border); box-shadow:0 18px 40px rgba(0,0,0,.35);
+            }
+            .links.is-open { display:flex; animation:menuDrop .18s ease-out; }
+            .links a { display:block; font-size:.95rem; padding:14px 16px; border-radius:10px; background:var(--surface-2); border-color:var(--border); }
+            .links .cta { text-align:center; background:var(--gold); color:var(--ink-on-accent); font-weight:800; }
+            .links .cta:hover { background:var(--gold); color:var(--ink-on-accent); }
         }
+        @keyframes menuDrop { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
 
         @media (max-width:960px) {
             .hero-layout {
@@ -611,24 +637,27 @@
     {% endif %}
     <nav>
         <div class="logo notranslate" translate="no">Talanta <span>Soka</span></div>
-        <ul class="links">
-            <li><a href="{% url 'home' %}" data-i18n="nav.home">Home</a></li>
-            <li><a href="{% url 'public_opportunities' %}" id="tour-trials" data-i18n="nav.trials">Trials &amp; Tournaments</a></li>
-            <li><a href="{% url 'login' %}" id="tour-login" data-i18n="nav.login">Login</a></li>
-            <li><a href="{% url 'register' %}" class="cta" id="tour-signup" data-i18n="nav.signup">Sign Up</a></li>
-            <li>
+        <div class="nav-right">
+            <ul class="links" id="site-links">
+                <li><a href="{% url 'home' %}" data-i18n="nav.home">Home</a></li>
+                <li><a href="{% url 'public_opportunities' %}" id="tour-trials" data-i18n="nav.trials">Trials &amp; Tournaments</a></li>
+                <li><a href="{% url 'login' %}" id="tour-login" data-i18n="nav.login">Login</a></li>
+                <li><a href="{% url 'register' %}" class="cta" id="tour-signup" data-i18n="nav.signup">Sign Up</a></li>
+            </ul>
+            <div class="nav-tools">
                 <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language (shortcut: L)" title="Switch language (press L)">
                     <span class="lang-toggle-option is-active" data-lang-label="en">EN</span>
                     <span class="lang-toggle-sep">/</span>
                     <span class="lang-toggle-option" data-lang-label="sw">SW</span>
                 </button>
-            </li>
-            <li>
                 <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch light/dark mode" title="Toggle theme (press T)">
                     <span id="theme-toggle-icon">🌙</span>
                 </button>
-            </li>
-        </ul>
+                <button type="button" class="menu-toggle" id="menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="site-links">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
     </nav>
 
     <section class="hero">
@@ -964,6 +993,10 @@
                     positionForTarget(null);
                     return;
                 }
+                const inMenu = !!el.closest('#site-links');
+                if (window.TalantaMenu && window.innerWidth <= 700) {
+                    if (inMenu) { window.TalantaMenu.open(); } else { window.TalantaMenu.close(); }
+                }
 
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -1011,6 +1044,7 @@
 
             function endTour() {
                 active = false;
+                if (window.TalantaMenu) window.TalantaMenu.close();
                 dim.classList.remove('is-active');
                 tooltip.classList.remove('is-active');
                 highlight.classList.remove('is-active');
@@ -1107,5 +1141,25 @@
         })();
     </script>
 {% if show_update %}{% include 'includes/update_modal.html' with site_update=show_update %}{% elif pending_site_update %}{% include 'includes/update_modal.html' with site_update=pending_site_update %}{% endif %}
+    <script>
+        (function () {
+            const menuBtn = document.getElementById('menu-toggle');
+            const links = document.getElementById('site-links');
+            if (!menuBtn || !links) return;
+            function setOpen(open) {
+                links.classList.toggle('is-open', open);
+                menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+            }
+            window.TalantaMenu = { open: function () { setOpen(true); }, close: function () { setOpen(false); } };
+            menuBtn.addEventListener('click', function () { setOpen(!links.classList.contains('is-open')); });
+            links.addEventListener('click', function (e) { if (e.target.closest('a')) setOpen(false); });
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+            document.addEventListener('click', function (e) {
+                if (links.classList.contains('is-open') && !links.contains(e.target) && !menuBtn.contains(e.target) && !e.target.closest('.tour-tooltip')) setOpen(false);
+            });
+            window.addEventListener('resize', function () { if (window.innerWidth > 700) setOpen(false); });
+        })();
+    </script>
 </body>
 </html>

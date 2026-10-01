@@ -1,0 +1,16 @@
+{# App-style bar fixed to the bottom of the screen for players and scouts. Phones only (hidden on laptops by CSS). #}
+{% with here=request.resolver_match.url_name %}
+<nav class="ts-bottombar" aria-label="Quick navigation">
+    {% if user.role == 'player' %}
+        <a href="{% url 'player_dashboard' %}" class="{% if here == 'player_dashboard' %}is-here{% endif %}"><span aria-hidden="true">&#127968;</span>Home</a>
+        <a href="{% url 'view_opportunities' %}" class="{% if here == 'view_opportunities' or here == 'my_applications' %}is-here{% endif %}"><span aria-hidden="true">&#127942;</span>Trials</a>
+        <a href="{% url 'upload_video' %}" class="{% if here == 'upload_video' %}is-here{% endif %}"><span aria-hidden="true">&#127909;</span>Videos</a>
+        <a href="{% url 'player_profile' %}" class="{% if here == 'player_profile' %}is-here{% endif %}"><span aria-hidden="true">&#128100;</span>Profile</a>
+    {% else %}
+        <a href="{% url 'scout_dashboard' %}" class="{% if here == 'scout_dashboard' %}is-here{% endif %}"><span aria-hidden="true">&#127968;</span>Home</a>
+        <a href="{% url 'scout_player_directory' %}" class="{% if here == 'scout_player_directory' or here == 'scout_player_recommendations' %}is-here{% endif %}"><span aria-hidden="true">&#128269;</span>Players</a>
+        <a href="{% url 'manage_posted_opportunities' %}" class="{% if here == 'manage_posted_opportunities' or here == 'post_opportunity' %}is-here{% endif %}"><span aria-hidden="true">&#128203;</span>Trials</a>
+        <a href="{% url 'scout_shortlist' %}" class="{% if here == 'scout_shortlist' %}is-here{% endif %}"><span aria-hidden="true">&#10084;&#65039;</span>Interests</a>
+    {% endif %}
+</nav>
+{% endwith %}
