@@ -1,0 +1,31 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}Update emails | Talanta Soka{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-end mb-2">
+        <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Home</a>
+    </div>
+    <p class="eyebrow">Email preferences</p>
+    {% if invalid %}
+        <h1 class="title">This link is not valid</h1>
+        <p class="lead">Please use the Unsubscribe link from your most recent Talanta Soka update email, or write to <a href="mailto:{{ support_email }}">{{ support_email }}</a>.</p>
+    {% elif done == 'unsubscribed' %}
+        <h1 class="title">You&rsquo;re unsubscribed &#128075;</h1>
+        <p class="lead">We will no longer email you about new features. You will still get verification codes, password resets and other important account emails.</p>
+        <form method="post">{% csrf_token %}
+            <input type="hidden" name="action" value="resubscribe">
+            <button type="submit" class="btn btn-outline-light mt-2">Changed your mind? Get updates again</button>
+        </form>
+    {% elif done == 'resubscribed' %}
+        <h1 class="title">Welcome back! &#127881;</h1>
+        <p class="lead">You will get an email whenever Talanta Soka has something new.</p>
+    {% else %}
+        <h1 class="title">Stop update emails?</h1>
+        <p class="lead">Hello {{ person.full_name }}. If you unsubscribe, we will stop emailing you when Talanta Soka adds something new. Codes and important account emails will still reach you.</p>
+        <form method="post">{% csrf_token %}
+            <input type="hidden" name="action" value="unsubscribe">
+            <button type="submit" class="btn btn-brand mt-2">Unsubscribe from updates</button>
+        </form>
+    {% endif %}
+{% endblock %}

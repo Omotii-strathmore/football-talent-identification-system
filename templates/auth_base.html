@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -77,5 +78,6 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+    <script src="{% static 'js/password-eye.js' %}"></script>
 </body>
 </html>

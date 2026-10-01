@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Updates{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="dashboard-hero mb-4">
+        <h2 class="fw-bold mb-1">&#127381; Updates</h2>
+        <p class="text-muted mb-0">Tell players and scouts what is new. When you publish, Talanta Soka emails it automatically to everyone who wants updates and shows it once as a pop-up when they next visit. This page keeps a record of every update.</p>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4"><div class="card stat-card h-100 text-center"><div class="card-body">
+            <div class="stat-value">{{ subscribers }}</div><p class="text-muted mb-0">Will receive update emails</p>
+        </div></div></div>
+        <div class="col-md-4"><div class="card stat-card h-100 text-center"><div class="card-body">
+            <div class="stat-value">{{ unsubscribed }}</div><p class="text-muted mb-0">Unsubscribed (still see the pop-up)</p>
+        </div></div></div>
+        <div class="col-md-4"><div class="card stat-card h-100 text-center"><div class="card-body">
+            <div class="stat-value">{{ rows|length }}</div><p class="text-muted mb-0">Updates published</p>
+        </div></div></div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Write a new update</h5>
+            <form method="post" novalidate onsubmit="return confirm('Publish this update and email it to {{ subscribers }} people?');">
+                {% csrf_token %}
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field }}
+                        {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+                        {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                    </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-success">Publish and email &#128640;</button>
+                <span class="small text-muted ms-2">Up to {{ per_day }} update emails go out per day; anyone left over is emailed the next day.</span>
+            </form>
+        </div>
+    </div>
+
+    <h5 class="fw-bold mb-3">History</h5>
+    {% if rows %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr><th>Published</th><th>Update</th><th class="text-center">Emailed</th><th class="text-center">Seen</th><th>Resend to someone who asked</th></tr>
+                </thead>
+                <tbody>
+                {% for row in rows %}
+                    <tr>
+                        <td class="text-nowrap">{{ row.update.created_at|date:"j M Y, H:i" }}</td>
+                        <td>
+                            <strong>{{ row.update.title }}</strong>
+                            <div class="small text-muted">{{ row.update.teaser }}</div>
+                            <details class="small mt-1"><summary>Points ({{ row.update.point_list|length }})</summary>
+                                <ul class="mb-0">{% for p in row.update.point_list %}<li>{{ p }}</li>{% endfor %}</ul>
+                            </details>
+                            <a class="small" href="{% url 'home' %}?update={{ row.update.pk }}" target="_blank" rel="noopener">Preview pop-up &#8599;</a>
+                        </td>
+                        <td class="text-center text-nowrap">
+                            {{ row.emailed }} / {{ row.queued }}
+                            {% if row.waiting %}<div class="small text-warning">{{ row.waiting }} waiting</div>{% endif %}
+                        </td>
+                        <td class="text-center">{{ row.seen }}</td>
+                        <td>
+                            <form method="post" action="{% url 'admin_update_send_one' row.update.pk %}" class="d-flex gap-1">
+                                {% csrf_token %}
+                                <input type="email" name="email" required class="form-control form-control-sm" placeholder="their@email.com" style="min-width:170px">
+                                <button type="submit" class="btn btn-sm btn-outline-success">Send</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="text-muted">No updates yet. Your first one will appear here.</p>
+    {% endif %}
+</div>
+{% endblock %}

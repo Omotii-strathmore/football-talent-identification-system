@@ -1,0 +1,26 @@
+{% extends 'emails/base_email.html' %}
+{% block preheader %}{{ update.teaser }}{% endblock %}
+{% block headline %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px 0;">
+  <tr><td style="background:#f6c453;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:bold;color:#07170d;">&#127381; What&rsquo;s new</td></tr>
+</table>
+{{ update.title }}
+{% endblock %}
+{% block body %}
+<p style="margin:0 0 14px 0;">Hello {{ first_name }},</p>
+<p style="margin:0 0 16px 0;">{{ update.teaser }}</p>
+{% if points %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 20px 0;background:#f1faf4;border-left:4px solid #f6c453;border-radius:8px;">
+  <tr><td style="padding:14px 16px;font-size:14px;line-height:1.7;">
+    {% for point in points|slice:":4" %}<span style="color:#006b3f;font-weight:bold;">&#10004;</span> {{ point }}<br>{% endfor %}
+    {% if points|length > 4 %}<span style="color:#5b6b62;">...and {{ points|length|add:"-4" }} more</span>{% endif %}
+  </td></tr>
+</table>
+{% endif %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px auto;">
+  <tr><td align="center" bgcolor="#006b3f" style="border-radius:999px;">
+    <a href="{{ link }}" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:999px;">See what&rsquo;s new &#10140;</a>
+  </td></tr>
+</table>
+<p style="margin:18px 0 0 0;font-size:12px;color:#8a978f;text-align:center;">You are getting this because you have a Talanta Soka account. Don&rsquo;t want update emails? <a href="{{ unsubscribe_url }}" style="color:#5b6b62;">Unsubscribe</a>. Codes and important account emails will still reach you.</p>
+{% endblock %}

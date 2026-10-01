@@ -135,7 +135,7 @@
 	<h1 class="title">Create player or scout account</h1>
 	<p class="lead">Step 1 of 3: enter your basic account details. After this, you will continue to complete your role-specific profile and then verify your account before login.</p>
 
-	<form method="post" novalidate>
+	<form method="post" novalidate data-no-autofill>
 		{% csrf_token %}
 		{{ form.non_field_errors }}
 		{{ form.full_name|as_crispy_field }}
@@ -212,10 +212,6 @@
 				<li data-rule="number">A number (0-9)</li>
 				<li data-rule="special">A symbol (e.g. ! @ # $)</li>
 			</ul>
-		</div>
-		<div class="form-check mt-2 mb-0">
-			<input class="form-check-input" type="checkbox" id="toggle-register-passwords">
-			<label class="form-check-label" for="toggle-register-passwords">Show passwords</label>
 		</div>
 
 		<p class="locked-note" id="confirm-locked-note">&#128274; Once your password is strong, you'll confirm it here.</p>

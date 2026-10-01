@@ -43,6 +43,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     terms_accepted_at = models.DateTimeField(blank=True, null=True)
+    # True when the person clicked "Unsubscribe" in an update email. Codes and approvals still arrive.
+    updates_opt_out = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['full_name']
@@ -132,3 +134,35 @@ class SiteFeedback(models.Model):
     def reason_labels(self):
         labels = dict(self.REASON_CHOICES.get(self.rating, []))
         return [labels.get(code, code) for code in self.reasons]
+
+
+
+class SiteUpdate(models.Model):
+    """A "What's new" announcement written by the administrator and emailed to users."""
+    title = models.CharField(max_length=120)
+    teaser = models.CharField(max_length=220, help_text='One or two sentences shown in the email.')
+    points = models.TextField(help_text='One point per line.')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def point_list(self):
+        bullet_chars = ' -*\t•'
+        return [line.strip(bullet_chars) for line in self.points.splitlines() if line.strip(bullet_chars)]
+
+
+class UpdateReceipt(models.Model):
+    """Who was emailed an update, and who has seen it on the website."""
+    update = models.ForeignKey(SiteUpdate, on_delete=models.CASCADE, related_name='receipts')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='update_receipts')
+    emailed_at = models.DateTimeField(null=True, blank=True)
+    seen_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        unique_together = ('update', 'user')

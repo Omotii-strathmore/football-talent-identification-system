@@ -2,7 +2,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 
-from .models import SiteFeedback
+from .models import SiteFeedback, UpdateReceipt
 
 # Options that only make sense for the other role.
 ROLE_HIDDEN_REASONS = {
@@ -23,6 +23,11 @@ def site_extras(request):
 
     user = getattr(request, 'user', None)
     if user is not None and user.is_authenticated and not user.is_staff:
+        # Show the newest update this person has not seen yet, once, as a pop-up on their pages.
+        receipt = (UpdateReceipt.objects.filter(user=user, seen_at__isnull=True)
+                   .select_related('update').order_by('-update__created_at').first())
+        if receipt and request.GET.get('update') is None:
+            context['pending_site_update'] = receipt.update
         ask = not SiteFeedback.objects.filter(user=user).exists()
         context['ask_site_feedback'] = ask
         if ask:

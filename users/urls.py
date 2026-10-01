@@ -32,5 +32,10 @@ urlpatterns = [
     path('management/users/<int:user_id>/update/', views.admin_update_user_view, name='admin_update_user'),
     path('management/users/<int:user_id>/delete/', views.admin_delete_user_view, name='admin_delete_user'),
     path('management/feedback/', views.admin_feedback_view, name='admin_feedback'),
+    path('management/updates/', views.admin_updates_view, name='admin_updates'),
+    path('management/updates/<int:update_id>/send/', views.admin_update_send_one_view, name='admin_update_send_one'),
+    path('updates/<int:update_id>/seen/', views.update_seen_view, name='update_seen'),
+    path('updates/<int:update_id>/email-me/', views.update_email_me_view, name='update_email_me'),
+    path('updates/unsubscribe/<str:token>/', views.updates_unsubscribe_view, name='updates_unsubscribe'),
     path('management/reports/', views.admin_reports_view, name='admin_reports'),
 ]

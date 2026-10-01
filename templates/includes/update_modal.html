@@ -1,0 +1,108 @@
+{# "What's new" pop-up. Needs `site_update`. Opens by itself; marks the update as seen when closed. #}
+<div class="ts-update" id="ts-update" role="dialog" aria-modal="true" aria-labelledby="ts-update-title" translate="no"
+     data-seen-url="{% if user.is_authenticated %}{% url 'update_seen' site_update.pk %}{% endif %}"
+     data-email-url="{% if user.is_authenticated %}{% url 'update_email_me' site_update.pk %}{% endif %}">
+    <div class="ts-update__panel">
+        <button type="button" class="ts-update__x" data-close aria-label="Close">&times;</button>
+        <div class="ts-update__head">
+            <span class="ts-update__badge">&#127381; What&rsquo;s new</span>
+            <span class="ts-update__date">{{ site_update.created_at|date:"j F Y" }}</span>
+            <h2 id="ts-update-title">{{ site_update.title }}</h2>
+            <p>{{ site_update.teaser }}</p>
+        </div>
+        <div class="ts-update__body">
+            <ul>
+                {% for point in site_update.point_list %}<li>{{ point }}</li>{% endfor %}
+            </ul>
+        </div>
+        <div class="ts-update__foot">
+            {% if user.is_authenticated %}
+                <button type="button" class="ts-update__link" id="ts-update-email">&#128233; Email me this update</button>
+                <span class="ts-update__note" id="ts-update-note" aria-live="polite"></span>
+            {% else %}
+                <span class="ts-update__note">Talanta Soka &middot; <em>&ldquo;Nionekane nikicheza kwa TV!&rdquo;</em></span>
+            {% endif %}
+            <button type="button" class="ts-update__ok" data-close>Got it &#9917;</button>
+        </div>
+    </div>
+</div>
+<style>
+    .ts-update{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;
+        background:rgba(4,12,8,.72);backdrop-filter:blur(3px);opacity:0;transition:opacity .25s ease}
+    .ts-update.is-open{opacity:1}
+    .ts-update__panel{position:relative;width:min(900px,100%);height:min(75vh,720px);display:flex;flex-direction:column;
+        background:#fffdf7;color:#13231a;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45);
+        transform:translateY(16px) scale(.98);transition:transform .25s ease;font-family:inherit}
+    .ts-update.is-open .ts-update__panel{transform:none}
+    .ts-update__x{position:absolute;top:12px;right:14px;width:40px;height:40px;border:0;border-radius:50%;
+        background:rgba(255,255,255,.15);color:#fff;font-size:28px;line-height:1;cursor:pointer}
+    .ts-update__x:hover,.ts-update__x:focus-visible{background:rgba(255,255,255,.3);outline:none}
+    .ts-update__head{padding:28px 32px 24px;color:#fff;background:linear-gradient(135deg,#07170d 0%,#0b4d2c 60%,#006b3f 100%);
+        border-bottom:4px solid #f6c453}
+    .ts-update__badge{display:inline-block;background:#f6c453;color:#07170d;font-weight:800;font-size:13px;
+        padding:5px 12px;border-radius:999px;letter-spacing:.3px}
+    .ts-update__date{margin-left:10px;font-size:13px;color:#cfe9d8}
+    .ts-update__head h2{margin:14px 52px 8px 0;font-size:clamp(22px,3vw,30px);font-weight:800;line-height:1.2;color:#fff}
+    .ts-update__head p{margin:0;font-size:16px;color:#e3f3e9;max-width:60ch}
+    .ts-update__body{flex:1;overflow-y:auto;padding:22px 32px}
+    .ts-update__body ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+    .ts-update__body li{position:relative;padding:14px 16px 14px 50px;background:#f1faf4;border:1px solid #d5ecdd;
+        border-radius:12px;font-size:16px;line-height:1.5}
+    .ts-update__body li::before{content:"\2714";position:absolute;left:14px;top:12px;width:24px;height:24px;border-radius:50%;
+        background:#006b3f;color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center}
+    .ts-update__foot{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 32px;border-top:1px solid #e3ebe5;background:#fff}
+    .ts-update__link{border:0;background:none;color:#006b3f;font-weight:700;cursor:pointer;padding:6px 0;text-decoration:underline}
+    .ts-update__note{flex:1;font-size:14px;color:#5b6b62}
+    .ts-update__ok{margin-left:auto;border:0;border-radius:999px;padding:12px 28px;font-weight:800;font-size:16px;
+        background:#006b3f;color:#fff;cursor:pointer}
+    .ts-update__ok:hover,.ts-update__ok:focus-visible{background:#00552f;outline:3px solid #f6c453}
+    @media (max-width:600px){.ts-update__panel{height:85vh}.ts-update__head,.ts-update__body,.ts-update__foot{padding-left:18px;padding-right:18px}}
+    @media (prefers-reduced-motion:reduce){.ts-update,.ts-update__panel{transition:none}}
+</style>
+<script>
+(function () {
+    var box = document.getElementById('ts-update');
+    if (!box) return;
+    var lastFocus = document.activeElement;
+    window.TalantaUpdateOpen = true;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(function () { box.classList.add('is-open'); });
+    var ok = box.querySelector('.ts-update__ok');
+    setTimeout(function () { ok.focus(); }, 60);
+
+    function csrf() {
+        var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return m ? decodeURIComponent(m[1]) : '';
+    }
+    function post(url) {
+        return fetch(url, { method: 'POST', headers: { 'X-CSRFToken': csrf() }, credentials: 'same-origin' });
+    }
+    function close() {
+        box.classList.remove('is-open');
+        document.body.style.overflow = '';
+        window.TalantaUpdateOpen = false;
+        if (box.dataset.seenUrl) post(box.dataset.seenUrl).catch(function () {});
+        setTimeout(function () { box.remove(); if (lastFocus && lastFocus.focus) lastFocus.focus(); }, 250);
+        document.removeEventListener('keydown', onKey);
+    }
+    function onKey(e) { if (e.key === 'Escape') close(); }
+    document.addEventListener('keydown', onKey);
+    Array.prototype.forEach.call(box.querySelectorAll('[data-close]'), function (b) { b.addEventListener('click', close); });
+    box.addEventListener('click', function (e) { if (e.target === box) close(); });
+
+    var emailBtn = document.getElementById('ts-update-email');
+    if (emailBtn && box.dataset.emailUrl) {
+        emailBtn.addEventListener('click', function () {
+            var note = document.getElementById('ts-update-note');
+            emailBtn.disabled = true;
+            note.textContent = 'Sending...';
+            post(box.dataset.emailUrl).then(function (r) { return r.json(); }).then(function (data) {
+                note.textContent = data.message || 'Sent!';
+            }).catch(function () {
+                note.textContent = 'Sorry, that did not work. Please try again.';
+                emailBtn.disabled = false;
+            });
+        });
+    }
+})();
+</script>

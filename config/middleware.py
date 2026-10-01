@@ -1,8 +1,12 @@
 from django.utils.cache import patch_cache_control
 
+# Pages with sign-in or password forms. They must never be kept in the browser's history cache,
+# otherwise pressing Back after logging out can bring back what was typed.
+FORM_PAGE_PREFIXES = ('/login/', '/register/', '/verify-otp/', '/password-reset/')
+
 
 class DisableClientCacheMiddleware:
-    """Prevent browsers from storing authenticated pages in history cache."""
+    """Prevent browsers from storing authenticated pages and sign-in forms in history cache."""
 
     def __init__(self, get_response):
         self.get_response = get_response
@@ -10,7 +14,7 @@ class DisableClientCacheMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
-        if request.user.is_authenticated:
+        if request.user.is_authenticated or request.path.startswith(FORM_PAGE_PREFIXES):
             patch_cache_control(
                 response,
                 no_cache=True,

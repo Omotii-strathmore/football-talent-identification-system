@@ -1106,5 +1106,6 @@
             }
         })();
     </script>
+{% if show_update %}{% include 'includes/update_modal.html' with site_update=show_update %}{% elif pending_site_update %}{% include 'includes/update_modal.html' with site_update=pending_site_update %}{% endif %}
 </body>
 </html>

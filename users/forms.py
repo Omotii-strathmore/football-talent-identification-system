@@ -6,7 +6,7 @@ from crispy_forms.helper import FormHelper
 from crispy_forms.layout import Layout
 import re
 
-from .models import User
+from .models import SiteUpdate, User
 
 
 class RegistrationForm(forms.ModelForm):
@@ -235,3 +235,20 @@ class OTPVerifyForm(forms.Form):
 		if not data.isdigit():
 			raise forms.ValidationError('Invalid code format.')
 		return data
+
+
+
+class SiteUpdateForm(forms.ModelForm):
+	class Meta:
+		model = SiteUpdate
+		fields = ['title', 'teaser', 'points']
+		labels = {
+			'title': 'Title',
+			'teaser': 'Short intro (shown in the email)',
+			'points': 'What is new (one point per line)',
+		}
+		widgets = {
+			'title': forms.TextInput(attrs={'placeholder': 'e.g. A smoother sign-up and safer accounts for young players', 'class': 'form-control'}),
+			'teaser': forms.TextInput(attrs={'placeholder': 'One or two sentences that make people want to read more', 'class': 'form-control'}),
+			'points': forms.Textarea(attrs={'rows': 6, 'class': 'form-control', 'placeholder': 'Parents now approve players under 18 by email\nA new eye button shows or hides your password\nLight mode on the trials page'}),
+		}

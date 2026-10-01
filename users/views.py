@@ -47,8 +47,9 @@ from .forms import (
     OTPVerifyForm,
     PasswordResetRequestForm,
     PasswordResetConfirmForm,
+    SiteUpdateForm,
 )
-from .models import User, OneTimeCode, SiteFeedback
+from .models import User, OneTimeCode, SiteFeedback, SiteUpdate, UpdateReceipt
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +57,14 @@ def _is_staff_user(user):
     return user.is_authenticated and user.is_staff
 
 def home(request):
-    return render(request, 'users/home.html')
+    # Links in update emails open the landing page with that update in a pop-up.
+    show_update = None
+    update_id = request.GET.get('update', '')
+    if update_id.isdigit():
+        show_update = SiteUpdate.objects.filter(pk=int(update_id)).first()
+        if show_update and request.user.is_authenticated:
+            UpdateReceipt.objects.filter(update=show_update, user=request.user, seen_at__isnull=True).update(seen_at=timezone.now())
+    return render(request, 'users/home.html', {'show_update': show_update})
 
 
 def privacy_view(request):
@@ -548,6 +556,7 @@ def admin_dashboard_view(request):
             'opportunities_count': opportunities_count,
             'applications_count': applications_count,
             'feedback_count': feedback_count,
+            'updates_count': SiteUpdate.objects.count(),
         },
     )
 
@@ -1047,3 +1056,108 @@ def admin_reports_view(request):
             'report_rows': report_rows,
         },
     )
+
+# ---------------------------------------------------------------- "What's new" updates
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_updates_view(request):
+    from . import updates as update_mail
+
+    form = SiteUpdateForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        update = form.save(commit=False)
+        update.created_by = request.user
+        update.save()
+        update_mail.queue_recipients(update)
+        total = update.receipts.count()
+        update_mail.send_in_background(update)
+        messages.success(
+            request,
+            f'Update published. It is being emailed to {total} player{"s" if total != 1 else ""} and scouts in the background, '
+            'and they will see it once on their dashboard.',
+        )
+        return redirect('admin_updates')
+
+    # Continue any update that hit the daily email limit yesterday.
+    update_mail.resume_unfinished()
+
+    rows = []
+    for update in SiteUpdate.objects.all():
+        receipts = update.receipts
+        rows.append({
+            'update': update,
+            'queued': receipts.count(),
+            'emailed': receipts.filter(emailed_at__isnull=False).count(),
+            'seen': receipts.filter(seen_at__isnull=False).count(),
+            'waiting': update_mail.pending_count(update),
+        })
+    return render(request, 'users/admin_updates.html', {
+        'form': form,
+        'rows': rows,
+        'subscribers': update_mail.recipients().count(),
+        'unsubscribed': User.objects.filter(is_active=True, is_staff=False, updates_opt_out=True).count(),
+        'per_day': update_mail.UPDATE_EMAILS_PER_DAY,
+    })
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+@require_POST
+def admin_update_send_one_view(request, update_id):
+    """The administrator emails an update to one person who asked for it again."""
+    from . import updates as update_mail
+
+    update = get_object_or_404(SiteUpdate, pk=update_id)
+    email = request.POST.get('email', '').strip()
+    person = User.objects.filter(email__iexact=email, is_active=True).first()
+    if not person:
+        messages.error(request, f'No active account uses the email "{email}".')
+        return redirect('admin_updates')
+    try:
+        update_mail.send_update_email(update, person)
+        messages.success(request, f'"{update.title}" was emailed to {person.full_name}.')
+    except Exception:
+        logger.exception('Could not resend update %s to %s', update.pk, person.email)
+        messages.error(request, 'The email could not be sent. Please try again later.')
+    return redirect('admin_updates')
+
+
+@login_required
+@require_POST
+def update_seen_view(request, update_id):
+    UpdateReceipt.objects.filter(update_id=update_id, user=request.user, seen_at__isnull=True).update(seen_at=timezone.now())
+    return JsonResponse({'ok': True})
+
+
+@login_required
+@require_POST
+def update_email_me_view(request, update_id):
+    """A user who closed the pop-up too soon asks for the update by email."""
+    from . import updates as update_mail
+
+    update = get_object_or_404(SiteUpdate, pk=update_id)
+    receipt = UpdateReceipt.objects.filter(update=update, user=request.user).first()
+    if receipt and receipt.emailed_at and timezone.now() - receipt.emailed_at < timedelta(minutes=10):
+        return JsonResponse({'ok': True, 'message': 'We already emailed it to you a moment ago. Please check your inbox.'})
+    try:
+        update_mail.send_update_email(update, request.user)
+    except Exception:
+        logger.exception('Could not email update %s to %s', update.pk, request.user.email)
+        return JsonResponse({'ok': False, 'message': 'Sorry, the email could not be sent. Please try again later.'}, status=502)
+    return JsonResponse({'ok': True, 'message': f'Sent! Check {request.user.email}.'})
+
+
+def updates_unsubscribe_view(request, token):
+    """Link at the bottom of every update email. Asks for a click so email scanners cannot unsubscribe people."""
+    from . import updates as update_mail
+
+    person = update_mail.user_from_unsubscribe_token(token)
+    if person is None:
+        return render(request, 'users/updates_unsubscribe.html', {'invalid': True}, status=404)
+    done = None
+    if request.method == 'POST':
+        person.updates_opt_out = request.POST.get('action') != 'resubscribe'
+        person.save(update_fields=['updates_opt_out'])
+        done = 'unsubscribed' if person.updates_opt_out else 'resubscribed'
+    return render(request, 'users/updates_unsubscribe.html', {'person': person, 'done': done})
