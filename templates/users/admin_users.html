@@ -4,53 +4,68 @@
 
 {% block extra_css %}
 <style>
-    .user-tabs {
-        display: inline-flex;
-        gap: 4px;
-        padding: 4px;
-        border-radius: 999px;
-        background: #e2e8f0;
+    .um-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+    .um-filter {
+        display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px;
+        border: 1px solid #d7dee5; background: #fff; color: #1f2933; text-decoration: none; font-weight: 600; font-size: .9rem;
     }
+    .um-filter .num { background: #eef2f6; border-radius: 999px; padding: 1px 9px; font-size: .8rem; }
+    .um-filter:hover { border-color: #006b3f; color: #006b3f; }
+    .um-filter.is-on { background: #006b3f; border-color: #006b3f; color: #fff; }
+    .um-filter.is-on .num { background: rgba(255,255,255,.2); color: #fff; }
 
-    .user-tabs .btn {
-        border-radius: 999px !important;
-        border: 0 !important;
+    .um-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+    .um-card {
+        background: #fff; border: 1px solid #e3e8ee; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px;
+        box-shadow: 0 1px 2px rgba(16,24,40,.04); color: #1f2933;
     }
-
-    .user-name-cell {
-        display: flex;
-        align-items: center;
-        gap: 10px;
+    .um-card.is-off { background: #fafafa; }
+    .um-card.is-off .um-who { opacity: .75; }
+    .um-top { display: flex; gap: 12px; align-items: center; }
+    .um-avatar {
+        width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0; object-fit: cover;
+        display: grid; place-items: center; font-weight: 800; color: #fff; background: linear-gradient(135deg, #0b4d2c, #006b3f);
     }
-
-    .user-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-        color: #0f172a;
-        display: grid;
-        place-items: center;
-        font-weight: 700;
-        font-size: 0.85rem;
-        flex-shrink: 0;
-    }
+    .um-avatar.scout { background: linear-gradient(135deg, #1d4ed8, #0ea5e9); }
+    .um-avatar.staff { background: linear-gradient(135deg, #b45309, #f6c453); color: #1f1300; }
+    .um-name { font-weight: 700; line-height: 1.2; }
+    .um-email { font-size: .85rem; color: #5b6770; word-break: break-all; }
+    .um-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .um-chip { font-size: .75rem; font-weight: 700; border-radius: 999px; padding: 3px 10px; background: #eef2f6; color: #334155; }
+    .um-chip.green { background: #e6f6ec; color: #006b3f; }
+    .um-chip.amber { background: #fff4e0; color: #9a5b00; }
+    .um-chip.red { background: #fde8e8; color: #b42318; }
+    .um-chip.blue { background: #e8f0fe; color: #1d4ed8; }
+    .um-chip.dark { background: #1f2933; color: #fff; }
+    .um-facts { font-size: .85rem; color: #475467; margin: 0; padding: 0; list-style: none; }
+    .um-facts li { padding: 2px 0; }
+    .um-controls { display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid #eef2f6; padding-top: 12px; margin-top: auto; }
+    .um-switches { display: flex; gap: 18px; }
+    .um-switches .form-check-input { cursor: pointer; }
+    .um-switches .form-check-input:checked { background-color: #006b3f; border-color: #006b3f; }
+    .um-you { font-size: .8rem; color: #5b6770; }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h2 class="mb-0">Manage User Accounts</h2>
-        <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary">Back to Admin Dashboard</a>
+<div class="container mt-4 mb-5">
+    <div class="dashboard-hero mb-4">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">&#128101; Manage users</h2>
+                <p class="text-muted mb-0">See every account at a glance. You can switch an account <strong>off</strong> (they can no longer log in) or give <strong>staff</strong> access. Names, emails and passwords belong to each user and can only be changed by them.</p>
+            </div>
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-light btn-sm">Back to dashboard</a>
+        </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-        <div class="user-tabs">
-            <a href="{% url 'admin_users' %}" class="btn btn-sm {% if not role_filter %}btn-dark{% else %}btn-light{% endif %}">All ({{ total_users }})</a>
-            <a href="?role=player" class="btn btn-sm {% if role_filter == 'player' %}btn-primary{% else %}btn-light{% endif %}">Players ({{ role_counts.player }})</a>
-            <a href="?role=scout" class="btn btn-sm {% if role_filter == 'scout' %}btn-primary{% else %}btn-light{% endif %}">Scouts ({{ role_counts.scout }})</a>
-            <a href="?role=staff" class="btn btn-sm {% if role_filter == 'staff' %}btn-primary{% else %}btn-light{% endif %}">Staff ({{ role_counts.staff }})</a>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+        <div class="um-filters">
+            <a href="{% url 'admin_users' %}" class="um-filter {% if not role_filter %}is-on{% endif %}">All <span class="num">{{ total_users }}</span></a>
+            <a href="?role=player" class="um-filter {% if role_filter == 'player' %}is-on{% endif %}">&#9917; Players <span class="num">{{ role_counts.player }}</span></a>
+            <a href="?role=scout" class="um-filter {% if role_filter == 'scout' %}is-on{% endif %}">&#128301; Scouts <span class="num">{{ role_counts.scout }}</span></a>
+            <a href="?role=staff" class="um-filter {% if role_filter == 'staff' %}is-on{% endif %}">&#128737;&#65039; Staff <span class="num">{{ role_counts.staff }}</span></a>
+            <a href="?role=unverified" class="um-filter {% if role_filter == 'unverified' %}is-on{% endif %}">&#9203; Not verified / off <span class="num">{{ role_counts.unverified }}</span></a>
         </div>
         <form method="get" class="d-flex gap-2">
             {% if role_filter %}<input type="hidden" name="role" value="{{ role_filter }}">{% endif %}
@@ -59,113 +74,101 @@
         </form>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-lg-12">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5>Edit User</h5>
-                    {% if edit_form and edit_user %}
-                        <form method="post" action="{% url 'admin_update_user' edit_user.id %}">
-                            {% csrf_token %}
-                            {% for hidden in edit_form.hidden_fields %}
-                                {{ hidden }}
-                            {% endfor %}
-
-                            {% for field in edit_form.visible_fields %}
-                                <div class="mb-3">
-                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                    {% if field.name == 'password' %}
-                                        {{ field }}
-                                    {% else %}
-                                        {{ field }}
-                                    {% endif %}
-                                    {% if field.help_text %}
-                                        <div class="form-text">{{ field.help_text }}</div>
-                                    {% endif %}
-                                    {% for error in field.errors %}
-                                        <div class="text-danger small">{{ error }}</div>
-                                    {% endfor %}
-                                </div>
-                            {% endfor %}
-
-                            {% for error in edit_form.non_field_errors %}
-                                <div class="alert alert-danger py-2">{{ error }}</div>
-                            {% endfor %}
-
-                            <button type="submit" class="btn btn-success">Update User</button>
-                            <a href="{% url 'admin_users' %}" class="btn btn-outline-secondary">Cancel</a>
-                        </form>
-                    {% else %}
-                        <p class="text-muted mb-0">Select a user from the table below using Edit.</p>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-    </div>
-
     {% if users %}
-        <div class="table-responsive">
-            <table class="table table-bordered table-striped align-middle">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th>Role</th>
-                        <th>Status</th>
-                        <th>Staff</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for managed_user in users %}
-                        <tr>
-                            <td>
-                                <div class="user-name-cell">
-                                    <div class="user-avatar">{{ managed_user.full_name|slice:':1'|upper }}</div>
-                                    <div>
-                                        <div class="fw-semibold">{{ managed_user.full_name }}</div>
-                                        <div class="text-muted small">{{ managed_user.email }}</div>
-                                    </div>
+        <div class="um-grid">
+            {% for u in users %}
+                {% with p=u.player_profile s=u.scout_profile %}
+                <div class="um-card {% if not u.is_active %}is-off{% endif %}">
+                    <div class="um-top um-who">
+                        {% if u.role == 'player' and p.profile_photo %}
+                            <img class="um-avatar" src="{{ p.profile_photo.url }}" alt="">
+                        {% elif u.role == 'scout' and s.profile_photo %}
+                            <img class="um-avatar" src="{{ s.profile_photo.url }}" alt="">
+                        {% else %}
+                            <div class="um-avatar {% if u.is_staff %}staff{% elif u.role == 'scout' %}scout{% endif %}">{{ u.full_name|slice:':1'|upper }}</div>
+                        {% endif %}
+                        <div>
+                            <div class="um-name">{{ u.full_name }}</div>
+                            <div class="um-email">{{ u.email }}</div>
+                        </div>
+                    </div>
+
+                    <div class="um-chips">
+                        {% if u.is_staff %}<span class="um-chip dark">&#128737;&#65039; Staff</span>{% endif %}
+                        {% if not u.is_staff %}{% if u.role == 'scout' %}<span class="um-chip blue">&#128301; Scout</span>{% else %}<span class="um-chip">&#9917; Player</span>{% endif %}{% endif %}
+                        {% if u.is_active %}<span class="um-chip green">&#9989; Active</span>{% else %}<span class="um-chip amber">&#9203; Not verified or switched off</span>{% endif %}
+                        {% if u.role == 'scout' and s and not u.is_staff %}
+                            {% if s.verification_status == 'approved' %}<span class="um-chip green">Documents approved</span>
+                            {% elif s.verification_status == 'rejected' %}<span class="um-chip red">Documents rejected</span>
+                            {% else %}<a href="{% url 'admin_verifications' %}" class="um-chip amber text-decoration-none">Documents waiting &rarr;</a>{% endif %}
+                        {% endif %}
+                        {% if u.role == 'player' and p and p.is_minor %}
+                            {% if p.guardian_approved_at %}<span class="um-chip green">Under 18 &middot; parent approved</span>
+                            {% elif p.guardian_declined_at %}<span class="um-chip red">Under 18 &middot; parent declined</span>
+                            {% else %}<span class="um-chip amber">Under 18 &middot; waiting for parent</span>{% endif %}
+                        {% endif %}
+                        {% if u.updates_opt_out %}<span class="um-chip">Unsubscribed from updates</span>{% endif %}
+                    </div>
+
+                    <ul class="um-facts">
+                        {% if u.role == 'player' and p %}
+                            <li>Age {{ p.age }} &middot; {{ p.position }} &middot; {{ p.location }}</li>
+                        {% elif u.role == 'scout' and s %}
+                            <li>{{ s.organization }}</li>
+                        {% elif not u.is_staff %}
+                            <li>Has not finished sign-up step 2</li>
+                        {% endif %}
+                        <li>Last login: {% if u.last_login %}{{ u.last_login|timesince }} ago{% else %}never{% endif %}</li>
+                    </ul>
+
+                    <div class="um-controls">
+                        {% if u == request.user %}
+                            <span class="um-you">This is you</span>
+                        {% else %}
+                            <form method="post" action="{% url 'admin_update_user' u.id %}" class="um-switches" data-name="{{ u.full_name }}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" name="is_active" id="active-{{ u.id }}" {% if u.is_active %}checked{% endif %} data-label="Active">
+                                    <label class="form-check-label small" for="active-{{ u.id }}">Active</label>
                                 </div>
-                            </td>
-                            <td>
-                                {% if managed_user.role == 'scout' %}
-                                    <span class="badge bg-primary">Scout</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Player</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if managed_user.is_active %}
-                                    <span class="badge bg-success">Active</span>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">Inactive</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if managed_user.is_staff %}
-                                    <span class="badge bg-dark">Staff</span>
-                                {% else %}
-                                    <span class="text-muted small">—</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="d-flex gap-2">
-                                    <a href="{% url 'admin_users' %}?edit={{ managed_user.id }}" class="btn btn-sm btn-outline-primary">Edit</a>
-                                    <form method="post" action="{% url 'admin_delete_user' managed_user.id %}" onsubmit="return confirm('Delete this user?');">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-                                    </form>
+                                <div class="form-check form-switch m-0">
+                                    <input class="form-check-input" type="checkbox" role="switch" name="is_staff" id="staff-{{ u.id }}" {% if u.is_staff %}checked{% endif %} data-label="Staff">
+                                    <label class="form-check-label small" for="staff-{{ u.id }}">Staff</label>
                                 </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </form>
+                            <form method="post" action="{% url 'admin_delete_user' u.id %}" onsubmit="return confirm('Delete {{ u.full_name|escapejs }} and all their photos, videos and documents? This cannot be undone.');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endwith %}
+            {% endfor %}
         </div>
     {% else %}
         <div class="alert alert-info">No users found.</div>
     {% endif %}
 </div>
 
-
+<script>
+(function () {
+    document.querySelectorAll('.um-switches').forEach(function (form) {
+        form.querySelectorAll('input[type="checkbox"]').forEach(function (box) {
+            box.addEventListener('change', function () {
+                var name = form.dataset.name;
+                var label = box.dataset.label;
+                var question;
+                if (label === 'Active') {
+                    question = box.checked ? 'Switch ' + name + '\'s account back on?' : 'Switch off ' + name + '\'s account? They will not be able to log in.';
+                } else {
+                    question = box.checked ? 'Give ' + name + ' staff access? They will be able to manage users, scouts and updates.' : 'Remove staff access from ' + name + '?';
+                }
+                if (confirm(question)) { form.submit(); } else { box.checked = !box.checked; }
+            });
+        });
+    });
+})();
+</script>
 {% endblock %}

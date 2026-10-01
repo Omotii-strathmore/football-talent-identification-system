@@ -7,7 +7,7 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError('Users must have an email address')
 
-        email = self.normalize_email(email)
+        email = self.normalize_email(email).lower()
         user = self.model(
             email=email,
             full_name=full_name,
@@ -17,6 +17,10 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
 
         return user
+
+    def get_by_natural_key(self, username):
+        # Log in with any capitalisation of the email address.
+        return self.get(**{f'{self.model.USERNAME_FIELD}__iexact': username})
 
     def create_superuser(self, email, password=None, full_name='Administrator'):
         user = self.create_user(

@@ -140,6 +140,58 @@
 		{{ form.non_field_errors }}
 		{{ form.full_name|as_crispy_field }}
 		{{ form.email|as_crispy_field }}
+		<div class="email-pop" id="email-pop" role="status" aria-live="polite" hidden></div>
+		<style>
+			.email-pop { position: relative; margin: -6px 0 14px; padding: 10px 14px; border-radius: 10px; font-size: .9rem; line-height: 1.4;
+				background: #3b1d1d; border: 1px solid #f87171; color: #fecaca; animation: emailPopIn .18s ease-out; }
+			.email-pop::before { content: ""; position: absolute; top: -7px; left: 22px; width: 12px; height: 12px; transform: rotate(45deg);
+				background: inherit; border-left: 1px solid #f87171; border-top: 1px solid #f87171; }
+			.email-pop.is-ok { background: #0f2f22; border-color: #34d399; color: #a7f3d0; }
+			.email-pop.is-ok::before { border-color: #34d399; }
+			.email-pop a, .email-pop button.linkish { color: #f6c453; font-weight: 700; }
+			.email-pop button.linkish { background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+			@keyframes emailPopIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+		</style>
+		<script>
+		(function () {
+			var input = document.getElementById('id_email');
+			var pop = document.getElementById('email-pop');
+			if (!input || !pop) return;
+			var timer = null, lastChecked = '';
+			function show(html, ok) { pop.innerHTML = html; pop.classList.toggle('is-ok', !!ok); pop.hidden = false; }
+			function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+			function check(force) {
+				var value = input.value.trim();
+				if (!value) { pop.hidden = true; return; }
+				if (!force && value === lastChecked) return;
+				lastChecked = value;
+				fetch('{% url "check_email" %}?email=' + encodeURIComponent(value), { credentials: 'same-origin' })
+					.then(function (r) { return r.json(); })
+					.then(function (res) {
+						if (input.value.trim() !== value) return;
+						if (res.ok) { show('&#9989; This email can be used. We will send your verification code here.', true); return; }
+						if (!res.message) { pop.hidden = true; return; }
+						var html = '&#9888;&#65039; ' + esc(res.message);
+						if (res.message.indexOf('already has') !== -1) {
+							html += ' <a href="{% url "login" %}">Log in</a> &middot; <a href="{% url "password_reset_request" %}">Reset password</a>';
+						}
+						if (res.suggestion) {
+							html += ' <button type="button" class="linkish" data-fix="' + esc(res.suggestion) + '">Use ' + esc(res.suggestion) + '</button>';
+						}
+						show(html, false);
+						var fix = pop.querySelector('[data-fix]');
+						if (fix) fix.addEventListener('click', function () { input.value = fix.dataset.fix; check(true); });
+					})
+					.catch(function () { pop.hidden = true; });
+			}
+			input.addEventListener('blur', function () { check(false); });
+			input.addEventListener('input', function () {
+				clearTimeout(timer);
+				pop.hidden = true;
+				if (/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(input.value.trim())) timer = setTimeout(function () { check(false); }, 700);
+			});
+		})();
+		</script>
 
 		<fieldset class="role-picker">
 			<legend>I am joining as a…<span class="asteriskField">*</span></legend>

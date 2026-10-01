@@ -8,6 +8,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.http import require_POST
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
+from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
 from users.emails import send_branded_email, send_scout_decision_email, send_welcome_email
 from django.conf import settings
@@ -176,7 +177,7 @@ def verify_otp_view(request):
     if pending_user_id:
         user = User.objects.filter(id=pending_user_id).first()
     elif pending_user_email:
-        user = User.objects.filter(email=pending_user_email, is_active=False).first()
+        user = User.objects.filter(email__iexact=pending_user_email, is_active=False).first()
 
     if not user:
         messages.error(request, 'No pending verification found. Please request a new code below.')
@@ -216,7 +217,7 @@ def resend_otp_view(request):
     if pending_user_id:
         user = User.objects.filter(id=pending_user_id).first()
     elif pending_user_email:
-        user = User.objects.filter(email=pending_user_email, is_active=False).first()
+        user = User.objects.filter(email__iexact=pending_user_email, is_active=False).first()
 
     if not user:
         messages.error(request, 'No pending verification found. Please request a new code below.')
@@ -241,7 +242,7 @@ def resend_verification_request_view(request):
         form = PasswordResetRequestForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data['email']
-            user = User.objects.filter(email=email, is_active=False).first()
+            user = User.objects.filter(email__iexact=email, is_active=False).first()
             if user:
                 request.session['pending_user_id'] = user.id
                 request.session['pending_user_email'] = user.email
@@ -266,7 +267,7 @@ def password_reset_request_view(request):
         form = PasswordResetRequestForm(request.POST)
         if form.is_valid():
             email = form.cleaned_data['email']
-            user = User.objects.filter(email=email).first()
+            user = User.objects.filter(email__iexact=email).first()
             if user:
                 request.session['reset_user_id'] = user.id
                 sent = send_otp_to_user(user, method='email', purpose='reset')
@@ -503,7 +504,7 @@ def login_view(request):
                 return redirect('scout_dashboard')
 
             # If authentication failed, check for an inactive user with valid credentials.
-            inactive_user = User.objects.filter(email=form.cleaned_data['email'], is_active=False).first()
+            inactive_user = User.objects.filter(email__iexact=form.cleaned_data['email'], is_active=False).first()
             if inactive_user and inactive_user.check_password(form.cleaned_data['password']):
                 request.session['pending_user_id'] = inactive_user.id
                 request.session['pending_user_email'] = inactive_user.email
@@ -659,31 +660,25 @@ def admin_users_view(request):
     search_query = request.GET.get('q', '').strip()
     all_users = User.objects.all()
     role_counts = {
-        'player': all_users.filter(role='player').count(),
-        'scout': all_users.filter(role='scout').count(),
+        'player': all_users.filter(role='player', is_staff=False).count(),
+        'scout': all_users.filter(role='scout', is_staff=False).count(),
         'staff': all_users.filter(is_staff=True).count(),
+        'unverified': all_users.filter(is_active=False).count(),
     }
 
-    users = all_users.order_by('full_name')
+    users = all_users.select_related('player_profile', 'scout_profile').order_by('-is_staff', 'full_name')
 
     if role_filter == 'staff':
         users = users.filter(is_staff=True)
+    elif role_filter == 'unverified':
+        users = users.filter(is_active=False)
     elif role_filter in {'player', 'scout'}:
-        users = users.filter(role=role_filter)
+        users = users.filter(role=role_filter, is_staff=False)
 
     if search_query:
         users = users.filter(
             Q(full_name__icontains=search_query) | Q(email__icontains=search_query)
         )
-
-    edit_id = request.GET.get('edit')
-    edit_user = None
-    edit_form = None
-
-    if edit_id:
-        edit_user = User.objects.filter(id=edit_id).first()
-        if edit_user:
-            edit_form = AdminUserUpdateForm(instance=edit_user)
 
     return render(
         request,
@@ -694,36 +689,34 @@ def admin_users_view(request):
             'search_query': search_query,
             'role_counts': role_counts,
             'total_users': all_users.count(),
-            'edit_form': edit_form,
-            'edit_user': edit_user,
         },
     )
 
 
 @login_required
 @user_passes_test(_is_staff_user, login_url='login')
+@require_POST
 def admin_update_user_view(request, user_id):
+    """Switch an account's Active or Staff setting. Nothing else about the account can be changed here."""
     target_user = get_object_or_404(User, id=user_id)
+    back = request.POST.get('next') or reverse('admin_users')
+    if not url_has_allowed_host_and_scheme(back, allowed_hosts={request.get_host()}):
+        back = reverse('admin_users')
 
-    if request.method != 'POST':
-        return redirect('admin_users')
+    if target_user == request.user:
+        messages.error(request, 'You cannot switch off your own account or your own staff access.')
+        return redirect(back)
 
     form = AdminUserUpdateForm(request.POST, instance=target_user)
     if form.is_valid():
         form.save()
-        messages.success(request, 'User updated successfully.')
-        return redirect('admin_users')
-
-    users = User.objects.all().order_by('full_name')
-    return render(
-        request,
-        'users/admin_users.html',
-        {
-            'users': users,
-            'edit_form': form,
-            'edit_user': target_user,
-        },
-    )
+        state = []
+        state.append('active' if target_user.is_active else 'switched off')
+        state.append('staff' if target_user.is_staff else 'not staff')
+        messages.success(request, f'{target_user.full_name} is now {" and ".join(state)}.')
+    else:
+        messages.error(request, 'That change could not be saved.')
+    return redirect(back)
 
 
 @login_required
@@ -1098,6 +1091,7 @@ def admin_updates_view(request):
         'subscribers': update_mail.recipients().count(),
         'unsubscribed': User.objects.filter(is_active=True, is_staff=False, updates_opt_out=True).count(),
         'per_day': update_mail.UPDATE_EMAILS_PER_DAY,
+        'ai_enabled': bool(settings.ANTHROPIC_API_KEY),
     })
 
 
@@ -1161,3 +1155,33 @@ def updates_unsubscribe_view(request, token):
         person.save(update_fields=['updates_opt_out'])
         done = 'unsubscribed' if person.updates_opt_out else 'resubscribed'
     return render(request, 'users/updates_unsubscribe.html', {'person': person, 'done': done})
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+@require_POST
+def admin_update_ai_draft_view(request):
+    """Turn the administrator's rough notes into a draft update. Nothing is saved or sent."""
+    from .ai_draft import DraftError, draft_update
+
+    try:
+        draft = draft_update(request.POST.get('notes', ''))
+    except DraftError as exc:
+        return JsonResponse({'ok': False, 'message': str(exc)}, status=400)
+    return JsonResponse({'ok': True, **draft})
+
+
+def check_email_view(request):
+    """Live check for the sign-up form: is this email usable, or already taken?"""
+    from django.core.cache import cache
+
+    from .email_check import check_email
+
+    ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR', '')
+    key = f'email-check:{ip}'
+    hits = cache.get(key, 0)
+    if hits >= 30:
+        return JsonResponse({'ok': True, 'message': ''})  # too many checks; the form still checks on submit
+    cache.set(key, hits + 1, 60)
+    _, problem, suggestion = check_email(request.GET.get('email', ''))
+    return JsonResponse({'ok': problem is None, 'message': problem or '', 'suggestion': suggestion or ''})

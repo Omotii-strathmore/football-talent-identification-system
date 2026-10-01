@@ -24,6 +24,23 @@
     <div class="card mb-4">
         <div class="card-body">
             <h5 class="fw-bold mb-3">Write a new update</h5>
+
+            <div class="ai-draft mb-4">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <strong>&#10024; Draft with AI</strong>
+                    {% if ai_enabled %}
+                        <span class="badge bg-success">On</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Not switched on yet</span>
+                    {% endif %}
+                </div>
+                <label for="ai-notes" class="form-label small mb-1">Type rough notes about what changed. The AI fills in the boxes below; you can edit everything before publishing.</label>
+                <textarea id="ai-notes" class="form-control mb-2" rows="3" maxlength="3000" placeholder="e.g. eye button for passwords, parents approve under 18 by email, scouts get email when approved or rejected, light mode"></textarea>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="ai-draft-btn">&#10024; Draft with AI</button>
+                    <span class="small" id="ai-draft-status" aria-live="polite"></span>
+                </div>
+            </div>
             <form method="post" novalidate onsubmit="return confirm('Publish this update and email it to {{ subscribers }} people?');">
                 {% csrf_token %}
                 {% for field in form %}
@@ -80,4 +97,42 @@
         <p class="text-muted">No updates yet. Your first one will appear here.</p>
     {% endif %}
 </div>
+
+<style>
+    .ai-draft { border: 1px dashed rgba(13, 110, 253, .45); border-radius: 12px; padding: 14px 16px; background: rgba(13, 110, 253, .05); }
+</style>
+<script>
+(function () {
+    var btn = document.getElementById('ai-draft-btn');
+    if (!btn) return;
+    var statusEl = document.getElementById('ai-draft-status');
+    function csrf() {
+        var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return m ? decodeURIComponent(m[1]) : '';
+    }
+    function say(text, ok) {
+        statusEl.textContent = text;
+        statusEl.className = 'small ' + (ok ? 'text-success' : 'text-danger');
+    }
+    btn.addEventListener('click', function () {
+        var data = new FormData();
+        data.append('notes', document.getElementById('ai-notes').value);
+        btn.disabled = true;
+        statusEl.className = 'small text-muted';
+        statusEl.textContent = 'Writing a draft... (a few seconds)';
+        fetch('{% url "admin_update_ai_draft" %}', {
+            method: 'POST', body: data, credentials: 'same-origin', headers: { 'X-CSRFToken': csrf() }
+        }).then(function (r) { return r.json(); }).then(function (res) {
+            if (!res.ok) { say(res.message || 'Something went wrong.', false); return; }
+            document.getElementById('id_title').value = res.title;
+            document.getElementById('id_teaser').value = res.teaser;
+            document.getElementById('id_points').value = res.points.join('\n');
+            say('Draft ready below. Read it, edit anything, then publish. Click again for a different version.', true);
+            btn.innerHTML = '&#10024; Draft again';
+        }).catch(function () {
+            say('Could not reach the server. Please try again.', false);
+        }).finally(function () { btn.disabled = false; });
+    });
+})();
+</script>
 {% endblock %}

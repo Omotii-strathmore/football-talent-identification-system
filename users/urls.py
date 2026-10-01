@@ -9,6 +9,7 @@ urlpatterns = [
     path('feedback/', views.submit_feedback_view, name='submit_feedback'),
 
     path('register/', views.register_view, name='register'),
+    path('register/check-email/', views.check_email_view, name='check_email'),
 
     path('register/complete-profile/', views.complete_profile_view, name='complete_profile'),
 
@@ -33,6 +34,7 @@ urlpatterns = [
     path('management/users/<int:user_id>/delete/', views.admin_delete_user_view, name='admin_delete_user'),
     path('management/feedback/', views.admin_feedback_view, name='admin_feedback'),
     path('management/updates/', views.admin_updates_view, name='admin_updates'),
+    path('management/updates/ai-draft/', views.admin_update_ai_draft_view, name='admin_update_ai_draft'),
     path('management/updates/<int:update_id>/send/', views.admin_update_send_one_view, name='admin_update_send_one'),
     path('updates/<int:update_id>/seen/', views.update_seen_view, name='update_seen'),
     path('updates/<int:update_id>/email-me/', views.update_email_me_view, name='update_email_me'),

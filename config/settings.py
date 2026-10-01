@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -220,6 +221,13 @@ LOGIN_URL = 'login'
 SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL', 'anelmcall@gmail.com')
 # Public address of the live site, used for images and links inside emails.
 SITE_URL = os.environ.get('SITE_URL', 'https://talanta-soka.onrender.com').rstrip('/')
+
+# "Draft with AI" on the admin Updates page. Leave ANTHROPIC_API_KEY empty to keep it switched off.
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+AI_DRAFT_MODEL = os.environ.get('AI_DRAFT_MODEL', 'claude-opus-5-5')
+
+# Sign-up checks that an email's domain can receive mail. Skipped while running automated tests.
+EMAIL_DNS_CHECK = os.environ.get('EMAIL_DNS_CHECK', 'True') == 'True' and 'test' not in sys.argv
 
 # Email settings for OTP delivery
 EMAIL_BACKEND = os.environ.get('DJANGO_EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')

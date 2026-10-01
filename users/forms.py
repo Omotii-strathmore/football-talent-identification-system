@@ -52,6 +52,13 @@ class RegistrationForm(forms.ModelForm):
 			'accept_terms',
 		)
 
+	def clean_email(self):
+		from .email_check import check_email
+		email, problem, _ = check_email(self.cleaned_data.get('email'))
+		if problem:
+			raise forms.ValidationError(problem)
+		return email
+
 	def clean(self):
 		cleaned_data = super().clean()
 		password = cleaned_data.get('password')
@@ -126,24 +133,12 @@ class AdminUserCreateForm(forms.ModelForm):
 
 
 class AdminUserUpdateForm(forms.ModelForm):
-	password = forms.CharField(
-		label='New password (optional)',
-		required=False,
-		widget=forms.PasswordInput(attrs={'placeholder': 'Leave blank to keep current password'}),
-	)
+	"""Administrators can only switch an account on/off and give or remove staff access.
+	Names, emails, roles and passwords belong to the account owner."""
 
 	class Meta:
 		model = User
-		fields = ['full_name', 'email', 'role', 'is_active', 'is_staff']
-
-	def save(self, commit=True):
-		user = super().save(commit=False)
-		password = self.cleaned_data.get('password')
-		if password:
-			user.set_password(password)
-		if commit:
-			user.save()
-		return user
+		fields = ['is_active', 'is_staff']
 
 
 class PasswordResetRequestForm(forms.Form):
