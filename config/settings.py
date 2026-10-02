@@ -186,6 +186,9 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Uploads go to Cloudflare R2 when its credentials are set; local disk otherwise.
 R2_BUCKET_NAME = os.environ.get('R2_BUCKET_NAME')
+# Set R2_BUCKET_NAME=off (for example while practising locally) to keep uploads on this computer.
+if (R2_BUCKET_NAME or '').strip().lower() in ('off', 'none', 'false', '0'):
+    R2_BUCKET_NAME = ''
 USE_R2 = bool(R2_BUCKET_NAME)
 
 if USE_R2:

@@ -1,6 +1,6 @@
 """Fill a local practice database with demo Stars, Starlets, scouts and trials.
 
-    $env:DATABASE_URL = "sqlite:///practice.sqlite3"; $env:R2_BUCKET_NAME = ""
+    $env:DATABASE_URL = "sqlite:///practice.sqlite3"; $env:R2_BUCKET_NAME = "off"
     python manage.py migrate
     python manage.py seed_demo
     python manage.py runserver
@@ -46,8 +46,8 @@ class Command(BaseCommand):
         if connection.vendor != 'sqlite':
             raise CommandError('seed_demo only runs on a local SQLite practice database, never on the live database.')
         from django.conf import settings
-        if getattr(settings, 'R2_BUCKET_NAME', ''):
-            raise CommandError('Switch off live file storage first: $env:R2_BUCKET_NAME = ""')
+        if getattr(settings, 'USE_R2', False):
+            raise CommandError('Switch off live file storage first: $env:R2_BUCKET_NAME = "off"')
 
         from opportunities.models import Opportunity
         from players.models import PlayerProfile
