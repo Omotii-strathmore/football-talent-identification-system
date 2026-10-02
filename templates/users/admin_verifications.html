@@ -65,6 +65,7 @@
                         <th>Scout</th>
                         <th>Organization</th>
                         <th>Specialization</th>
+                        <th>Scouts <small class="fw-normal">(from the document)</small></th>
                         <th>Verification Document</th>
                         <th>Status</th>
                         <th>Action</th>
@@ -85,6 +86,26 @@
                             <td>{{ scout.organization }}</td>
                             <td>{{ scout.specialization }}</td>
                             <td>
+                                {% if scout.verification_status == 'approved' %}
+                                    <form method="post" action="{% url 'admin_set_scout_category' scout.id %}" class="d-flex gap-1">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                        <select name="scouts_for" class="form-select form-select-sm" style="min-width:150px" onchange="this.form.submit()" aria-label="Which players this scout may see">
+                                            <option value="stars" {% if scout.scouts_for == 'stars' %}selected{% endif %}>&#11088; Stars (men)</option>
+                                            <option value="starlets" {% if scout.scouts_for == 'starlets' %}selected{% endif %}>&#127775; Starlets (women)</option>
+                                            <option value="both" {% if scout.scouts_for == 'both' %}selected{% endif %}>&#11088;&#127775; Both</option>
+                                        </select>
+                                    </form>
+                                {% else %}
+                                    <select name="scouts_for" form="approve-{{ scout.id }}" class="form-select form-select-sm" style="min-width:150px" required aria-label="Which players this scout may see">
+                                        <option value="">Choose from document...</option>
+                                        <option value="stars">&#11088; Stars (men)</option>
+                                        <option value="starlets">&#127775; Starlets (women)</option>
+                                        <option value="both">&#11088;&#127775; Both</option>
+                                    </select>
+                                {% endif %}
+                            </td>
+                            <td>
                                 {% if scout.verification_document %}
                                     <a href="{{ scout.verification_document.url }}" target="_blank" class="btn btn-sm btn-outline-dark">
                                         <span class="doc-icon">📄</span> View Document
@@ -104,7 +125,7 @@
                             </td>
                             <td>
                                 <div class="d-flex gap-2">
-                                    <form method="post" action="{% url 'admin_approve_scout' scout.id %}">
+                                    <form method="post" action="{% url 'admin_approve_scout' scout.id %}" id="approve-{{ scout.id }}">
                                         {% csrf_token %}
                                         <button type="submit" class="btn btn-sm btn-success" {% if scout.verification_status == 'approved' %}disabled{% endif %}>Approve</button>
                                     </form>

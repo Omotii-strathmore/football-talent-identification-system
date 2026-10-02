@@ -77,7 +77,7 @@ class ScoutOnboardingForm(forms.ModelForm):
 
 	class Meta:
 		model = Scout
-		fields = ["organization", "scouts_for", "specialization", "verification_document", "profile_photo"]
+		fields = ["organization", "specialization", "verification_document", "profile_photo"]
 		widgets = {
 			"organization": forms.TextInput(attrs={"placeholder": "Organization worked with"}),
 		}
@@ -85,15 +85,6 @@ class ScoutOnboardingForm(forms.ModelForm):
 
 	def clean_organization(self):
 		return clean_organization_name(self.cleaned_data.get('organization'))
-
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		if 'scouts_for' in self.fields:
-			self.fields['scouts_for'].required = False
-
-	def clean_scouts_for(self):
-		# Scouts who skip the question look for both Stars and Starlets.
-		return self.cleaned_data.get('scouts_for') or 'both'
 
 
 class ScoutEditDetailsForm(forms.ModelForm):
@@ -105,9 +96,7 @@ class ScoutEditDetailsForm(forms.ModelForm):
 
 	class Meta:
 		model = Scout
-		fields = ["organization", "scouts_for", "specialization", "profile_photo"]
-		labels = {"scouts_for": "Which players do you scout?"}
-		help_texts = {"scouts_for": "About the players you look for, not about you. Scouts of one category only see and post for that category."}
+		fields = ["organization", "specialization", "profile_photo"]
 		widgets = {
 			"organization": forms.TextInput(attrs={"placeholder": "Organization worked with"}),
 		}
@@ -115,15 +104,6 @@ class ScoutEditDetailsForm(forms.ModelForm):
 
 	def clean_organization(self):
 		return clean_organization_name(self.cleaned_data.get('organization'))
-
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		if 'scouts_for' in self.fields:
-			self.fields['scouts_for'].required = False
-
-	def clean_scouts_for(self):
-		# Scouts who skip the question look for both Stars and Starlets.
-		return self.cleaned_data.get('scouts_for') or 'both'
 
 
 class ScoutResubmitForm(forms.ModelForm):

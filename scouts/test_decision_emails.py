@@ -24,7 +24,13 @@ class ScoutDecisionEmailTests(TestCase):
     def test_approval_emails_the_scout(self):
         self.client.force_login(self.admin)
         self.client.post(reverse('admin_approve_scout', args=[self.scout.id]))
+        self.scout.refresh_from_db()
+        self.assertEqual(self.scout.verification_status, 'pending')  # the admin must choose Stars, Starlets or both first
+        self.client.post(reverse('admin_approve_scout', args=[self.scout.id]), {'scouts_for': 'starlets'})
+        self.scout.refresh_from_db()
+        self.assertEqual((self.scout.verification_status, self.scout.scouts_for), ('approved', 'starlets'))
         email = mail.outbox[-1]
+        self.assertIn('Starlets (women', email.alternatives[0][0])
         self.assertEqual(email.to, ['coach@example.com'])
         self.assertIn("Verified, Coach", email.subject)
         html = email.alternatives[0][0]
@@ -65,3 +71,20 @@ class ScoutDecisionEmailTests(TestCase):
             'email': 'coach@example.com', 'password': 'Talanta#2026', 'next': 'https://evil.example.com/',
         })
         self.assertRedirects(response, reverse('scout_dashboard'), fetch_redirect_response=False)
+
+
+    def test_admin_can_change_an_approved_scouts_category(self):
+        self.scout.verification_status, self.scout.verified, self.scout.scouts_for = 'approved', True, 'both'
+        self.scout.save()
+        self.client.force_login(self.admin)
+        self.client.post(reverse('admin_set_scout_category', args=[self.scout.id]), {'scouts_for': 'stars'})
+        self.scout.refresh_from_db()
+        self.assertEqual(self.scout.scouts_for, 'stars')
+
+    def test_scouts_cannot_choose_their_own_category(self):
+        self.scout.verification_status, self.scout.verified, self.scout.scouts_for = 'approved', True, 'starlets'
+        self.scout.save()
+        self.client.force_login(self.user)
+        self.client.post(reverse('scout_edit_details'), {'organization': 'Gor Mahia Youth Academy', 'specialization': 'attacking', 'scouts_for': 'both'})
+        self.scout.refresh_from_db()
+        self.assertEqual(self.scout.scouts_for, 'starlets')

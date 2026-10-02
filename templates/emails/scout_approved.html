@@ -8,6 +8,7 @@ Karibu, Coach {{ first_name }}! &#128301;
 {% endblock %}
 {% block body %}
 <p style="margin:0 0 14px 0;">Good news: our team has reviewed your documents and your scout account for <strong>{{ organization }}</strong> is now verified.</p>
+<p style="margin:0 0 14px 0;">Based on your document, you can scout <strong>{% if scouts_for == 'starlets' %}&#127775; Starlets (women&rsquo;s football){% elif scouts_for == 'stars' %}&#11088; Stars (men&rsquo;s football){% else %}&#11088;&#127775; Stars and Starlets (men&rsquo;s and women&rsquo;s football){% endif %}</strong>.</p>
 <p style="margin:0 0 14px 0;">Across Kenya there are players with magic in their feet who have never had a scout watch them play. <strong>Thank you for helping them get seen.</strong></p>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 16px 0;background:#f1faf4;border-left:4px solid #f6c453;border-radius:8px;">
   <tr><td style="padding:14px 16px;font-size:14px;line-height:1.7;">
