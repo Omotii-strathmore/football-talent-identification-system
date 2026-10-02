@@ -11,7 +11,7 @@
     <h1 class="title">Welcome back</h1>
     <p class="lead">Sign in with your existing account. If your role profile is not complete yet, you will be sent to finish registration first.</p>
 
-    <form method="post" novalidate data-no-autofill>
+    <form method="post" novalidate data-no-autofill="suggest">
         {% csrf_token %}
         {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
         {{ form|crispy }}

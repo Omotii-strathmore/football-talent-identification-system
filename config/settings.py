@@ -64,6 +64,11 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    # Tell browsers to always use HTTPS for this site. Start at one day; raise to a year
+    # (31536000) once everything has run smoothly for a few weeks.
+    SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', 86400))
+    SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
+    SECURE_REFERRER_POLICY = 'strict-origin-when-cross-origin'
 
 
 # Application definition

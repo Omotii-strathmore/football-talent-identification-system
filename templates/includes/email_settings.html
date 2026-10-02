@@ -1,0 +1,83 @@
+{% comment %}
+Login email (players and scouts) and, for players, the contact email scouts may see.
+Needs `user`; optional `profile` (a player profile). Each button posts to the account_email view.
+{% endcomment %}
+<div class="email-settings">
+    <style>
+        .email-settings .es-row { border: 1px solid #e3e8ee; border-radius: 14px; padding: 14px 16px; background: #fff; color: #1f2933; margin-bottom: 12px; }
+        .email-settings .es-label { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #5b6770; }
+        .email-settings .es-email { font-weight: 700; word-break: break-all; }
+        .email-settings .es-badge { display: inline-block; font-size: .78rem; font-weight: 700; border-radius: 999px; padding: 3px 10px; }
+        .email-settings .es-ok { background: #e6f6ec; color: #006b3f; }
+        .email-settings .es-wait { background: #fff4e0; color: #9a5b00; }
+        .email-settings .es-pending { margin-top: 10px; padding: 12px; border-radius: 10px; background: #fffaf0; border: 1px dashed #f3c77a; }
+        .email-settings .es-code { max-width: 170px; letter-spacing: 4px; font-weight: 700; }
+        .email-settings details summary { cursor: pointer; color: #006b3f; font-weight: 600; margin-top: 8px; }
+    </style>
+
+    {# Login email #}
+    <div class="es-row">
+        <div class="es-label">Login email</div>
+        <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+            <span class="es-email">{{ user.email }}</span>
+            <span class="es-badge es-ok">Verified &#9989;</span>
+        </div>
+        {% if user.pending_email %}
+            <div class="es-pending">
+                <div><span class="es-badge es-wait">&#9203; Pending verification</span> <strong class="ms-1">{{ user.pending_email }}</strong></div>
+                <div class="small text-muted mt-1">Enter the 6-digit code we emailed to the new address. Your current login email keeps working until then.</div>
+                <form method="post" action="{% url 'account_email' %}" class="d-flex flex-wrap gap-2 mt-2">
+                    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="form-control form-control-sm es-code" placeholder="123456" required>
+                    <button type="submit" name="action" value="verify" class="btn btn-sm btn-success">Verify</button>
+                </form>
+                <form method="post" action="{% url 'account_email' %}" class="d-flex flex-wrap gap-2 mt-2">
+                    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <button type="submit" name="action" value="resend" class="btn btn-sm btn-outline-secondary">Send a new code</button>
+                    <button type="submit" name="action" value="cancel" class="btn btn-sm btn-outline-danger">Cancel change</button>
+                </form>
+            </div>
+        {% else %}
+            <details>
+                <summary>Change login email</summary>
+                <form method="post" action="{% url 'account_email' %}" class="d-flex flex-wrap gap-2 mt-2">
+                    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <input type="email" name="new_email" class="form-control form-control-sm" style="max-width:280px" placeholder="new.email@gmail.com" required>
+                    <button type="submit" name="action" value="change" class="btn btn-sm btn-primary">Send verification code</button>
+                </form>
+                <div class="small text-muted mt-1">We send a code to the new email. Nothing changes until you enter it.</div>
+            </details>
+        {% endif %}
+    </div>
+
+    {# Contact email (players) #}
+    {% if profile %}
+        <div class="es-row">
+            <div class="es-label">Contact email for scouts</div>
+            {% if profile.contact_email %}
+                <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                    <span class="es-email">{{ profile.contact_email }}</span>
+                    {% if profile.contact_email_verified_at %}
+                        <span class="es-badge es-ok">Verified &#9989;</span>
+                    {% else %}
+                        <span class="es-badge es-wait">&#9203; Pending verification</span>
+                    {% endif %}
+                </div>
+                {% if not profile.contact_email_verified_at %}
+                    <div class="small text-muted mt-1">Scouts only see contact emails that are verified.</div>
+                    <form method="post" action="{% url 'account_email' %}" class="d-flex flex-wrap gap-2 mt-2">
+                        {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="submit" name="action" value="contact_send" class="btn btn-sm btn-primary">Verify &#9993;&#65039; send me a code</button>
+                    </form>
+                    <form method="post" action="{% url 'account_email' %}" class="d-flex flex-wrap gap-2 mt-2">
+                        {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <input type="text" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="form-control form-control-sm es-code" placeholder="123456" required>
+                        <button type="submit" name="action" value="contact_verify" class="btn btn-sm btn-success">Enter code</button>
+                    </form>
+                {% endif %}
+            {% else %}
+                <div class="small text-muted mt-1">No contact email added. You can add one under <strong>Edit Profile &rarr; Contact permissions</strong>.</div>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>

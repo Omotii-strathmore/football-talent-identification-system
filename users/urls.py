@@ -10,6 +10,8 @@ urlpatterns = [
 
     path('register/', views.register_view, name='register'),
     path('register/check-email/', views.check_email_view, name='check_email'),
+    path('account/email/', views.account_email_view, name='account_email'),
+    path('ai/assist/', views.ai_assist_view, name='ai_assist'),
 
     path('register/complete-profile/', views.complete_profile_view, name='complete_profile'),
 
@@ -34,6 +36,7 @@ urlpatterns = [
     path('management/users/<int:user_id>/delete/', views.admin_delete_user_view, name='admin_delete_user'),
     path('management/feedback/', views.admin_feedback_view, name='admin_feedback'),
     path('management/updates/', views.admin_updates_view, name='admin_updates'),
+    path('management/backup/', views.admin_backup_view, name='admin_backup'),
     path('management/updates/ai-draft/', views.admin_update_ai_draft_view, name='admin_update_ai_draft'),
     path('management/updates/<int:update_id>/send/', views.admin_update_send_one_view, name='admin_update_send_one'),
     path('updates/<int:update_id>/seen/', views.update_seen_view, name='update_seen'),

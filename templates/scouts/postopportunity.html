@@ -24,6 +24,7 @@
 			<form method="post" enctype="multipart/form-data" novalidate>
 				{% csrf_token %}
 				{{ form|crispy }}
+				{% if is_verified %}{% include 'includes/ai_assist.html' with kind='opportunity' target='id_description' hint='e.g. U-17 trials for midfielders and forwards, Kasarani grounds, bring boots and shin guards, free entry, coaches from Gor Mahia academy watching' %}{% endif %}
 				{% if is_verified %}
 					<button type="submit" class="btn btn-primary mt-2">Publish Opportunity</button>
 				{% else %}

@@ -1,0 +1,82 @@
+{% comment %}
+"Write with AI" helper. Needs: kind (opportunity, bio or experience), target (id of the textarea to fill),
+hint (example notes). The AI only fills the box; the person edits and saves as usual.
+{% endcomment %}
+<div class="ai-assist" data-kind="{{ kind }}" data-target="{{ target }}">
+    <button type="button" class="ai-assist__toggle" aria-expanded="false">&#10024; Write with AI</button>
+    <div class="ai-assist__panel" hidden>
+        <label class="ai-assist__label" for="ai-notes-{{ kind }}">Type a few rough notes. The AI writes a draft into the box; you can change anything before saving.</label>
+        <textarea id="ai-notes-{{ kind }}" class="form-control ai-assist__notes" rows="3" maxlength="3000" placeholder="{{ hint }}"></textarea>
+        <div class="ai-assist__actions">
+            <button type="button" class="btn btn-sm btn-primary ai-assist__go">&#10024; Write draft</button>
+            <span class="ai-assist__status small" aria-live="polite"></span>
+        </div>
+    </div>
+</div>
+{% if not ai_assist_loaded %}
+<style>
+    .ai-assist { margin: -4px 0 14px; }
+    .ai-assist__toggle { border: 1px dashed rgba(13,110,253,.55); background: rgba(13,110,253,.06); color: #0d6efd; font-weight: 600;
+        font-size: .85rem; border-radius: 999px; padding: 6px 14px; cursor: pointer; min-height: 36px; }
+    .ai-assist__toggle:hover { background: rgba(13,110,253,.12); }
+    .ai-assist__panel { margin-top: 10px; padding: 12px 14px; border-radius: 12px; border: 1px dashed rgba(13,110,253,.45); background: rgba(13,110,253,.04); }
+    .ai-assist__label { font-size: .85rem; margin-bottom: 6px; display: block; }
+    .ai-assist__actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+</style>
+<script>
+(function () {
+    function csrf() {
+        var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/);
+        return m ? decodeURIComponent(m[1]) : '';
+    }
+    function setup(box) {
+        // Sit directly under the text box it helps with.
+        var field = document.getElementById(box.dataset.target);
+        var wrap = field && (field.closest('#div_' + box.dataset.target) || field.closest('p') || field.parentNode);
+        if (wrap && wrap.parentNode) wrap.parentNode.insertBefore(box, wrap.nextSibling);
+        var toggle = box.querySelector('.ai-assist__toggle');
+        var panel = box.querySelector('.ai-assist__panel');
+        var go = box.querySelector('.ai-assist__go');
+        var notes = box.querySelector('.ai-assist__notes');
+        var status = box.querySelector('.ai-assist__status');
+        toggle.addEventListener('click', function () {
+            panel.hidden = !panel.hidden;
+            toggle.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+            if (!panel.hidden) notes.focus();
+        });
+        go.addEventListener('click', function () {
+            var target = document.getElementById(box.dataset.target);
+            if (!target) return;
+            if (target.value.trim() && !confirm('Replace what is already written in the box with the AI draft?')) return;
+            var data = new FormData();
+            data.append('kind', box.dataset.kind);
+            data.append('notes', notes.value);
+            go.disabled = true;
+            status.className = 'ai-assist__status small text-muted';
+            status.textContent = 'Writing a draft... (a few seconds)';
+            fetch('{% url "ai_assist" %}', { method: 'POST', body: data, credentials: 'same-origin', headers: { 'X-CSRFToken': csrf() } })
+                .then(function (r) { return r.json(); })
+                .then(function (res) {
+                    if (!res.ok) {
+                        status.className = 'ai-assist__status small text-danger';
+                        status.textContent = res.message || 'Something went wrong.';
+                        return;
+                    }
+                    target.value = res.text;
+                    target.dispatchEvent(new Event('input', { bubbles: true }));
+                    status.className = 'ai-assist__status small text-success';
+                    status.textContent = 'Draft added. Read it, edit anything, then save. Press again for a different version.';
+                    go.innerHTML = '&#10024; Write again';
+                })
+                .catch(function () {
+                    status.className = 'ai-assist__status small text-danger';
+                    status.textContent = 'Could not reach the server. Please try again.';
+                })
+                .finally(function () { go.disabled = false; });
+        });
+    }
+    function init() { document.querySelectorAll('.ai-assist:not([data-ready])').forEach(function (b) { b.dataset.ready = '1'; setup(b); }); }
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', init); } else { init(); }
+})();
+</script>
+{% endif %}

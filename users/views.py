@@ -10,7 +10,8 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
 from django.urls import reverse
 from django.utils.http import url_has_allowed_host_and_scheme
-from users.emails import send_branded_email, send_scout_decision_email, send_welcome_email
+from users.emails import send_branded_email, send_scout_decision_email, send_security_alert, send_welcome_email
+from users import throttle
 from django.conf import settings
 from datetime import timedelta
 import logging
@@ -189,12 +190,20 @@ def verify_otp_view(request):
 
     if request.method == 'POST':
         form = OTPVerifyForm(request.POST)
-        if form.is_valid():
+        if form.is_valid() and throttle.locked_minutes('code', user.pk):
+            messages.error(request, throttle.message('code', user.pk))
+        elif form.is_valid():
             code = form.cleaned_data['code']
-            otp = OneTimeCode.objects.filter(user=user, code=code, used=False).order_by('-created_at').first()
+            otp = OneTimeCode.objects.filter(user=user, code=code, purpose='verify', used=False).order_by('-created_at').first()
             if not otp:
-                messages.error(request, 'Invalid verification code.')
+                if throttle.record_failure('code', user.pk):
+                    # Too many guesses: old codes stop working; the person must ask for a new one.
+                    OneTimeCode.objects.filter(user=user, purpose='verify', used=False).update(used=True)
+                    messages.error(request, throttle.message('code', user.pk) + ' Then request a new code.')
+                else:
+                    messages.error(request, 'Invalid verification code.')
             else:
+                throttle.reset('code', user.pk)
                 if otp.expires_at and otp.expires_at < timezone.now():
                     messages.error(request, 'Verification code has expired. Request a new one.')
                 else:
@@ -228,6 +237,10 @@ def resend_otp_view(request):
         return redirect('resend_verification_request')
 
     method = request.POST.get('method', 'email')
+    wait = throttle.resend_wait(user, 'verify')
+    if wait:
+        messages.info(request, f'A code was sent a moment ago. Please check your inbox and Spam, or try again in {wait} seconds.')
+        return redirect('verify_otp')
     # create and send a fresh OTP
     success = send_otp_to_user(user, method=method)
     if success:
@@ -247,6 +260,11 @@ def resend_verification_request_view(request):
         if form.is_valid():
             email = form.cleaned_data['email']
             user = User.objects.filter(email__iexact=email, is_active=False).first()
+            if user and throttle.resend_wait(user, 'verify'):
+                request.session['pending_user_id'] = user.id
+                request.session['pending_user_email'] = user.email
+                messages.info(request, 'A code was sent a moment ago. Please check your inbox and Spam folder.')
+                return redirect('verify_otp')
             if user:
                 request.session['pending_user_id'] = user.id
                 request.session['pending_user_email'] = user.email
@@ -272,6 +290,10 @@ def password_reset_request_view(request):
         if form.is_valid():
             email = form.cleaned_data['email']
             user = User.objects.filter(email__iexact=email).first()
+            if user and throttle.resend_wait(user, 'reset'):
+                request.session['reset_user_id'] = user.id
+                messages.info(request, 'A reset code was sent a moment ago. Please check your inbox and Spam folder.')
+                return redirect('password_reset_confirm')
             if user:
                 request.session['reset_user_id'] = user.id
                 sent = send_otp_to_user(user, method='email', purpose='reset')
@@ -300,11 +322,17 @@ def password_reset_confirm_view(request):
 
     if request.method == 'POST':
         form = PasswordResetConfirmForm(request.POST, user=user)
-        if form.is_valid():
+        if form.is_valid() and throttle.locked_minutes('code', user.pk):
+            messages.error(request, throttle.message('code', user.pk))
+        elif form.is_valid():
             code = form.cleaned_data['code']
             otp = OneTimeCode.objects.filter(user=user, code=code, purpose='reset', used=False).order_by('-created_at').first()
             if not otp:
-                messages.error(request, 'Invalid verification code.')
+                if throttle.record_failure('code', user.pk):
+                    OneTimeCode.objects.filter(user=user, purpose='reset', used=False).update(used=True)
+                    messages.error(request, throttle.message('code', user.pk) + ' Then request a new code.')
+                else:
+                    messages.error(request, 'Invalid verification code.')
             elif otp.expires_at and otp.expires_at < timezone.now():
                 messages.error(request, 'Verification code has expired. Request a new one.')
             else:
@@ -312,7 +340,10 @@ def password_reset_confirm_view(request):
                 otp.save(update_fields=['used'])
                 user.set_password(form.cleaned_data['new_password'])
                 user.save(update_fields=['password'])
+                throttle.reset('code', user.pk)
+                throttle.reset('login', user.email)
                 request.session.pop('reset_user_id', None)
+                send_security_alert(user, 'password')
                 messages.success(request, 'Your password has been reset. You may now sign in.')
                 return redirect('login')
     else:
@@ -328,6 +359,10 @@ def password_reset_resend_view(request):
         messages.error(request, 'No pending password reset found. Please request a new code.')
         return redirect('password_reset_request')
 
+    wait = throttle.resend_wait(user, 'reset')
+    if wait:
+        messages.info(request, f'A code was sent a moment ago. Please check your inbox and Spam, or try again in {wait} seconds.')
+        return redirect('password_reset_confirm')
     sent = send_otp_to_user(user, method='email', purpose='reset')
     if sent:
         messages.success(request, 'A new password reset code was sent to your email.')
@@ -468,8 +503,12 @@ def login_view(request):
     if request.method == 'POST':
 
         form = LoginForm(request.POST)
+        ip = throttle.client_ip(request)
 
-        if form.is_valid():
+        if form.is_valid() and (throttle.locked_minutes('login', form.cleaned_data['email']) or throttle.locked_minutes('login-ip', ip)):
+            rule, value = ('login', form.cleaned_data['email']) if throttle.locked_minutes('login', form.cleaned_data['email']) else ('login-ip', ip)
+            messages.error(request, throttle.message(rule, value) + ' You can also reset your password.')
+        elif form.is_valid():
 
             user = authenticate(
                 request,
@@ -478,6 +517,7 @@ def login_view(request):
             )
 
             if user:
+                throttle.reset('login', form.cleaned_data['email'])
 
                 if user.is_staff:
                     login(request, user)
@@ -515,7 +555,11 @@ def login_view(request):
                 messages.info(request, 'Your account is not yet verified. Please enter the code sent to your email.')
                 return redirect('verify_otp')
 
-            messages.error(request, 'Invalid email or password.')
+            throttle.record_failure('login-ip', ip)
+            if throttle.record_failure('login', form.cleaned_data['email']):
+                messages.error(request, throttle.message('login', form.cleaned_data['email']) + ' You can also reset your password.')
+            else:
+                messages.error(request, 'Invalid email or password.')
 
     else:
 
@@ -1189,3 +1233,103 @@ def check_email_view(request):
     cache.set(key, hits + 1, 60)
     _, problem, suggestion = check_email(request.GET.get('email', ''))
     return JsonResponse({'ok': problem is None, 'message': problem or '', 'suggestion': suggestion or ''})
+
+
+
+@login_required
+@require_POST
+def account_email_view(request):
+    """Change or verify the login email, or verify a player's contact email (buttons on the profile page)."""
+    from .email_change import (
+        EmailChangeError, cancel_login_email_change, confirm_contact_email, confirm_login_email,
+        resend_login_email_code, start_contact_verification, start_login_email_change,
+    )
+
+    user = request.user
+    back = request.POST.get('next') or '/'
+    if not url_has_allowed_host_and_scheme(back, allowed_hosts={request.get_host()}):
+        back = '/'
+    action = request.POST.get('action', '')
+    profile = getattr(user, 'player_profile', None) if user.role == 'player' else None
+    try:
+        if action == 'change':
+            start_login_email_change(user, request.POST.get('new_email', ''))
+            messages.success(request, f'We sent a 6-digit code to {user.pending_email}. Enter it below to finish.')
+        elif action == 'resend':
+            resend_login_email_code(user)
+            messages.success(request, f'A new code was sent to {user.pending_email}.')
+        elif action == 'verify':
+            confirm_login_email(user, request.POST.get('code', ''))
+            messages.success(request, f'Your login email is now {user.email} ✅. Use it the next time you log in.')
+        elif action == 'cancel':
+            cancel_login_email_change(user)
+            messages.info(request, 'Email change cancelled. Your login email is unchanged.')
+        elif action == 'contact_send' and profile:
+            start_contact_verification(user, profile)
+            messages.success(request, f'We sent a 6-digit code to {profile.contact_email}. Enter it below to verify it.')
+        elif action == 'contact_verify' and profile:
+            confirm_contact_email(user, profile, request.POST.get('code', ''))
+            messages.success(request, 'Your contact email is verified ✅. Scouts can now see it if you allow them.')
+        else:
+            messages.error(request, 'Something went wrong. Please try again.')
+    except EmailChangeError as exc:
+        messages.error(request, str(exc))
+    return redirect(back)
+
+
+@login_required
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_backup_view(request):
+    """Download a copy of all records (not photos or videos, which are kept in Cloudflare R2).
+
+    The file contains personal data and password hashes, so only superusers may download it.
+    """
+    import io
+    from django.core.management import call_command
+
+    if not request.user.is_superuser:
+        messages.error(request, 'Only the main administrator account can download backups.')
+        return redirect('admin_dashboard')
+    out = io.StringIO()
+    call_command(
+        'dumpdata', '--natural-foreign', '--indent', '1',
+        '--exclude', 'contenttypes', '--exclude', 'auth.permission', '--exclude', 'sessions',
+        '--exclude', 'admin.logentry', '--exclude', 'users.auththrottle',
+        stdout=out,
+    )
+    stamp = timezone.localtime().strftime('%Y-%m-%d_%H%M')
+    response = HttpResponse(out.getvalue(), content_type='application/json')
+    response['Content-Disposition'] = f'attachment; filename="talanta-soka-backup-{stamp}.json"'
+    return response
+
+
+AI_DRAFTS_PER_HOUR = 20
+
+
+@login_required
+@require_POST
+def ai_assist_view(request):
+    """'Write with AI' for scouts (opportunity description) and players (bio, experience)."""
+    from django.core.cache import cache
+
+    from .ai_draft import DraftError, draft_text
+
+    kind = request.POST.get('kind', '')
+    user = request.user
+    allowed = (
+        (kind == 'opportunity' and (user.is_staff or (user.role == 'scout' and getattr(getattr(user, 'scout_profile', None), 'verification_status', '') == 'approved')))
+        or (kind in {'bio', 'experience'} and user.role == 'player')
+    )
+    if not allowed:
+        return JsonResponse({'ok': False, 'message': 'This writing helper is not available for your account.'}, status=403)
+    # Keep AI costs predictable: a few drafts per person per hour is plenty.
+    key = f'ai-assist:{user.pk}'
+    used = cache.get(key, 0)
+    if used >= AI_DRAFTS_PER_HOUR:
+        return JsonResponse({'ok': False, 'message': 'You have used the writing helper a lot this hour. Please try again later.'}, status=429)
+    try:
+        draft = draft_text(kind, request.POST.get('notes', ''))
+    except DraftError as exc:
+        return JsonResponse({'ok': False, 'message': str(exc)}, status=400)
+    cache.set(key, used + 1, 3600)
+    return JsonResponse({'ok': True, **draft})

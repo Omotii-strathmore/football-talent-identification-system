@@ -129,13 +129,13 @@
                             {% if profile.consent_to_share_contact %}
                                 <div class="alert alert-success py-2 mb-2">
                                     <strong>Communication options:</strong>
-                                    {% if profile.contact_email %}
+                                    {% if profile.contact_email and profile.contact_email_verified_at %}
                                         <div>Email: {{ profile.contact_email }}</div>
                                     {% endif %}
                                     {% if profile.contact_phone %}
                                         <div>Contact: {{ profile.contact_phone }}</div>
                                     {% endif %}
-                                    {% if not profile.contact_email and not profile.contact_phone %}
+                                    {% if not profile.contact_email_verified_at and not profile.contact_phone %}
                                         <div class="text-muted">Player gave consent but has not added contact details yet.</div>
                                     {% endif %}
                                 </div>

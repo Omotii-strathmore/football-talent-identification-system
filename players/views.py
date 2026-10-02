@@ -63,10 +63,16 @@ def profile_view(request):
     edit_mode = request.GET.get('edit') == 'true'
 
     if request.method == 'POST':
+        old_contact_email = profile.contact_email
         form = PlayerProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Profile updated successfully.')
+            from users.email_change import contact_email_changed
+            contact_email_changed(profile, old_contact_email)
+            if profile.contact_email and not profile.contact_email_verified_at:
+                messages.success(request, 'Profile updated. Please verify your new contact email below so scouts can see it.')
+            else:
+                messages.success(request, 'Profile updated successfully.')
             return redirect('player_profile')
     else:
         form = PlayerProfileForm(instance=profile)

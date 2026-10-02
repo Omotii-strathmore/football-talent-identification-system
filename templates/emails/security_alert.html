@@ -1,0 +1,22 @@
+{% extends 'emails/base_email.html' %}
+{% block preheader %}{% if kind == 'password' %}Your Talanta Soka password was just changed.{% else %}Your Talanta Soka login email was just changed.{% endif %}{% endblock %}
+{% block headline %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px 0;">
+  <tr><td style="background:#e8f0fe;border:1px solid #a9c1f5;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:bold;color:#1d4ed8;">&#128737;&#65039; Security notice</td></tr>
+</table>
+{% if kind == 'password' %}Your password was changed{% else %}Your login email was changed{% endif %}
+{% endblock %}
+{% block body %}
+<p style="margin:0 0 14px 0;">Hello {{ first_name }},</p>
+{% if kind == 'password' %}
+<p style="margin:0 0 14px 0;">The password for your Talanta Soka account was changed on <strong>{{ when }}</strong>.</p>
+{% else %}
+<p style="margin:0 0 14px 0;">On <strong>{{ when }}</strong> the email you use to log in to Talanta Soka was changed to <strong>{{ new_email_masked }}</strong>. From now on, log in with the new email.</p>
+{% endif %}
+<p style="margin:0 0 14px 0;"><strong>Was this you?</strong> Then you don&rsquo;t need to do anything.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px 0;background:#fff8e1;border-left:4px solid #f6c453;border-radius:8px;">
+  <tr><td style="padding:12px 16px;font-size:14px;line-height:1.6;">
+    <strong>Not you?</strong> Reply to this email or write to <a href="mailto:{{ support_email }}" style="color:#006b3f;">{{ support_email }}</a> straight away so we can protect your account.
+  </td></tr>
+</table>
+{% endblock %}

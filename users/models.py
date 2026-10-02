@@ -49,6 +49,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     terms_accepted_at = models.DateTimeField(blank=True, null=True)
     # True when the person clicked "Unsubscribe" in an update email. Codes and approvals still arrive.
     updates_opt_out = models.BooleanField(default=False)
+    # A new login email waiting for its verification code. The old email keeps working until then.
+    pending_email = models.EmailField(blank=True, default='')
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['full_name']
@@ -67,6 +69,8 @@ class OneTimeCode(models.Model):
     PURPOSE_CHOICES = [
         ('verify', 'Account verification'),
         ('reset', 'Password reset'),
+        ('newemail', 'New login email'),
+        ('contact', 'Contact email'),
     ]
 
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='otps')
@@ -76,6 +80,8 @@ class OneTimeCode(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField(blank=True, null=True)
     used = models.BooleanField(default=False)
+    # For email changes: the address this code proves the user owns.
+    target_email = models.EmailField(blank=True, default='')
 
     class Meta:
         indexes = [models.Index(fields=['user', 'code'])]
@@ -170,3 +176,15 @@ class UpdateReceipt(models.Model):
 
     class Meta:
         unique_together = ('update', 'user')
+
+
+
+class AuthThrottle(models.Model):
+    """Counts wrong passwords and codes so nobody can keep guessing (see users/throttle.py)."""
+    key = models.CharField(max_length=190, unique=True)
+    failures = models.PositiveIntegerField(default=0)
+    window_start = models.DateTimeField()
+    locked_until = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.key

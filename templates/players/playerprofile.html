@@ -456,13 +456,18 @@
                 <p class="mb-0">{{ profile.bio|default:'No bio provided yet.' }}</p>
             </div>
 
+            <div class="profile-section mt-4" id="emails">
+                <h5>Emails</h5>
+                {% include 'includes/email_settings.html' with profile=profile %}
+            </div>
+
             <div class="profile-section mt-4">
                 <h5>Contact permissions</h5>
                 <div class="alert alert-info py-2 mb-3">
                     With your consent, interested scouts could reach out directly.
                 </div>
                 {% if profile.consent_to_share_contact %}
-                    <p class="mb-1"><span aria-hidden="true">✉️</span> <strong>Email:</strong> {{ profile.contact_email|default:'Not provided' }}</p>
+                    <p class="mb-1"><span aria-hidden="true">✉️</span> <strong>Email:</strong> {{ profile.contact_email|default:'Not provided' }}{% if profile.contact_email and not profile.contact_email_verified_at %} <span class="badge bg-warning text-dark">Pending verification &mdash; hidden from scouts</span>{% endif %}</p>
                     <p class="mb-0"><span aria-hidden="true">📞</span> <strong>Phone:</strong> {{ profile.contact_phone|default:'Not provided' }}</p>
                 {% else %}
                     <p class="mb-0 text-muted">You have not shared communication options with scouts yet.</p>
@@ -548,11 +553,13 @@
                         <div class="col-md-3">{{ form.previous_club_end_year|as_crispy_field }}</div>
                     </div>
                     {{ form.football_experience|as_crispy_field }}
+                    {% include 'includes/ai_assist.html' with kind='experience' target='id_football_experience' hint='e.g. captain of my school team 2025, top scorer in Kisumu county youth league, played 2 seasons at Kisumu Allstars U-17' %}
                 </div>
 
                 <div class="edit-section-card">
                     <p class="edit-section-title mb-0">About & bio</p>
                     {{ form.bio|as_crispy_field }}
+                    {% include 'includes/ai_assist.html' with kind='bio' target='id_bio' hint='e.g. left-footed winger, fast, love dribbling, dream to play in the Premier League, training every evening' ai_assist_loaded=True %}
                 </div>
 
                 <div class="edit-section-card">

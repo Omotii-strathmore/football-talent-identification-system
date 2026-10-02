@@ -121,3 +121,40 @@ def send_scout_decision_email(scout, approved, reason=''):
     except Exception:
         logger.exception('Failed to send scout decision email to %s', user.email)
         return False
+
+
+def send_security_alert(user, kind, new_email='', to_email=None):
+    """Tell someone their password or login email changed, in case it was not them."""
+    from django.utils import timezone
+    from players.guardian import mask_email
+
+    first_name = (user.full_name or '').split(' ')[0] or 'there'
+    when = timezone.localtime().strftime('%d %B %Y at %H:%M')
+    if kind == 'password':
+        subject = '\U0001F6E1️ Your Talanta Soka Password Was Changed'
+        text = f'Hello {first_name},\n\nYour Talanta Soka password was changed on {when}.\n\nNot you? Write to {settings.SUPPORT_EMAIL} straight away.\n\nTalanta Soka'
+    else:
+        subject = '\U0001F6E1️ Your Talanta Soka Login Email Was Changed'
+        text = (f'Hello {first_name},\n\nOn {when} the email you use to log in to Talanta Soka was changed to {mask_email(new_email)}.\n\n'
+                f'Not you? Write to {settings.SUPPORT_EMAIL} straight away.\n\nTalanta Soka')
+    try:
+        send_branded_email(
+            subject, text, 'security_alert.html',
+            {'first_name': first_name, 'kind': kind, 'when': when, 'new_email_masked': mask_email(new_email)},
+            [to_email or user.email], from_email=f'{settings.EMAIL_FROM_NAME} <{settings.DEFAULT_FROM_EMAIL}>', banner='team',
+        )
+        return True
+    except Exception:
+        logger.exception('Failed to send security alert to %s', to_email or user.email)
+        return False
+
+
+def send_code_email(user, code, purpose, to_email):
+    """Email a 6-digit code to an address the user wants to start using."""
+    subject = '\U0001F511 Confirm Your Email | Talanta Soka'
+    text = f'Hello {user.full_name},\n\nYour Talanta Soka confirmation code is: {code}\nIt expires in 15 minutes.\n\nIf you did not ask for this, ignore this email.'
+    send_branded_email(
+        subject, text, 'code.html',
+        {'code': code, 'purpose': purpose, 'full_name': user.full_name, 'first_name': (user.full_name or '').split(' ')[0]},
+        [to_email], from_email=f'{settings.EMAIL_FROM_NAME} <{settings.DEFAULT_FROM_EMAIL}>', banner='player',
+    )

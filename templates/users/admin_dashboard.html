@@ -115,6 +115,18 @@
                 </div>
             </a>
         </div>
+        {% if user.is_superuser %}
+        <div class="col-6 col-md-4">
+            <a href="{% url 'admin_backup' %}" class="text-decoration-none" onclick="return confirm('Download a backup of all Talanta Soka records? The file contains personal data. Keep it private, for example in your own OneDrive.');">
+                <div class="card stat-card h-100 text-center">
+                    <div class="card-body">
+                        <div class="stat-value">&#11015;&#65039;</div>
+                        <p class="text-muted mb-0">Download backup</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

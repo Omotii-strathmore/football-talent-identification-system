@@ -27,7 +27,7 @@
         <li><strong>Account details:</strong> full name, email address, password (stored only in encrypted, hashed form), and whether you are a player or scout.</li>
         <li><strong>Player profiles:</strong> date of birth and age, playing position, county, height, weight, clubs, achievements, bio, profile photo, and the videos you upload.</li>
         <li><strong>Scout profiles:</strong> organization, specialization, profile photo, and the verification document you submit.</li>
-        <li><strong>Optional contact details:</strong> an email or phone number you choose to share with scouts.</li>
+        <li><strong>Optional contact details:</strong> an email or phone number you choose to share with scouts. A contact email is shown to scouts only after you confirm it with a code we email to it.</li>
         <li><strong>Activity:</strong> opportunities posted, applications made, scout feedback, replies, and the players a scout marks as interested.</li>
         <li><strong>Technical data:</strong> login sessions and verification codes needed to keep your account secure.</li>
     </ul>
@@ -62,6 +62,7 @@
         <li><strong>Neon</strong>: stores the database (Frankfurt, Germany).</li>
         <li><strong>Cloudflare R2</strong>: stores photos, videos, and documents privately (Western Europe).</li>
         <li><strong>Brevo</strong> (France) and <strong>Google (Gmail)</strong>: deliver verification, password-reset, and parent-approval emails.</li>
+        <li><strong>Anthropic</strong> (United States): only if you press a &ldquo;Write with AI&rdquo; button, the rough notes you type there are sent to Anthropic&rsquo;s Claude to write a draft for you. Nothing else about you is sent, the draft is not saved unless you save it, and Anthropic does not use these notes to train its AI. Please do not type phone numbers or other private details into the notes.</li>
     </ul>
     <p>This means your information is stored outside Kenya, in the European Union, which has data protection laws at least as strong as Kenya's. Files are kept in private storage and are only viewable through short-lived links shown to logged-in users.</p>
 
@@ -92,7 +93,7 @@
     <p>If you are still not satisfied after talking to us, you can also complain to the Office of the Data Protection Commissioner (ODPC) of Kenya.</p>
 
     <h2>10. Security</h2>
-    <p>Passwords are hashed, the site only runs over encrypted HTTPS connections, accounts are verified by email, and uploaded files are stored privately. No system is completely secure, so please use a strong password and keep it to yourself.</p>
+    <p>Passwords are hashed, the site only runs over encrypted HTTPS connections, accounts are verified by email, and uploaded files are stored privately. After several wrong passwords or codes, further attempts are paused for 15 minutes, and we email you if your password or login email changes. No system is completely secure, so please use a strong password and keep it to yourself.</p>
 
     <h2>11. Changes to this policy</h2>
     <p>If we make important changes, we will update the date at the top of this page and let registered users know.</p>

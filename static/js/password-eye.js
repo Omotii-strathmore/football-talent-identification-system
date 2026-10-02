@@ -47,10 +47,17 @@
   }
 
   function blockAutofill(form) {
-    form.setAttribute('autocomplete', 'off');
+    // data-no-autofill="suggest" (the login page): boxes still start empty, but tapping a box shows the
+    // browser's list of saved logins so people can pick theirs. Other forms never offer saved logins.
+    var suggest = form.getAttribute('data-no-autofill') === 'suggest';
+    if (!suggest) form.setAttribute('autocomplete', 'off');
     var fields = form.querySelectorAll('input[type="email"], input[type="text"], input[type="password"]');
     Array.prototype.forEach.call(fields, function (field) {
-      field.setAttribute('autocomplete', field.type === 'password' ? 'new-password' : 'off');
+      if (suggest) {
+        field.setAttribute('autocomplete', field.type === 'password' ? 'current-password' : 'username');
+      } else {
+        field.setAttribute('autocomplete', field.type === 'password' ? 'new-password' : 'off');
+      }
       // Browsers do not fill read-only boxes; unlock as soon as the person uses the box.
       field.setAttribute('readonly', 'readonly');
       var unlock = function () { field.removeAttribute('readonly'); };

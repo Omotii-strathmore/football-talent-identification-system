@@ -117,6 +117,9 @@ class PlayerProfile(models.Model):
         help_text='Optional phone number scouts can use to contact you.'
     )
 
+    # When the player proved they own contact_email. Scouts only see verified contact emails.
+    contact_email_verified_at = models.DateTimeField(blank=True, null=True)
+
     consent_to_share_contact = models.BooleanField(
         default=False,
         help_text='Allow scouts to view your communication options.'
