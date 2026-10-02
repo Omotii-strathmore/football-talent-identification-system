@@ -33,7 +33,7 @@ class GuardianApprovalTests(TestCase):
             'password': 'Str0ngPass!x', 'confirm_password': 'Str0ngPass!x', 'accept_terms': 'on',
         })
         return self.client.post(reverse('complete_profile'), {
-            'date_of_birth': _born(15).isoformat(), 'position': 'Forward', 'location': 'Nairobi',
+            'date_of_birth': _born(15).isoformat(), 'category': 'starlets', 'position': 'Forward', 'location': 'Nairobi',
             'guardian_consent': 'on', 'guardian_name': 'Mary Mum', 'guardian_email': guardian_email,
         })
 
@@ -48,7 +48,7 @@ class GuardianApprovalTests(TestCase):
             'password': 'Str0ngPass!x', 'confirm_password': 'Str0ngPass!x', 'accept_terms': 'on',
         })
         response = self.client.post(reverse('complete_profile'), {
-            'date_of_birth': _born(15).isoformat(), 'position': 'Forward', 'location': 'Nairobi', 'guardian_consent': 'on',
+            'date_of_birth': _born(15).isoformat(), 'category': 'starlets', 'position': 'Forward', 'location': 'Nairobi', 'guardian_consent': 'on',
         })
         self.assertEqual(response.status_code, 200)
         self.assertFalse(PlayerProfile.objects.exists())

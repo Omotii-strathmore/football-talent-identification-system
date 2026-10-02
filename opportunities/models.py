@@ -2,6 +2,8 @@ from django.conf import settings
 from django.db import models
 
 
+from players.categories import OPPORTUNITY_CATEGORY_CHOICES
+
 class Opportunity(models.Model):
 	scout = models.ForeignKey(
 		settings.AUTH_USER_MODEL,
@@ -15,6 +17,8 @@ class Opportunity(models.Model):
 	location = models.CharField(max_length=120)
 	deadline = models.DateField()
 	max_applications = models.PositiveIntegerField(blank=True, null=True)
+	# Stars (men), Starlets (women) or open to all players.
+	category = models.CharField(max_length=10, choices=OPPORTUNITY_CATEGORY_CHOICES, default='open')
 	is_active = models.BooleanField(default=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 	updated_at = models.DateTimeField(auto_now=True)

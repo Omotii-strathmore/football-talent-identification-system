@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load football %}
 
 {% block title %}Player Recommendations{% endblock %}
 
@@ -57,7 +58,7 @@
 
                                 <div>
                                     <h5 class="card-title mb-1">{{ profile.full_name }}</h5>
-                                    <p class="text-muted mb-1">Position: {{ profile.position }}</p>
+                                    <p class="text-muted mb-1">{% if profile.category %}<span class="badge text-bg-warning me-1">{{ profile.category|category_badge }}</span>{% endif %}Position: {{ profile.position }}</p>
                                     <p class="text-muted mb-0">Age: {{ profile.age }} | Location: {{ profile.location }}</p>
                                 </div>
                             </div>

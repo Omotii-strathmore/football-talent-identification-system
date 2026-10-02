@@ -6,6 +6,8 @@ from django.utils import timezone
 from users.models import User
 from players.models import PlayerProfile, PlayerVideo
 
+from players.categories import SCOUTS_FOR_CHOICES
+
 class Scout(models.Model):
 
     VERIFICATION_STATUS_CHOICES = [
@@ -36,6 +38,8 @@ class Scout(models.Model):
     )
 
     verified = models.BooleanField(default=False)
+    # Which football the scout looks for: Stars (men), Starlets (women) or both.
+    scouts_for = models.CharField(max_length=10, choices=SCOUTS_FOR_CHOICES, default='both')
     verification_status = models.CharField(
         max_length=20,
         choices=VERIFICATION_STATUS_CHOICES,

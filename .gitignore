@@ -30,3 +30,6 @@ staticfiles/
 
 # Environment files
 .env
+
+# Local practice database (never the live one)
+practice.sqlite3

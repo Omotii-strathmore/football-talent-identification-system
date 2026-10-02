@@ -99,6 +99,14 @@ def player_directory(request):
         .filter(visible_to_scouts_q())
     )
 
+    # Stars (men) / Starlets (women): start with what the scout looks for; "all" shows everyone.
+    scouts_for = getattr(request.user.scout_profile, 'scouts_for', 'both') or 'both'
+    selected_category = request.GET.get('category', '').strip()
+    if selected_category not in ('stars', 'starlets', 'all'):
+        selected_category = scouts_for if scouts_for in ('stars', 'starlets') else 'all'
+    if selected_category in ('stars', 'starlets'):
+        profiles = profiles.filter(category=selected_category)
+
     position_param_present = 'position' in request.GET
     selected_position = request.GET.get('position', '').strip()
     selected_location = request.GET.get('location', '').strip()
@@ -167,6 +175,7 @@ def player_directory(request):
         'scouts/playerdirectory.html',
         {
             'profiles': profiles,
+            'selected_category': selected_category,
             'positions': PlayerProfile.POSITION_CHOICES,
             'locations': all_locations,
             'ages': all_ages,
@@ -323,6 +332,9 @@ def player_recommendations(request):
     recommended_position = _recommended_position_from_specialization(scout_profile.specialization)
 
     profiles = PlayerProfile.objects.select_related('user').prefetch_related('videos').filter(visible_to_scouts_q())
+    scouts_for = getattr(request.user.scout_profile, 'scouts_for', 'both') or 'both'
+    if scouts_for in ('stars', 'starlets'):
+        profiles = profiles.filter(category=scouts_for)
     if recommended_position:
         profiles = profiles.filter(position=recommended_position)
 

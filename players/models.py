@@ -9,6 +9,8 @@ def _calculate_age(born):
     return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
 
+from players.categories import PLAYER_CATEGORY_CHOICES
+
 class PlayerProfile(models.Model):
 
     POSITION_CHOICES = (
@@ -116,6 +118,9 @@ class PlayerProfile(models.Model):
         blank=True,
         help_text='Optional phone number scouts can use to contact you.'
     )
+
+    # Stars (men's football) or Starlets (women's football); used only for matching with scouts and trials.
+    category = models.CharField(max_length=10, choices=PLAYER_CATEGORY_CHOICES, blank=True, default='')
 
     # When the player proved they own contact_email. Scouts only see verified contact emails.
     contact_email_verified_at = models.DateTimeField(blank=True, null=True)

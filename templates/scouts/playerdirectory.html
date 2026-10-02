@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load football %}
 
 {% block title %}Player Directory{% endblock %}
 
@@ -53,7 +54,13 @@
 
     <div class="card mb-4">
         <div class="card-body">
+            <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Stars or Starlets">
+                <a href="?category=all" class="btn btn-sm {% if selected_category == 'all' %}btn-dark{% else %}btn-outline-dark{% endif %}">All players</a>
+                <a href="?category=stars" class="btn btn-sm {% if selected_category == 'stars' %}btn-dark{% else %}btn-outline-dark{% endif %}">&#11088; Stars <small>(men)</small></a>
+                <a href="?category=starlets" class="btn btn-sm {% if selected_category == 'starlets' %}btn-warning{% else %}btn-outline-warning{% endif %}">&#127775; Starlets <small>(women)</small></a>
+            </div>
             <form method="get" class="row g-2 align-items-end">
+                <input type="hidden" name="category" value="{{ selected_category }}">
                 <div class="col-md-3">
                     <label for="position" class="form-label mb-1">Position</label>
                     <select id="position" name="position" class="form-select">
@@ -119,7 +126,7 @@
 
                                 <div>
                                     <h5 class="card-title mb-1">{{ profile.full_name }}</h5>
-                                    <p class="text-muted mb-1">Position: {{ profile.position }}</p>
+                                    <p class="text-muted mb-1">{% if profile.category %}<span class="badge text-bg-warning me-1">{{ profile.category|category_badge }}</span>{% endif %}Position: {{ profile.position }}</p>
                                     <p class="text-muted mb-0">Age: {{ profile.age }} | Location: {{ profile.location }}</p>
                                 </div>
                             </div>

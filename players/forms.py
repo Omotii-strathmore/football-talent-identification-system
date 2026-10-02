@@ -21,6 +21,7 @@ class PlayerProfileForm(forms.ModelForm):
         model = PlayerProfile
 
         fields = [
+            'category',
             'full_name',
             'date_of_birth',
             'position',
@@ -60,6 +61,9 @@ class PlayerProfileForm(forms.ModelForm):
         self.fields['date_of_birth'].required = False
         self.fields['date_of_birth'].help_text = 'Keeps your age accurate automatically. Allowed range: 12 to 28 years old.'
         self.fields['contact_email'].required = False
+        self.fields['category'].required = True
+        self.fields['category'].label = 'Stars or Starlets?'
+        self.fields['category'].help_text = "Stars are men's football and Starlets are women's football. We use this only to match you with the right scouts and trials."
         self.fields['contact_phone'].required = False
         self.fields['secondary_position'].required = False
         self.fields['height_cm'].required = False
@@ -143,6 +147,7 @@ class PlayerOnboardingForm(forms.ModelForm):
         model = PlayerProfile
 
         fields = [
+            'category',
             'date_of_birth',
             'position',
             'location',
@@ -161,6 +166,8 @@ class PlayerOnboardingForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['location'].help_text = 'Choose or type a county name from the 47 counties list.'
+        self.fields['category'].required = True
+        self.fields['category'].error_messages['required'] = 'Please choose Stars or Starlets.'
 
     def clean_date_of_birth(self):
         dob = self.cleaned_data['date_of_birth']

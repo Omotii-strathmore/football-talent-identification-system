@@ -19,7 +19,11 @@ def site_extras(request):
         'to': email,
         'su': 'Talanta Soka',
     })
-    context = {'support_email': email, 'support_compose_url': compose_url}
+    report_url = 'https://mail.google.com/mail/?' + urlencode({
+        'view': 'cm', 'fs': '1', 'to': email, 'su': 'Talanta Soka - Report a concern',
+        'body': 'Please tell us what happened, who was involved (name or trial), and when. We read every report.\n\n',
+    })
+    context = {'support_email': email, 'support_compose_url': compose_url, 'report_concern_url': report_url}
 
     user = getattr(request, 'user', None)
     if user is not None and user.is_authenticated and not user.is_staff:

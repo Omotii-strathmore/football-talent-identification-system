@@ -102,6 +102,7 @@
                             {% elif s.verification_status == 'rejected' %}<span class="um-chip red">Documents rejected</span>
                             {% else %}<a href="{% url 'admin_verifications' %}" class="um-chip amber text-decoration-none">Documents waiting &rarr;</a>{% endif %}
                         {% endif %}
+                        {% if u.role == 'player' and p %}{% if p.category == 'starlets' %}<span class="um-chip amber">&#127775; Starlets</span>{% elif p.category == 'stars' %}<span class="um-chip dark">&#11088; Stars</span>{% else %}<span class="um-chip">Category not chosen</span>{% endif %}{% endif %}
                         {% if u.role == 'player' and p and p.is_minor %}
                             {% if p.guardian_approved_at %}<span class="um-chip green">Under 18 &middot; parent approved</span>
                             {% elif p.guardian_declined_at %}<span class="um-chip red">Under 18 &middot; parent declined</span>

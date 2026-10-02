@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, render, redirect
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
 from opportunities.models import Application
 from players.forms import PlayerProfileForm, PlayerVideoForm
@@ -257,4 +258,18 @@ def guardian_resend(request):
         messages.success(request, f'Approval email sent to {mask_email(profile.guardian_email)}.')
     else:
         messages.error(request, 'We could not send the email right now. Please try again later.')
+    return redirect('player_dashboard')
+
+
+@login_required
+@require_POST
+def set_category(request):
+    """The one-time Stars / Starlets question on the dashboard for players who joined before categories."""
+    profile = PlayerProfile.objects.filter(user=request.user).first()
+    category = request.POST.get('category', '')
+    if profile and category in ('stars', 'starlets'):
+        profile.category = category
+        profile.save(update_fields=['category'])
+        name = 'Stars' if category == 'stars' else 'Starlets'
+        messages.success(request, f'Thank you! You are now listed with the {name}. You can change this on your profile.')
     return redirect('player_dashboard')

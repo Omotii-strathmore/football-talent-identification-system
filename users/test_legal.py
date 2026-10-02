@@ -45,7 +45,7 @@ class LegalPagesAndConsentTests(TestCase):
         self._register('minor@example.com')
         response = self.client.post(reverse('complete_profile'), {
             'date_of_birth': _years_ago(15),
-            'position': 'Forward',
+            'category': 'starlets', 'position': 'Forward',
             'location': 'Nairobi',
         })
         self.assertEqual(response.status_code, 200)
@@ -53,7 +53,7 @@ class LegalPagesAndConsentTests(TestCase):
 
         self.client.post(reverse('complete_profile'), {
             'date_of_birth': _years_ago(15),
-            'position': 'Forward',
+            'category': 'starlets', 'position': 'Forward',
             'location': 'Nairobi',
             'guardian_consent': 'on',
             'guardian_name': 'Mary Mum',
@@ -66,7 +66,7 @@ class LegalPagesAndConsentTests(TestCase):
         self._register('adult@example.com')
         self.client.post(reverse('complete_profile'), {
             'date_of_birth': _years_ago(22),
-            'position': 'Forward',
+            'category': 'starlets', 'position': 'Forward',
             'location': 'Nairobi',
         })
         profile = PlayerProfile.objects.get(user__email='adult@example.com')
