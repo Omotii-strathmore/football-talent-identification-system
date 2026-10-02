@@ -114,3 +114,13 @@ class TemplateNoteTests(TestCase):
                 if '{#' in line and '#}' not in line:
                     bad.append(f'{path.name}:{number}')
         self.assertEqual(bad, [])
+
+
+class WaitingPopUpTests(TestCase):
+    def test_a_waiting_pop_up_never_covers_the_page(self):
+        """A pop-up waiting for the tour must be truly hidden, or it blocks every button on the landing page."""
+        SiteUpdate.objects.create(title='New', teaser='Teaser', points='One')
+        page = self.client.get(reverse('home')).content.decode()
+        self.assertIn('data-defer="1" hidden', page)
+        self.assertIn('.ts-update[hidden]{display:none!important}', page)
+        self.assertIn('.ts-update:not(.is-open){pointer-events:none}', page)

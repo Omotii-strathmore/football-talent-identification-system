@@ -34,6 +34,9 @@ With `defer`, it waits until the page calls TalantaUpdateModal.open(), and shows
     .ts-update{position:fixed;inset:0;z-index:2000;display:flex;align-items:center;justify-content:center;padding:16px;
         background:rgba(4,12,8,.72);backdrop-filter:blur(3px);opacity:0;transition:opacity .25s ease}
     .ts-update.is-open{opacity:1}
+    /* While waiting (hidden) or closing, the pop-up must never sit invisibly over the page and block taps. */
+    .ts-update[hidden]{display:none!important}
+    .ts-update:not(.is-open){pointer-events:none}
     .ts-update__panel{position:relative;width:min(900px,100%);height:min(75vh,720px);display:flex;flex-direction:column;
         background:#fffdf7;color:#13231a;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45);
         transform:translateY(16px) scale(.98);transition:transform .25s ease;font-family:inherit}
