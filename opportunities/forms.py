@@ -12,6 +12,13 @@ class OpportunityForm(forms.ModelForm):
         self.fields['max_applications'].required = False
         self.fields['max_applications'].help_text = 'Optional. Set how many applications you want before closing early.'
         self.fields['category'].required = False
+        scouts_for = getattr(getattr(self.scout, 'scout_profile', None), 'scouts_for', 'both')
+        if scouts_for in ('stars', 'starlets'):
+            self.fields['category'].choices = [
+                choice for choice in self.fields['category'].choices if choice[0] in ('open', scouts_for)
+            ]
+            if not self.instance.pk:
+                self.initial.setdefault('category', scouts_for)
 
     class Meta:
         model = Opportunity

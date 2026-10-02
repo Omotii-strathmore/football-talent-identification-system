@@ -12,6 +12,21 @@ from players.guardian import visible_to_scouts_q
 from scouts.models import Scout, ScoutPlayerShortlist, ScoutVideoFeedback
 
 
+def _scout_category(request):
+    """'stars' or 'starlets' for scouts who look for one category; None for scouts who look for both."""
+    value = getattr(getattr(request.user, 'scout_profile', None), 'scouts_for', 'both') or 'both'
+    return value if value in ('stars', 'starlets') else None
+
+
+def _players_q(request, prefix=''):
+    """Players this scout may see: visible to scouts, and in the scout's own category (Stars or Starlets)."""
+    q = visible_to_scouts_q(prefix)
+    category = _scout_category(request)
+    if category:
+        q &= Q(**{prefix + 'category': category})
+    return q
+
+
 def _recommended_position_from_specialization(specialization):
     specialization_text = (specialization or '').strip().lower()
 
@@ -96,16 +111,20 @@ def player_directory(request):
     profiles = (
         PlayerProfile.objects.select_related('user')
         .prefetch_related('videos')
-        .filter(visible_to_scouts_q())
+        .filter(_players_q(request))
     )
 
-    # Stars (men) / Starlets (women): start with what the scout looks for; "all" shows everyone.
-    scouts_for = getattr(request.user.scout_profile, 'scouts_for', 'both') or 'both'
-    selected_category = request.GET.get('category', '').strip()
-    if selected_category not in ('stars', 'starlets', 'all'):
-        selected_category = scouts_for if scouts_for in ('stars', 'starlets') else 'all'
-    if selected_category in ('stars', 'starlets'):
-        profiles = profiles.filter(category=selected_category)
+    # Scouts of one category only ever see that category (already applied by _players_q).
+    # Scouts of both can narrow the list with the Stars / Starlets buttons.
+    scout_category = _scout_category(request)
+    if scout_category:
+        selected_category = scout_category
+    else:
+        selected_category = request.GET.get('category', '').strip()
+        if selected_category not in ('stars', 'starlets'):
+            selected_category = 'all'
+        if selected_category in ('stars', 'starlets'):
+            profiles = profiles.filter(category=selected_category)
 
     position_param_present = 'position' in request.GET
     selected_position = request.GET.get('position', '').strip()
@@ -139,13 +158,13 @@ def player_directory(request):
             messages.error(request, 'Select a valid age range.')
 
     all_locations = (
-        PlayerProfile.objects.filter(visible_to_scouts_q()).exclude(location='')
+        PlayerProfile.objects.filter(_players_q(request)).exclude(location='')
         .values_list('location', flat=True)
         .distinct()
         .order_by('location')
     )
     all_ages = (
-        PlayerProfile.objects.filter(visible_to_scouts_q()).values_list('age', flat=True)
+        PlayerProfile.objects.filter(_players_q(request)).values_list('age', flat=True)
         .distinct()
         .order_by('age')
     )
@@ -176,6 +195,7 @@ def player_directory(request):
         {
             'profiles': profiles,
             'selected_category': selected_category,
+            'scout_category': scout_category,
             'positions': PlayerProfile.POSITION_CHOICES,
             'locations': all_locations,
             'ages': all_ages,
@@ -210,7 +230,7 @@ def scout_toggle_shortlist(request):
         return redirect('scout_player_directory')
 
     profile_id = request.POST.get('profile_id')
-    profile = get_object_or_404(PlayerProfile.objects.filter(visible_to_scouts_q()), id=profile_id)
+    profile = get_object_or_404(PlayerProfile.objects.filter(_players_q(request)), id=profile_id)
 
     entry = ScoutPlayerShortlist.objects.filter(scout=request.user, profile=profile).first()
     if entry:
@@ -247,7 +267,7 @@ def scout_shortlist(request):
             return redirect('scout_shortlist')
 
         video = get_object_or_404(
-            PlayerVideo.objects.select_related('profile').filter(visible_to_scouts_q('profile__')),
+            PlayerVideo.objects.select_related('profile').filter(_players_q(request, 'profile__')),
             id=video_id,
             profile__shortlisted_by__scout=request.user,
         )
@@ -298,7 +318,7 @@ def scout_shortlist(request):
         ScoutPlayerShortlist.objects.select_related('profile', 'profile__user')
         .prefetch_related('profile__videos')
         .filter(scout=request.user)
-        .filter(visible_to_scouts_q('profile__'))
+        .filter(_players_q(request, 'profile__'))
     )
     profile_ids = [entry.profile_id for entry in entries]
     feedback_map = {
@@ -331,10 +351,7 @@ def player_recommendations(request):
     scout_profile = request.user.scout_profile
     recommended_position = _recommended_position_from_specialization(scout_profile.specialization)
 
-    profiles = PlayerProfile.objects.select_related('user').prefetch_related('videos').filter(visible_to_scouts_q())
-    scouts_for = getattr(request.user.scout_profile, 'scouts_for', 'both') or 'both'
-    if scouts_for in ('stars', 'starlets'):
-        profiles = profiles.filter(category=scouts_for)
+    profiles = PlayerProfile.objects.select_related('user').prefetch_related('videos').filter(_players_q(request))
     if recommended_position:
         profiles = profiles.filter(position=recommended_position)
 

@@ -106,7 +106,8 @@ class ScoutEditDetailsForm(forms.ModelForm):
 	class Meta:
 		model = Scout
 		fields = ["organization", "scouts_for", "specialization", "profile_photo"]
-		labels = {"scouts_for": "Who do you scout?"}
+		labels = {"scouts_for": "Which players do you scout?"}
+		help_texts = {"scouts_for": "About the players you look for, not about you. Scouts of one category only see and post for that category."}
 		widgets = {
 			"organization": forms.TextInput(attrs={"placeholder": "Organization worked with"}),
 		}

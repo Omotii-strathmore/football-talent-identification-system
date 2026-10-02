@@ -54,11 +54,15 @@
 
     <div class="card mb-4">
         <div class="card-body">
+            {% if scout_category %}
+            <p class="mb-3 small">You scout <strong>{% if scout_category == 'starlets' %}&#127775; Starlets (women's football){% else %}&#11088; Stars (men's football){% endif %}</strong>, so only those players are shown. You can change this in <a href="{% url 'scout_edit_details' %}">Edit Details</a>.</p>
+            {% else %}
             <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Stars or Starlets">
                 <a href="?category=all" class="btn btn-sm {% if selected_category == 'all' %}btn-dark{% else %}btn-outline-dark{% endif %}">All players</a>
                 <a href="?category=stars" class="btn btn-sm {% if selected_category == 'stars' %}btn-dark{% else %}btn-outline-dark{% endif %}">&#11088; Stars <small>(men)</small></a>
                 <a href="?category=starlets" class="btn btn-sm {% if selected_category == 'starlets' %}btn-warning{% else %}btn-outline-warning{% endif %}">&#127775; Starlets <small>(women)</small></a>
             </div>
+            {% endif %}
             <form method="get" class="row g-2 align-items-end">
                 <input type="hidden" name="category" value="{{ selected_category }}">
                 <div class="col-md-3">

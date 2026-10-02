@@ -59,14 +59,29 @@ class StarsAndStarletsTests(TestCase):
         self.star.player_profile.refresh_from_db()
         self.assertEqual(self.star.player_profile.category, 'stars')
 
-    def test_scouts_see_their_category_first_and_can_see_all(self):
+    def test_starlets_scouts_only_ever_reach_starlets(self):
         self.client.force_login(self.scout_user)
-        page = self.client.get(reverse('scout_player_directory'))
+        page = self.client.get(reverse('scout_player_directory') + '?category=all&position=')
         self.assertContains(page, 'Wanjiru Starlet')
         self.assertNotContains(page, 'Juma Star<')
-        everyone = self.client.get(reverse('scout_player_directory') + '?category=all&position=')
+        self.assertNotContains(page, 'All players')
+        # Cannot mark a Star as interested, even by sending the request directly.
+        response = self.client.post(reverse('scout_toggle_shortlist'), {'profile_id': self.star.player_profile.id})
+        self.assertEqual(response.status_code, 404)
+        # Can only post Starlets or open trials.
+        choices = [value for value, _ in self.client.get(reverse('post_opportunity')).context['form'].fields['category'].choices]
+        self.assertEqual(choices, ['open', 'starlets'])
+
+    def test_scouts_of_both_can_see_everyone_and_filter(self):
+        self.scout.scouts_for = 'both'
+        self.scout.save()
+        self.client.force_login(self.scout_user)
+        everyone = self.client.get(reverse('scout_player_directory') + '?position=')
         self.assertContains(everyone, 'Juma Star')
         self.assertContains(everyone, 'Wanjiru Starlet')
+        only_stars = self.client.get(reverse('scout_player_directory') + '?category=stars&position=')
+        self.assertContains(only_stars, 'Juma Star')
+        self.assertNotContains(only_stars, 'Wanjiru Starlet')
 
     def test_trials_page_filters_and_badges(self):
         page = self.client.get(reverse('public_opportunities') + '?cat=starlets')
