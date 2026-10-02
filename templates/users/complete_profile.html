@@ -77,6 +77,10 @@
         /* ---------- Choice cards (positions / specialisations) ---------- */
         .choice-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
         .choice-grid.cols-5 { grid-template-columns: repeat(5, 1fr); }
+        .choice-grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .choice-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .cat-emoji { font-size: 2.1rem; line-height: 1; filter: drop-shadow(0 4px 10px rgba(246, 196, 83, .35)); }
+        .cat-note { font-size: .78rem; color: var(--muted); margin-top: 8px; }
         .choice { position: relative; margin: 0; cursor: pointer; }
         .choice input { position: absolute; opacity: 0; pointer-events: none; }
         .choice-body {
@@ -209,6 +213,7 @@
         @media (max-width: 560px) {
             .choice-grid { grid-template-columns: repeat(2, 1fr); }
             .choice-grid.cols-5 { grid-template-columns: repeat(2, 1fr); }
+            .choice-grid.cols-3 { grid-template-columns: 1fr; }
             .step-card { padding: 14px; }
         }
         @media (prefers-reduced-motion: reduce) {
@@ -220,7 +225,7 @@
     <p class="eyebrow">Complete Profile</p>
     {% if role == 'player' %}
         <h1 class="title">Tell us about your game &#9917;</h1>
-        <p class="lead">Step 2 of 3: three quick questions and you're in. You can add your club, height, videos and more later from your profile.</p>
+        <p class="lead">Step 2 of 3: four quick questions and you're in. You can add your club, height, videos and more later from your profile.</p>
     {% else %}
         <h1 class="title">Set up your scout profile &#128301;</h1>
         <p class="lead">Step 2 of 3: tell us who you scout for, what you look for, and upload a document so our admin can verify you.</p>
@@ -231,10 +236,41 @@
         {% for error in form.non_field_errors %}<div class="field-error mb-2">{{ error }}</div>{% endfor %}
 
         {% if role == 'player' %}
-            <!-- 1. Date of birth -->
-            <section class="step-card" data-step="dob">
+            <!-- 1. Stars or Starlets -->
+            <section class="step-card" data-step="category">
                 <div class="step-head">
                     <span class="step-num">1</span>
+                    <div>
+                        <p class="step-title">Which football do you play?</p>
+                        <p class="step-sub">Named after Kenya's national teams, the Harambee Stars and the Harambee Starlets.</p>
+                    </div>
+                </div>
+                <div class="choice-grid cols-2" role="radiogroup" aria-label="Football category">
+                    <label class="choice">
+                        <input type="radio" name="category" value="stars" {% if form.category.value == 'stars' %}checked{% endif %} required>
+                        <span class="choice-body">
+                            <span class="cat-emoji" aria-hidden="true">&#11088;</span>
+                            <span class="choice-name">Stars</span>
+                            <span class="choice-hint">Men's football</span>
+                        </span>
+                    </label>
+                    <label class="choice">
+                        <input type="radio" name="category" value="starlets" {% if form.category.value == 'starlets' %}checked{% endif %} required>
+                        <span class="choice-body">
+                            <span class="cat-emoji" aria-hidden="true">&#127775;</span>
+                            <span class="choice-name">Starlets</span>
+                            <span class="choice-hint">Women's football</span>
+                        </span>
+                    </label>
+                </div>
+                <p class="cat-note">We use this only to match you with the right scouts and trials.</p>
+                {% for error in form.category.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </section>
+
+            <!-- 2. Date of birth -->
+            <section class="step-card" data-step="dob">
+                <div class="step-head">
+                    <span class="step-num">2</span>
                     <div>
                         <p class="step-title">When were you born?</p>
                         <p class="step-sub">Players aged 12 to 28 can join. Your age updates automatically every year.</p>
@@ -278,10 +314,10 @@
                 {% for error in form.guardian_consent.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
             </div>
 
-            <!-- 2. Position -->
+            <!-- 3. Position -->
             <section class="step-card" data-step="position">
                 <div class="step-head">
-                    <span class="step-num">2</span>
+                    <span class="step-num">3</span>
                     <div>
                         <p class="step-title">Where do you play?</p>
                         <p class="step-sub">Pick your main position. You can add a second one later.</p>
@@ -313,7 +349,7 @@
             <!-- 3. County -->
             <section class="step-card" data-step="location">
                 <div class="step-head">
-                    <span class="step-num">3</span>
+                    <span class="step-num">4</span>
                     <div>
                         <p class="step-title">Where are you from?</p>
                         <p class="step-sub">Type your county, or tap one below. Scouts search players by county.</p>
@@ -353,10 +389,38 @@
                 {% for error in form.organization.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
             </section>
 
+            <!-- 2. Stars, Starlets or both -->
+            <section class="step-card" data-step="scouts_for">
+                <div class="step-head">
+                    <span class="step-num">2</span>
+                    <div>
+                        <p class="step-title">Who do you scout?</p>
+                        <p class="step-sub">This is about the players you look for, not about you: any coach, man or woman, can scout Stars (men's football), Starlets (women's football) or both. You can change this later.</p>
+                    </div>
+                </div>
+                <div class="choice-grid cols-3" role="radiogroup" aria-label="Who do you scout">
+                    {% with chosen=form.scouts_for.value|default:'both' %}
+                    <label class="choice">
+                        <input type="radio" name="scouts_for" value="stars" {% if chosen == 'stars' %}checked{% endif %}>
+                        <span class="choice-body"><span class="cat-emoji" aria-hidden="true">&#11088;</span><span class="choice-name">Stars</span><span class="choice-hint">Men's football</span></span>
+                    </label>
+                    <label class="choice">
+                        <input type="radio" name="scouts_for" value="starlets" {% if chosen == 'starlets' %}checked{% endif %}>
+                        <span class="choice-body"><span class="cat-emoji" aria-hidden="true">&#127775;</span><span class="choice-name">Starlets</span><span class="choice-hint">Women's football</span></span>
+                    </label>
+                    <label class="choice">
+                        <input type="radio" name="scouts_for" value="both" {% if chosen == 'both' %}checked{% endif %}>
+                        <span class="choice-body"><span class="cat-emoji" aria-hidden="true">&#11088;&#127775;</span><span class="choice-name">Both</span><span class="choice-hint">Stars and Starlets</span></span>
+                    </label>
+                    {% endwith %}
+                </div>
+                {% for error in form.scouts_for.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </section>
+
             <!-- 2. Specialisation -->
             <section class="step-card" data-step="specialization">
                 <div class="step-head">
-                    <span class="step-num">2</span>
+                    <span class="step-num">3</span>
                     <div>
                         <p class="step-title">What do you look for?</p>
                         <p class="step-sub">We'll recommend players who match your speciality.</p>
@@ -390,7 +454,7 @@
             <!-- 3. Verification document -->
             <section class="step-card" data-step="document">
                 <div class="step-head">
-                    <span class="step-num">3</span>
+                    <span class="step-num">4</span>
                     <div>
                         <p class="step-title">Prove you're a real scout</p>
                         <p class="step-sub">A coaching licence, club letter or accreditation. PDF or Word.</p>
@@ -412,7 +476,7 @@
             <!-- 4. Photo (optional) -->
             <section class="step-card" data-step="photo">
                 <div class="step-head">
-                    <span class="step-num">4</span>
+                    <span class="step-num">5</span>
                     <div>
                         <p class="step-title">Add your photo <span class="optional-tag">Optional</span></p>
                         <p class="step-sub">Players trust scouts they can put a face to.</p>

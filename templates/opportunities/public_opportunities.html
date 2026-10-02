@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load football %}
 {% load static %}
 
 {% block title %}Trials & Tournaments{% endblock %}
@@ -390,6 +391,12 @@
         border-color: rgba(0, 107, 63, 0.2);
         box-shadow: 0 4px 12px rgba(19, 35, 26, 0.1);
     }
+    .trial-cat { display:inline-block; font-size:.72rem; font-weight:800; border-radius:999px; padding:2px 9px; background:rgba(52,211,153,.18); color:#34d399; }
+    .trial-cat--stars { background:rgba(255,255,255,.14); color:#fff; }
+    .trial-cat--starlets { background:rgba(246,196,83,.22); color:#f6c453; }
+    html[data-theme="light"] .trial-cat--stars { background:#1f2933; color:#fff; }
+    html[data-theme="light"] .trial-cat--starlets { background:#fde68a; color:#7a4b00; }
+    html[data-theme="light"] .trial-cat--open { background:#d1fae5; color:#006b3f; }
 </style>
 <script>
     // Apply the saved theme before the page paints, so it never flashes dark then light.
@@ -428,6 +435,12 @@
                 <a href="{% url 'login' %}" class="btn btn-outline-light btn-sm">Sign In to Apply</a>
             </div>
 
+            <div class="trials-switch" aria-label="Stars or Starlets">
+                <a href="?view={{ selected_view }}&cat=all" class="btn btn-sm {% if selected_category == 'all' %}btn-light text-dark{% else %}btn-outline-light{% endif %}">All</a>
+                <a href="?view={{ selected_view }}&cat=stars" class="btn btn-sm {% if selected_category == 'stars' %}btn-light text-dark{% else %}btn-outline-light{% endif %}">&#11088; Stars</a>
+                <a href="?view={{ selected_view }}&cat=starlets" class="btn btn-sm {% if selected_category == 'starlets' %}btn-warning{% else %}btn-outline-warning{% endif %}">&#127775; Starlets</a>
+            </div>
+
             <div class="trials-switch">
                 <a href="{% url 'public_opportunities' %}?view=available" class="btn btn-sm {% if selected_view == 'available' %}btn-light text-dark{% else %}btn-outline-light{% endif %}">Available</a>
                 <a href="{% url 'public_opportunities' %}?view=history" class="btn btn-sm {% if selected_view == 'history' %}btn-secondary{% else %}btn-outline-secondary text-light{% endif %}">History</a>
@@ -449,6 +462,7 @@
                         >
                             <div>
                                 <div class="trial-summary-title">{{ opportunity.title }}</div>
+                                <div class="trial-summary-meta"><span class="trial-cat trial-cat--{{ opportunity.category }}">{{ opportunity.category|category_badge }}</span></div>
                                 <div class="trial-summary-meta">🏷️ {{ opportunity.organization }}</div>
                                 <div class="trial-summary-meta">📍 {{ opportunity.location }}</div>
                                 <div class="trial-summary-meta">
@@ -474,6 +488,7 @@
                             <p><strong>Location</strong><span>{{ opportunity.location }}</span></p>
                             <p><strong>Deadline</strong><span>{{ opportunity.deadline }}</span></p>
                             <p class="mb-0"><strong>Details</strong><span>{{ opportunity.description }}</span></p>
+                            <p class="mb-0 mt-2 small"><a href="{{ report_concern_url }}" target="_blank" rel="noopener" style="color:#f87171">&#128681; Report a concern</a></p>
                         </div>
                     </div>
                 {% endfor %}
@@ -499,6 +514,7 @@
                         >
                             <div>
                                 <div class="trial-summary-title">{{ opportunity.title }}</div>
+                                <div class="trial-summary-meta"><span class="trial-cat trial-cat--{{ opportunity.category }}">{{ opportunity.category|category_badge }}</span></div>
                                 <div class="trial-summary-meta">🏷️ {{ opportunity.organization }}</div>
                                 <div class="trial-summary-meta">📍 {{ opportunity.location }}</div>
                                 <div class="trial-summary-meta">
@@ -519,6 +535,7 @@
                             <p><strong>Location</strong><span>{{ opportunity.location }}</span></p>
                             <p><strong>Deadline</strong><span>{{ opportunity.deadline }}</span></p>
                             <p class="mb-0"><strong>Details</strong><span>{{ opportunity.description }}</span></p>
+                            <p class="mb-0 mt-2 small"><a href="{{ report_concern_url }}" target="_blank" rel="noopener" style="color:#f87171">&#128681; Report a concern</a></p>
                         </div>
                     </div>
                 {% endfor %}

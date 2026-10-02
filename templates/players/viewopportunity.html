@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load football %}
 {% load crispy_forms_tags %}
 
 {% block title %}Opportunities{% endblock %}
@@ -62,6 +63,11 @@
 		<a href="{% url 'view_opportunities' %}?view=available" class="btn btn-sm {% if selected_view == 'available' %}btn-primary{% else %}btn-light{% endif %}">Available</a>
 		<a href="{% url 'view_opportunities' %}?view=history" class="btn btn-sm {% if selected_view == 'history' %}btn-secondary{% else %}btn-light{% endif %}">History</a>
 	</div>
+	<div class="d-flex flex-wrap gap-2 mb-3" aria-label="Stars or Starlets">
+		<a href="?view={{ selected_view }}&cat=all" class="btn btn-sm {% if selected_category == 'all' %}btn-dark{% else %}btn-outline-dark{% endif %}">All</a>
+		<a href="?view={{ selected_view }}&cat=stars" class="btn btn-sm {% if selected_category == 'stars' %}btn-dark{% else %}btn-outline-dark{% endif %}">&#11088; Stars</a>
+		<a href="?view={{ selected_view }}&cat=starlets" class="btn btn-sm {% if selected_category == 'starlets' %}btn-warning{% else %}btn-outline-warning{% endif %}">&#127775; Starlets</a>
+	</div>
 
 	{% if selected_view == 'available' %}
 		{% if available_opportunities %}
@@ -83,13 +89,19 @@
 									<span class="opp-badge normal">{{ opportunity.days_left }}d left</span>
 								{% endif %}
 							</div>
+							<p class="mb-2"><span class="badge {% if opportunity.category == 'starlets' %}text-bg-warning{% elif opportunity.category == 'stars' %}text-bg-dark{% else %}text-bg-success{% endif %}">{{ opportunity.category|category_badge }}</span></p>
 							<p class="opp-meta">🏷️ {{ opportunity.organization }}</p>
 							<p class="opp-meta">📍 {{ opportunity.location }}</p>
 							<p class="opp-meta mb-2">🗓️ Deadline: {{ opportunity.deadline }}</p>
 							<p class="card-text">{{ opportunity.description }}</p>
+							<p class="small mb-2"><a href="{{ report_concern_url }}" target="_blank" rel="noopener" class="text-danger">&#128681; Report a concern</a></p>
 
 							{% if opportunity.id in applied_ids %}
 								<button class="btn btn-success" disabled>✓ Already Applied</button>
+							{% elif not player_category %}
+								<p class="small text-muted mb-0">Tell us whether you play with the Stars or the Starlets on your <a href="{% url 'player_dashboard' %}">dashboard</a> to apply.</p>
+							{% elif not opportunity.can_apply %}
+								<p class="small text-muted mb-0">This one is for {% if opportunity.category == 'starlets' %}&#127775; Starlets (women's football){% else %}&#11088; Stars (men's football){% endif %}.</p>
 							{% else %}
 								<form method="post" action="{% url 'apply_opportunity' opportunity.id %}">
 									{% csrf_token %}
@@ -121,6 +133,7 @@
 								<h5 class="card-title mb-0">{{ opportunity.title }}</h5>
 								<span class="opp-badge expired">Expired</span>
 							</div>
+							<p class="mb-2"><span class="badge {% if opportunity.category == 'starlets' %}text-bg-warning{% elif opportunity.category == 'stars' %}text-bg-dark{% else %}text-bg-success{% endif %}">{{ opportunity.category|category_badge }}</span></p>
 							<p class="opp-meta">🏷️ {{ opportunity.organization }}</p>
 							<p class="opp-meta">📍 {{ opportunity.location }}</p>
 							<p class="opp-meta mb-2">🗓️ Deadline: {{ opportunity.deadline }}</p>

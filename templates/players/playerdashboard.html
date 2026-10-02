@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load football %}
 {% load static %}
 
 {% block title %}Player Dashboard{% endblock %}
@@ -21,12 +22,30 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="dashboard-hero mb-4">
+    {% if not profile.category %}
+    <div class="category-ask mb-4">
+        <div>
+            <h5 class="fw-bold mb-1">&#11088; Stars or &#127775; Starlets?</h5>
+            <p class="mb-0 small">Talanta Soka now welcomes both men's and women's football. Tell us which you play so we can match you with the right scouts and trials.</p>
+        </div>
+        <form method="post" action="{% url 'player_set_category' %}" class="d-flex gap-2 flex-wrap">
+            {% csrf_token %}
+            <button type="submit" name="category" value="stars" class="btn btn-dark">&#11088; Stars <small class="d-block fw-normal">Men's football</small></button>
+            <button type="submit" name="category" value="starlets" class="btn btn-warning">&#127775; Starlets <small class="d-block fw-normal">Women's football</small></button>
+        </form>
+    </div>
+    <style>
+        .category-ask { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; padding:18px 20px; border-radius:16px;
+            background:linear-gradient(135deg,#fff8e1,#fef3c7); border:1px solid #f6c453; color:#3b2f00; }
+        .category-ask .btn { min-width:150px; line-height:1.2; }
+    </style>
+{% endif %}
+<div class="dashboard-hero mb-4">
         <div class="d-flex justify-content-between align-items-start gap-3">
             <div>
                 <h2 class="mb-1 fw-bold">Welcome to Player Dashboard, {{ first_name }}</h2>
                 {% if profile %}
-                    <p class="text-muted mb-0">{{ profile.full_name }} | {{ profile.position }}{% if profile.secondary_position %} / {{ profile.secondary_position }}{% endif %} | {{ profile.location }}</p>
+                    <p class="text-muted mb-0">{{ profile.full_name }} | {% if profile.category %}{{ profile.category|category_badge }} | {% endif %}{{ profile.position }}{% if profile.secondary_position %} / {{ profile.secondary_position }}{% endif %} | {{ profile.location }}</p>
                 {% else %}
                     <p class="text-muted mb-0">Welcome player.</p>
                 {% endif %}
@@ -141,7 +160,7 @@
     {% if feedback_entries %}
     <div class="panel-soft p-3 p-md-4 mt-4">
         <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h4 class="section-title mb-0">Scout Feedback</h4>
+            <h4 class="section-title mb-0">Scout Feedback</h4> <a href="{{ report_concern_url }}" target="_blank" rel="noopener" class="small text-danger ms-2">&#128681; Report a concern</a>
             {% if unread_feedback_count %}
                 <span class="badge bg-warning text-dark">{{ unread_feedback_count }} unread</span>
             {% endif %}

@@ -442,6 +442,7 @@ def complete_profile_view(request):
                     user=user,
                     defaults={
                         'full_name': user.full_name,
+                        'category': form.cleaned_data['category'],
                         'date_of_birth': form.cleaned_data['date_of_birth'],
                         'position': form.cleaned_data['position'],
                         'location': form.cleaned_data['location'],
@@ -462,6 +463,7 @@ def complete_profile_view(request):
                     user=user,
                     defaults={
                         'organization': form.cleaned_data['organization'],
+                        'scouts_for': form.cleaned_data.get('scouts_for') or 'both',
                         'specialization': form.cleaned_data['specialization'],
                         'verification_document': form.cleaned_data['verification_document'],
                         'profile_photo': form.cleaned_data.get('profile_photo'),
@@ -600,6 +602,12 @@ def admin_dashboard_view(request):
             'first_name': first_name,
             'total_users': total_users,
             'total_players': total_players,
+            'stars_count': PlayerProfile.objects.filter(category='stars').count(),
+            'starlets_count': PlayerProfile.objects.filter(category='starlets').count(),
+            'no_category_count': PlayerProfile.objects.filter(category='').count(),
+            'starlets_trials': Opportunity.objects.filter(category='starlets').count(),
+            'stars_trials': Opportunity.objects.filter(category='stars').count(),
+            'open_trials': Opportunity.objects.filter(category='open').count(),
             'total_scouts': total_scouts,
             'pending_verifications': pending_verifications,
             'opportunities_count': opportunities_count,

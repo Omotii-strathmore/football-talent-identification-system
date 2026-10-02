@@ -11,10 +11,20 @@ class OpportunityForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['max_applications'].required = False
         self.fields['max_applications'].help_text = 'Optional. Set how many applications you want before closing early.'
+        self.fields['category'].required = False
+        scouts_for = getattr(getattr(self.scout, 'scout_profile', None), 'scouts_for', 'both')
+        if scouts_for in ('stars', 'starlets'):
+            self.fields['category'].choices = [
+                choice for choice in self.fields['category'].choices if choice[0] in ('open', scouts_for)
+            ]
+            if not self.instance.pk:
+                self.initial.setdefault('category', scouts_for)
 
     class Meta:
         model = Opportunity
-        fields = ['title', 'organization', 'description', 'poster_image', 'location', 'deadline', 'max_applications']
+        fields = ['title', 'organization', 'category', 'description', 'poster_image', 'location', 'deadline', 'max_applications']
+        labels = {'category': 'Who is it for?'}
+        help_texts = {'category': "Stars are men's football and Starlets are women's football. Players can only apply to their own category or to opportunities open to all."}
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Opportunity title'}),
             'organization': forms.TextInput(attrs={'placeholder': 'Club or organization name'}),
@@ -23,6 +33,10 @@ class OpportunityForm(forms.ModelForm):
             'deadline': forms.DateInput(attrs={'type': 'date', 'min': timezone.localdate().isoformat()}),
             'max_applications': forms.NumberInput(attrs={'min': 1, 'placeholder': 'Optional application cap'}),
         }
+
+    def clean_category(self):
+        # Trials posted without choosing are open to Stars and Starlets.
+        return self.cleaned_data.get('category') or 'open'
 
     def clean_deadline(self):
         deadline = self.cleaned_data.get('deadline')

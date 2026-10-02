@@ -364,6 +364,28 @@
             to { opacity:1; transform:translateY(0); }
         }
 
+        .ss { padding:72px 6vw 24px; text-align:center; }
+        .ss .eyebrow { margin-bottom:8px; }
+        .ss-title { font-family:var(--font-display); font-size:clamp(2.4rem,6vw,3.6rem); letter-spacing:2px; line-height:1; }
+        .ss-sub { max-width:640px; margin:12px auto 32px; color:var(--muted); }
+        .ss-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; max-width:960px; margin:0 auto; text-align:left; }
+        .ss-card { position:relative; overflow:hidden; border-radius:18px; padding:28px; border:1px solid var(--border); background:var(--surface-2); }
+        .ss-card::after { content:""; position:absolute; right:-40px; top:-40px; width:140px; height:140px; border-radius:50%; opacity:.18; }
+        .ss-card--stars::after { background:var(--ink); }
+        .ss-card--starlets { border-color:rgba(245,196,0,.55); }
+        .ss-card--starlets::after { background:var(--gold); opacity:.3; }
+        .ss-icon { font-size:2.6rem; line-height:1; margin-bottom:10px; }
+        .ss-card h3 { font-family:var(--font-display); font-size:2rem; letter-spacing:1.5px; }
+        .ss-card--starlets h3 { color:var(--gold); }
+        .ss-tag { font-size:.75rem; font-weight:700; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); margin-bottom:10px; }
+        .ss-card p { color:var(--muted); }
+        .ss-actions { display:flex; align-items:center; gap:16px; flex-wrap:wrap; margin-top:18px; }
+        .ss-btn { display:inline-flex; align-items:center; min-height:44px; padding:10px 18px; border-radius:6px; font-weight:700; font-size:.85rem;
+            background:var(--ink); color:var(--bg); }
+        .ss-card--starlets .ss-btn { background:var(--gold); color:var(--ink-on-accent); }
+        .ss-link { font-weight:600; font-size:.85rem; color:var(--gold); }
+        @media (max-width:700px) { .ss { padding:56px 16px 16px; } .ss-grid { grid-template-columns:1fr; } .ss-card { padding:22px; } }
+
         .offers {
             padding:24px 6vw 70px;
             background:var(--surface-1);
@@ -665,7 +687,7 @@
             <div class="hero-copy">
                 <p class="eyebrow" data-i18n="hero.eyebrow">Kenya Football Talent Exposure Platform</p>
                 <h1 data-i18n="hero.title">YOUR TALENT<br><span class="accent">DESERVES</span><br>TO BE <span class="red">SEEN.</span></h1>
-                <p class="sub" data-i18n="hero.sub">Talanta Soka connects players with verified scouts through structured profiles, videos, and real football opportunities.</p>
+                <p class="sub" data-i18n="hero.sub">Talanta Soka connects Stars and Starlets, the sportsmen and sportswomen of Kenyan football, with verified scouts through profiles, videos and real football opportunities.</p>
 
                 <div class="actions">
                     <a href="{% url 'register' %}?role=player" class="btn-primary" id="tour-register-player" data-i18n="hero.registerPlayer">Register as Player</a>
@@ -690,6 +712,34 @@
             <article class="mini-card">
                 <h3 data-i18n="mini.trials.title">Trials &amp; Tournaments</h3>
                 <p data-i18n="mini.trials.desc">Discover open trial sessions and youth tournaments in one place. See where to find your next football opportunity begins.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="ss" id="stars-starlets" aria-labelledby="ss-title">
+        <p class="eyebrow" data-i18n="ss.eyebrow">Football is for everyone</p>
+        <h2 class="ss-title" id="ss-title" data-i18n="ss.title">Stars &amp; Starlets</h2>
+        <p class="ss-sub" data-i18n="ss.sub">Men&rsquo;s or women&rsquo;s football, your talent deserves to be seen. Named after Kenya&rsquo;s own Harambee Stars and Harambee Starlets.</p>
+        <div class="ss-grid">
+            <article class="ss-card ss-card--stars">
+                <div class="ss-icon" aria-hidden="true">&#11088;</div>
+                <h3 data-i18n="ss.stars.title">Stars</h3>
+                <p class="ss-tag" data-i18n="ss.stars.tag">Men&rsquo;s football</p>
+                <p data-i18n="ss.stars.desc">Show your game, get noticed by verified scouts, and find trials made for you.</p>
+                <div class="ss-actions">
+                    <a href="{% url 'register' %}?role=player" class="ss-btn" data-i18n="ss.stars.join">Join the Stars</a>
+                    <a href="{% url 'public_opportunities' %}?cat=stars" class="ss-link" data-i18n="ss.trials">See trials &rarr;</a>
+                </div>
+            </article>
+            <article class="ss-card ss-card--starlets">
+                <div class="ss-icon" aria-hidden="true">&#127775;</div>
+                <h3 data-i18n="ss.starlets.title">Starlets</h3>
+                <p class="ss-tag" data-i18n="ss.starlets.tag">Women&rsquo;s football</p>
+                <p data-i18n="ss.starlets.desc">Equal talent, equal stage. Build your profile, share your videos and reach scouts looking for Starlets.</p>
+                <div class="ss-actions">
+                    <a href="{% url 'register' %}?role=player" class="ss-btn" data-i18n="ss.starlets.join">Join the Starlets</a>
+                    <a href="{% url 'public_opportunities' %}?cat=starlets" class="ss-link" data-i18n="ss.trials">See trials &rarr;</a>
+                </div>
             </article>
         </div>
     </section>
@@ -756,7 +806,7 @@
                     'nav.signup': 'Sign Up',
                     'hero.eyebrow': 'Kenya Football Talent Exposure Platform',
                     'hero.title': 'YOUR TALENT<br><span class="accent">DESERVES</span><br>TO BE <span class="red">SEEN.</span>',
-                    'hero.sub': 'Talanta Soka connects players with verified scouts through structured profiles, videos, and real football opportunities.',
+                    'hero.sub': 'Talanta Soka connects Stars and Starlets, the sportsmen and sportswomen of Kenyan football, with verified scouts through profiles, videos and real football opportunities.',
                     'hero.registerPlayer': 'Register as Player',
                     'hero.joinScout': 'Join as Scout',
                     'mini.players.title': 'Players',
@@ -765,6 +815,18 @@
                     'mini.scouts.desc': 'Get verified, post opportunities, and review player applications.',
                     'mini.trials.title': 'Trials &amp; Tournaments',
                     'mini.trials.desc': 'Discover open trial sessions and youth tournaments in one place. See where to find your next football opportunity begins.',
+                    'ss.eyebrow': 'Football is for everyone',
+                    'ss.title': 'Stars &amp; Starlets',
+                    'ss.sub': 'Men’s or women’s football, your talent deserves to be seen. Named after Kenya’s own Harambee Stars and Harambee Starlets.',
+                    'ss.stars.title': 'Stars',
+                    'ss.stars.tag': 'Men’s football',
+                    'ss.stars.desc': 'Show your game, get noticed by verified scouts, and find trials made for you.',
+                    'ss.stars.join': 'Join the Stars',
+                    'ss.starlets.title': 'Starlets',
+                    'ss.starlets.tag': 'Women’s football',
+                    'ss.starlets.desc': 'Equal talent, equal stage. Build your profile, share your videos and reach scouts looking for Starlets.',
+                    'ss.starlets.join': 'Join the Starlets',
+                    'ss.trials': 'See trials &rarr;',
                     'offers.title': 'What Our System Offers',
                     'offers.players.title': 'For Players',
                     'offers.players.desc': 'Get seen by verified scouts. Show your skills on video and apply free to real trials. No connections needed, just your game.',
@@ -784,7 +846,7 @@
                     'nav.signup': 'Jiunge Sasa!',
                     'hero.eyebrow': 'Sehemu ya Vipaji vya Mpira Kenya',
                     'hero.title': 'TALENT YAKO<br><span class="accent">INASTAHILI</span><br>KUONEKANA <span class="red">SASA.</span>',
-                    'hero.sub': 'Talanta Soka inaunganisha wachezaji na ma-scout walio-verified kupitia profile, video, na fursa halisi za mpira.',
+                    'hero.sub': 'Talanta Soka inaunganisha Stars na Starlets, wachezaji wa kiume na wa kike wa mpira Kenya, na ma-scout walio-verified kupitia profile, video na fursa halisi za mpira.',
                     'hero.registerPlayer': 'Jisajili Kama Player',
                     'hero.joinScout': 'Jiunge Kama Scout',
                     'mini.players.title': 'Wachezaji',
@@ -793,6 +855,18 @@
                     'mini.scouts.desc': 'Pata verification, chapisha fursa, na uangalie application za wachezaji.',
                     'mini.trials.title': 'Page ya Fursa/Mashindano',
                     'mini.trials.desc': 'Gundua fursa za trials na mashindano ya vijana mahali pamoja. Hapa ndipo safari yako ya mpira inaanzia.',
+                    'ss.eyebrow': 'Mpira ni wa kila mtu',
+                    'ss.title': 'Stars na Starlets',
+                    'ss.sub': 'Mpira wa wanaume au wa wanawake, talanta yako inastahili kuonekana. Tumechukua majina kutoka Harambee Stars na Harambee Starlets.',
+                    'ss.stars.title': 'Stars',
+                    'ss.stars.tag': 'Mpira wa wanaume',
+                    'ss.stars.desc': 'Onyesha game yako, onekana na ma-scout walio-verified, na upate trials zinazokufaa.',
+                    'ss.stars.join': 'Jiunge na Stars',
+                    'ss.starlets.title': 'Starlets',
+                    'ss.starlets.tag': 'Mpira wa wanawake',
+                    'ss.starlets.desc': 'Talanta sawa, jukwaa sawa. Tengeneza profile, weka video zako na ufikie ma-scout wanaotafuta Starlets.',
+                    'ss.starlets.join': 'Jiunge na Starlets',
+                    'ss.trials': 'Ona trials &rarr;',
                     'offers.title': 'Mfumo Wetu Unatoa Nini',
                     'offers.players.title': 'Kwa Wachezaji',
                     'offers.players.desc': 'Onekana na ma-scout walio-verified. Onyesha skills zako kwa video na u-apply bure kwa trials za ukweli. Huhitaji connection, ni game yako tu.',

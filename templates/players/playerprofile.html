@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load crispy_forms_tags football %}
 {% load static %}
 
 {% block title %}Player Profile{% endblock %}
@@ -327,7 +327,7 @@
                 <h3 class="fw-bold mb-1">{{ profile.full_name }}</h3>
                 <p class="text-muted mb-2">Manage your playing profile, highlight your experience, and help scouts find the right fit.</p>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    <span class="profile-chip">{{ profile.position }}</span>
+                    {% if profile.category %}<span class="profile-chip">{{ profile.category|category_badge }}</span> {% endif %}<span class="profile-chip">{{ profile.position }}</span>
                     {% if profile.secondary_position %}
                         <span class="profile-chip">{{ profile.secondary_position }}</span>
                     {% endif %}
@@ -535,6 +535,7 @@
 
                 <div class="edit-section-card">
                     <p class="edit-section-title mb-0">Football details</p>
+                    {{ form.category|as_crispy_field }}
                     <div class="row">
                         <div class="col-md-6">{{ form.position|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.secondary_position|as_crispy_field }}</div>

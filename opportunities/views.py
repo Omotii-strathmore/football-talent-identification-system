@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from players.categories import can_apply
 
 from .forms import ApplicationForm, OpportunityForm
 from players.models import PlayerProfile
@@ -13,15 +14,26 @@ def _auto_expire_passed_deadline_opportunities():
 	Opportunity.objects.filter(is_active=True, deadline__lt=today).update(is_active=False)
 
 
+def _category_filter(queryset, category):
+	"""Stars or Starlets trials, together with those open to all."""
+	if category in ('stars', 'starlets'):
+		return queryset.filter(category__in=[category, 'open'])
+	return queryset
+
+
 def public_opportunities(request):
 	_auto_expire_passed_deadline_opportunities()
 	selected_view = request.GET.get('view', 'available').strip().lower()
 	if selected_view not in {'available', 'history'}:
 		selected_view = 'available'
 
+	selected_category = request.GET.get('cat', 'all')
+	if selected_category not in ('all', 'stars', 'starlets'):
+		selected_category = 'all'
+
 	today = timezone.localdate()
-	available_opportunities = Opportunity.objects.filter(is_active=True).order_by('deadline', '-created_at')
-	history_opportunities = Opportunity.objects.filter(is_active=False).order_by('-updated_at', '-created_at')
+	available_opportunities = _category_filter(Opportunity.objects.filter(is_active=True), selected_category).order_by('deadline', '-created_at')
+	history_opportunities = _category_filter(Opportunity.objects.filter(is_active=False), selected_category).order_by('-updated_at', '-created_at')
 	for opportunity in available_opportunities:
 		opportunity.days_left = (opportunity.deadline - today).days
 	return render(
@@ -31,6 +43,7 @@ def public_opportunities(request):
 			'available_opportunities': available_opportunities,
 			'history_opportunities': history_opportunities,
 			'selected_view': selected_view,
+			'selected_category': selected_category,
 		},
 	)
 
@@ -45,11 +58,17 @@ def view_opportunities(request):
 	selected_view = request.GET.get('view', 'available').strip().lower()
 	if selected_view not in {'available', 'history'}:
 		selected_view = 'available'
+	# Players see trials for their own category (Stars or Starlets) and those open to all first.
+	player_category = getattr(PlayerProfile.objects.filter(user=request.user).first(), 'category', '') or ''
+	selected_category = request.GET.get('cat', player_category or 'all')
+	if selected_category not in ('all', 'stars', 'starlets'):
+		selected_category = 'all'
 	today = timezone.localdate()
-	available_opportunities = Opportunity.objects.filter(is_active=True).order_by('deadline', '-created_at')
-	history_opportunities = Opportunity.objects.filter(is_active=False).order_by('-updated_at', '-created_at')
+	available_opportunities = _category_filter(Opportunity.objects.filter(is_active=True), selected_category).order_by('deadline', '-created_at')
+	history_opportunities = _category_filter(Opportunity.objects.filter(is_active=False), selected_category).order_by('-updated_at', '-created_at')
 	for opportunity in available_opportunities:
 		opportunity.days_left = (opportunity.deadline - today).days
+		opportunity.can_apply = bool(player_category) and can_apply(player_category, opportunity.category)
 	applied_ids = set(
 		Application.objects.filter(player=request.user).values_list('opportunity_id', flat=True)
 	)
@@ -64,6 +83,8 @@ def view_opportunities(request):
 			'applied_ids': applied_ids,
 			'application_form': ApplicationForm(),
 			'today': today,
+			'selected_category': selected_category,
+			'player_category': player_category,
 		},
 	)
 
@@ -84,6 +105,15 @@ def apply_opportunity(request, opportunity_id):
 	profile = PlayerProfile.objects.filter(user=request.user).first()
 	if profile and profile.needs_guardian_approval:
 		messages.error(request, 'Your parent or guardian needs to approve your account before you can apply for trials.')
+		return redirect('view_opportunities')
+
+	player_category = getattr(profile, 'category', '') or ''
+	if not player_category:
+		messages.info(request, 'First tell us whether you play with the Stars or the Starlets (on your dashboard), then apply.')
+		return redirect('player_dashboard')
+	if not can_apply(player_category, opportunity.category):
+		wanted = "Starlets (women's football)" if opportunity.category == 'starlets' else "Stars (men's football)"
+		messages.error(request, f'This opportunity is for {wanted}. You can apply to trials for your own category or ones open to all. If your category is wrong, change it on your profile.')
 		return redirect('view_opportunities')
 
 	existing = Application.objects.filter(opportunity=opportunity, player=request.user).exists()

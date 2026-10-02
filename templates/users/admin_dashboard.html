@@ -14,6 +14,19 @@
         <p class="text-muted mb-0">Monitor system activity and manage users and scout verification.</p>
     </div>
 
+    <div class="ss-admin mb-4">
+        <div><span class="ss-num">&#11088; {{ stars_count }}</span><span class="ss-lbl">Stars players</span></div>
+        <div><span class="ss-num">&#127775; {{ starlets_count }}</span><span class="ss-lbl">Starlets players</span></div>
+        <div><span class="ss-num">{{ no_category_count }}</span><span class="ss-lbl">Not chosen yet</span></div>
+        <div><span class="ss-num">{{ stars_trials }} / {{ starlets_trials }} / {{ open_trials }}</span><span class="ss-lbl">Trials: Stars / Starlets / Open</span></div>
+    </div>
+    <style>
+        .ss-admin { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; padding:14px; border-radius:16px; background:linear-gradient(135deg,#fff8e1,#fff); border:1px solid #f6c453; }
+        .ss-admin div { text-align:center; }
+        .ss-num { display:block; font-size:1.35rem; font-weight:800; color:#1f2933; }
+        .ss-lbl { font-size:.8rem; color:#5b6770; }
+        @media (max-width:767.98px) { .ss-admin { grid-template-columns:repeat(2,1fr); } }
+    </style>
     <div class="dash-stack">
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-6 col-lg-3">
