@@ -36,6 +36,13 @@
 {% endblock %}
 
 {% block content %}
+<style>
+    .scout-hello { border-radius: 12px; padding: 12px 16px; margin-bottom: 14px; font-size: .95rem; line-height: 1.5; }
+    .scout-hello.is-starlets { background: #fff8e1; border: 1px solid #f6c453; color: #4a3600; }
+    .scout-hello.is-stars { background: #eef2f6; border: 1px solid #c7d0da; color: #1f2933; }
+    .scout-hello.is-both { background: linear-gradient(90deg, #eef2f6, #fff8e1); border: 1px solid #e3d6a8; color: #1f2933; }
+    .scout-hello-note { font-size: .8rem; opacity: .8; margin-top: 4px; }
+</style>
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h2 class="mb-0">Player Profiles and Videos</h2>
@@ -55,8 +62,18 @@
     <div class="card mb-4">
         <div class="card-body">
             {% if scout_category %}
-            <p class="mb-3 small">You scout <strong>{% if scout_category == 'starlets' %}&#127775; Starlets (women's football){% else %}&#11088; Stars (men's football){% endif %}</strong>, so only those players are shown. You can change this in <a href="{% url 'scout_edit_details' %}">Edit Details</a>.</p>
+            <div class="scout-hello {% if scout_category == 'starlets' %}is-starlets{% else %}is-stars{% endif %}">
+                {% if scout_category == 'starlets' %}
+                    <strong>&#127775; Being a Starlets scout,</strong> you see the Starlets (women's football) using the filters below. Take a look and mark wisely &#128175;
+                {% else %}
+                    <strong>&#11088; Being a Stars scout,</strong> you see the Stars (men's football) using the filters below. Take a look and mark wisely &#128175;
+                {% endif %}
+                <div class="scout-hello-note">Scouting different players now? Change it in <a href="{% url 'scout_edit_details' %}">Edit Details</a>.</div>
+            </div>
             {% else %}
+            <div class="scout-hello is-both">
+                <strong>&#11088;&#127775; Being a Stars &amp; Starlets scout,</strong> you see both men's and women's football. Use the buttons to focus on one, add the filters below, and mark wisely &#128175;
+            </div>
             <div class="d-flex flex-wrap gap-2 mb-3" role="group" aria-label="Stars or Starlets">
                 <a href="?category=all" class="btn btn-sm {% if selected_category == 'all' %}btn-dark{% else %}btn-outline-dark{% endif %}">All players</a>
                 <a href="?category=stars" class="btn btn-sm {% if selected_category == 'stars' %}btn-dark{% else %}btn-outline-dark{% endif %}">&#11088; Stars <small>(men)</small></a>
