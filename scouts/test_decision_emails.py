@@ -23,10 +23,9 @@ class ScoutDecisionEmailTests(TestCase):
 
     def test_approval_emails_the_scout(self):
         self.client.force_login(self.admin)
+        self.scout.scouts_for = 'starlets'  # chosen by the scout at sign-up
+        self.scout.save()
         self.client.post(reverse('admin_approve_scout', args=[self.scout.id]))
-        self.scout.refresh_from_db()
-        self.assertEqual(self.scout.verification_status, 'pending')  # the admin must choose Stars, Starlets or both first
-        self.client.post(reverse('admin_approve_scout', args=[self.scout.id]), {'scouts_for': 'starlets'})
         self.scout.refresh_from_db()
         self.assertEqual((self.scout.verification_status, self.scout.scouts_for), ('approved', 'starlets'))
         email = mail.outbox[-1]
@@ -73,15 +72,18 @@ class ScoutDecisionEmailTests(TestCase):
         self.assertRedirects(response, reverse('scout_dashboard'), fetch_redirect_response=False)
 
 
-    def test_admin_can_change_an_approved_scouts_category(self):
-        self.scout.verification_status, self.scout.verified, self.scout.scouts_for = 'approved', True, 'both'
+    def test_rejected_scout_can_fix_their_choice_when_trying_again(self):
+        self.scout.verification_status, self.scout.scouts_for = 'rejected', 'stars'
         self.scout.save()
-        self.client.force_login(self.admin)
-        self.client.post(reverse('admin_set_scout_category', args=[self.scout.id]), {'scouts_for': 'stars'})
+        self.client.force_login(self.user)
+        self.client.post(reverse('scout_resubmit_verification'), {
+            'organization': 'Gor Mahia Youth Academy', 'scouts_for': 'starlets',
+            'verification_document': SimpleUploadedFile('letter.pdf', b'%PDF-1.4 new', content_type='application/pdf'),
+        })
         self.scout.refresh_from_db()
-        self.assertEqual(self.scout.scouts_for, 'stars')
+        self.assertEqual((self.scout.verification_status, self.scout.scouts_for), ('pending', 'starlets'))
 
-    def test_scouts_cannot_choose_their_own_category(self):
+    def test_approved_scouts_cannot_change_their_category_themselves(self):
         self.scout.verification_status, self.scout.verified, self.scout.scouts_for = 'approved', True, 'starlets'
         self.scout.save()
         self.client.force_login(self.user)

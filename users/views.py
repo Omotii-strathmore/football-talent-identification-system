@@ -463,6 +463,7 @@ def complete_profile_view(request):
                     user=user,
                     defaults={
                         'organization': form.cleaned_data['organization'],
+                        'scouts_for': form.cleaned_data.get('scouts_for') or 'both',
                         'specialization': form.cleaned_data['specialization'],
                         'verification_document': form.cleaned_data['verification_document'],
                         'profile_photo': form.cleaned_data.get('profile_photo'),
@@ -684,14 +685,9 @@ def admin_approve_scout_view(request, scout_id):
         return redirect('admin_verifications')
 
     scout = get_object_or_404(Scout, id=scout_id)
-    scouts_for = request.POST.get('scouts_for', '')
-    if scouts_for not in ('stars', 'starlets', 'both'):
-        messages.error(request, f'Choose whether {scout.user.full_name} scouts Stars, Starlets or both, as shown in their document, then approve.')
-        return redirect('admin_verifications')
     scout.verified = True
     scout.verification_status = 'approved'
-    scout.scouts_for = scouts_for
-    scout.save(update_fields=['verified', 'verification_status', 'scouts_for'])
+    scout.save(update_fields=['verified', 'verification_status'])
     emailed = send_scout_decision_email(scout, approved=True)
     messages.success(request, f'Scout {scout.user.full_name} has been approved.' + (' They have been emailed.' if emailed else ' (The email could not be sent.)'))
     return redirect('admin_verifications')
@@ -1347,17 +1343,3 @@ def ai_assist_view(request):
     return JsonResponse({'ok': True, **draft})
 
 
-
-@login_required
-@user_passes_test(_is_staff_user, login_url='login')
-@require_POST
-def admin_set_scout_category_view(request, scout_id):
-    """Change which players an approved scout may see (for example after a new document)."""
-    scout = get_object_or_404(Scout, id=scout_id)
-    scouts_for = request.POST.get('scouts_for', '')
-    if scouts_for in ('stars', 'starlets', 'both'):
-        scout.scouts_for = scouts_for
-        scout.save(update_fields=['scouts_for'])
-        label = {'stars': 'Stars', 'starlets': 'Starlets', 'both': 'Stars and Starlets'}[scouts_for]
-        messages.success(request, f'{scout.user.full_name} now scouts {label}.')
-    return redirect(request.POST.get('next') or 'admin_verifications')

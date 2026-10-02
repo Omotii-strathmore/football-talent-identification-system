@@ -389,10 +389,38 @@
                 {% for error in form.organization.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
             </section>
 
+            <!-- 2. Stars, Starlets or both -->
+            <section class="step-card" data-step="scouts_for">
+                <div class="step-head">
+                    <span class="step-num">2</span>
+                    <div>
+                        <p class="step-title">Who do you scout?</p>
+                        <p class="step-sub">This is about the players you look for, not about you: any coach, man or woman, can scout Stars (men's football), Starlets (women's football) or both. Our admin checks that your document matches your choice.</p>
+                    </div>
+                </div>
+                <div class="choice-grid cols-3" role="radiogroup" aria-label="Who do you scout">
+                    {% with chosen=form.scouts_for.value|default:'both' %}
+                    <label class="choice">
+                        <input type="radio" name="scouts_for" value="stars" {% if chosen == 'stars' %}checked{% endif %}>
+                        <span class="choice-body"><span class="cat-emoji" aria-hidden="true">&#11088;</span><span class="choice-name">Stars</span><span class="choice-hint">Men's football</span></span>
+                    </label>
+                    <label class="choice">
+                        <input type="radio" name="scouts_for" value="starlets" {% if chosen == 'starlets' %}checked{% endif %}>
+                        <span class="choice-body"><span class="cat-emoji" aria-hidden="true">&#127775;</span><span class="choice-name">Starlets</span><span class="choice-hint">Women's football</span></span>
+                    </label>
+                    <label class="choice">
+                        <input type="radio" name="scouts_for" value="both" {% if chosen == 'both' %}checked{% endif %}>
+                        <span class="choice-body"><span class="cat-emoji" aria-hidden="true">&#11088;&#127775;</span><span class="choice-name">Both</span><span class="choice-hint">Stars and Starlets</span></span>
+                    </label>
+                    {% endwith %}
+                </div>
+                {% for error in form.scouts_for.errors %}<div class="field-error">{{ error }}</div>{% endfor %}
+            </section>
+
             <!-- 2. Specialisation -->
             <section class="step-card" data-step="specialization">
                 <div class="step-head">
-                    <span class="step-num">2</span>
+                    <span class="step-num">3</span>
                     <div>
                         <p class="step-title">What do you look for?</p>
                         <p class="step-sub">We'll recommend players who match your speciality.</p>
@@ -426,11 +454,11 @@
             <!-- 3. Verification document -->
             <section class="step-card" data-step="document">
                 <div class="step-head">
-                    <span class="step-num">3</span>
+                    <span class="step-num">4</span>
                     <div>
                         <p class="step-title">Prove you're a real scout</p>
                         <p class="step-sub">A coaching licence, club letter or accreditation. PDF or Word.</p>
-                        <p class="step-sub mt-1">&#11088;&#127775; Our admin reads your document and confirms whether you scout <strong>Stars</strong> (men's football), <strong>Starlets</strong> (women's football) or both. A women's academy letter, for example, is approved for Starlets.</p>
+                        <p class="step-sub mt-1">&#11088;&#127775; It must match the players you chose above: for example, a women's academy letter for Starlets.</p>
                     </div>
                 </div>
                 <div class="dropzone" id="doc-dropzone">
@@ -449,7 +477,7 @@
             <!-- 4. Photo (optional) -->
             <section class="step-card" data-step="photo">
                 <div class="step-head">
-                    <span class="step-num">4</span>
+                    <span class="step-num">5</span>
                     <div>
                         <p class="step-title">Add your photo <span class="optional-tag">Optional</span></p>
                         <p class="step-sub">Players trust scouts they can put a face to.</p>
