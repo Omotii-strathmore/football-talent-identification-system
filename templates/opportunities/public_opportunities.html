@@ -22,7 +22,7 @@
     }
 
     .trials-shell {
-        min-height: calc(100vh - 56px);
+        min-height: calc(100vh - 140px); /* leaves room for the Report a concern line at the bottom */
         overflow: hidden;
         background: transparent;
         position: relative;
@@ -382,6 +382,8 @@
     html[data-theme="light"] .navbar-dark .nav-link,
     html[data-theme="light"] .navbar-dark .navbar-text { color: #3f4f46; }
     html[data-theme="light"] .navbar-dark .nav-link:hover { color: #006b3f; }
+    html[data-theme="light"] .navbar .nav-link.is-current { color: #0f172a !important; }
+    html[data-theme="light"] .navbar .nav-cta { color: #fff !important; }
     html[data-theme="light"] .navbar-dark .navbar-toggler { border-color: rgba(0, 107, 63, 0.3); }
     html[data-theme="light"] .navbar-dark .navbar-toggler-icon { filter: invert(1) brightness(0.4); }
     html[data-theme="light"] .navbar .btn-outline-light { color: #006b3f; border-color: #006b3f; }

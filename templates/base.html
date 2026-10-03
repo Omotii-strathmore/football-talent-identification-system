@@ -116,7 +116,15 @@
         }
         /* Keep "Report a concern" at the bottom centre of the screen, even on short pages. */
         body { min-height: 100vh; display: flex; flex-direction: column; }
-        .site-report { margin-top: auto; padding: 28px 16px 18px; }
+        .site-report { margin-top: auto; padding: 28px 16px 18px; position: relative; z-index: 5; }
+        .site-report__pill { display: inline-block; padding: 8px 16px; border-radius: 999px; background: rgba(255,255,255,.92); color: #334155;
+            box-shadow: 0 6px 18px rgba(15,23,42,.12); border: 1px solid rgba(148,163,184,.25); }
+        .site-report__pill a { color: #c81e1e; font-weight: 700; }
+        .site-report__pill .text-muted { color: #475569 !important; }
+        /* The page you are on: a yellow hand-drawn underline */
+        .navbar .nav-link.is-current { color: #fff !important; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 10' preserveAspectRatio='none'%3E%3Cpath d='M2 6 C 18 2, 32 9, 50 5 S 82 2, 98 6' stroke='%23F5C400' stroke-width='3.2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat center bottom 2px / 80% 9px; }
+        .navbar .nav-cta { background: #006b3f; color: #fff !important; border-radius: 8px; padding: 6px 14px !important; font-weight: 700; margin-left: 6px; }
+        .navbar .nav-cta:hover { background: #00552f; }
     </style>
 </head>
 {% if user.is_authenticated and not user.is_staff %}{% firstof '1' as show_bottombar %}{% endif %}
@@ -149,8 +157,6 @@
                     <li class="nav-item"><a class="nav-link" href="{% url 'admin_users' %}">Users</a></li>
                 {% elif user.is_authenticated and user.role == 'player' %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'player_profile' %}">Profile</a></li>
-                {% elif not user.is_authenticated %}
-                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
                 {% endif %}
 
                 <li class="nav-item d-lg-none">
@@ -165,6 +171,14 @@
 
             </ul>
 
+            {% if not user.is_authenticated %}
+                <ul class="navbar-nav ms-auto align-items-lg-center">
+                    <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'home' %} is-current{% endif %}" href="{% url 'home' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'public_opportunities' %} is-current{% endif %}"{% if request.resolver_match.url_name == 'public_opportunities' %} aria-current="page"{% endif %} href="{% url 'public_opportunities' %}">Trials &amp; Tournaments</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                    <li class="nav-item"><a class="nav-link nav-cta" href="{% url 'register' %}">Sign Up</a></li>
+                </ul>
+            {% endif %}
             {% if user.is_authenticated %}
                 {% if user.is_staff %}
                 <button type="button" class="admin-theme-switch" id="admin-theme-switch" title="Switch the admin look">&#128421;&#65039; Tech mode</button>
@@ -226,7 +240,7 @@
     });
 </script>
 
-<p class="site-report text-center small mb-0"><a href="{{ report_concern_url }}" target="_blank" rel="noopener" class="text-danger text-decoration-none">&#128681; Report a concern</a> <span class="text-muted">&middot; Felt unsafe or saw something wrong? Tell us.</span></p>
+<p class="site-report text-center small mb-0"><span class="site-report__pill"><a href="{{ report_concern_url }}" target="_blank" rel="noopener" class="text-danger text-decoration-none">&#128681; Report a concern</a> <span class="text-muted">&middot; Felt unsafe or saw something wrong? Tell us.</span></span></p>
 {% if show_bottombar %}{% include 'includes/mobile_bottom_bar.html' %}{% endif %}
 <script src="{% static 'js/password-eye.js' %}"></script>
 
