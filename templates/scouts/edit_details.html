@@ -18,6 +18,9 @@
                 </div>
             {% endif %}
 
+            <p class="mb-3"><strong>Players you scout:</strong>
+                {% if scout_profile.scouts_for == 'starlets' %}&#127775; Starlets (women's football){% elif scout_profile.scouts_for == 'stars' %}&#11088; Stars (men's football){% else %}&#11088;&#127775; Stars and Starlets{% endif %}
+                <br><small class="text-muted">You chose this when you signed up and our team checked it against your document. To change it, <a href="{{ support_compose_url }}" target="_blank" rel="noopener">contact us</a>.</small></p>
             <form method="post" enctype="multipart/form-data" novalidate>
                 {% csrf_token %}
                 {{ form|crispy }}

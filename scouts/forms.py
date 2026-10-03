@@ -105,9 +105,7 @@ class ScoutEditDetailsForm(forms.ModelForm):
 
 	class Meta:
 		model = Scout
-		fields = ["organization", "scouts_for", "specialization", "profile_photo"]
-		labels = {"scouts_for": "Which players do you scout?"}
-		help_texts = {"scouts_for": "About the players you look for, not about you. Scouts of one category only see and post for that category."}
+		fields = ["organization", "specialization", "profile_photo"]
 		widgets = {
 			"organization": forms.TextInput(attrs={"placeholder": "Organization worked with"}),
 		}
@@ -115,15 +113,6 @@ class ScoutEditDetailsForm(forms.ModelForm):
 
 	def clean_organization(self):
 		return clean_organization_name(self.cleaned_data.get('organization'))
-
-	def __init__(self, *args, **kwargs):
-		super().__init__(*args, **kwargs)
-		if 'scouts_for' in self.fields:
-			self.fields['scouts_for'].required = False
-
-	def clean_scouts_for(self):
-		# Scouts who skip the question look for both Stars and Starlets.
-		return self.cleaned_data.get('scouts_for') or 'both'
 
 
 class ScoutResubmitForm(forms.ModelForm):
@@ -138,8 +127,17 @@ class ScoutResubmitForm(forms.ModelForm):
 
 	class Meta:
 		model = Scout
-		fields = ["organization", "verification_document"]
-		labels = {"organization": "Who do you scout for?"}
+		fields = ["organization", "scouts_for", "verification_document"]
+		labels = {"organization": "Who do you scout for?", "scouts_for": "Which players do you scout?"}
+		help_texts = {"scouts_for": "Stars are men's football and Starlets are women's football. Your document must match this choice."}
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.fields['scouts_for'].required = False
+
+	def clean_scouts_for(self):
+		# Keep the earlier choice if none was sent.
+		return self.cleaned_data.get('scouts_for') or self.instance.scouts_for or 'both'
 
 	def clean_organization(self):
 		return clean_organization_name(self.cleaned_data.get('organization'))

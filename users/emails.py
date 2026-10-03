@@ -114,7 +114,8 @@ def send_scout_decision_email(scout, approved, reason=''):
     try:
         send_branded_email(
             subject, text, template,
-            {'first_name': first_name, 'organization': scout.organization, 'reason': reason, 'link': link},
+            {'first_name': first_name, 'organization': scout.organization, 'reason': reason, 'link': link,
+             'scouts_for': getattr(scout, 'scouts_for', 'both')},
             [user.email], from_email=f'{settings.EMAIL_FROM_NAME} <{settings.DEFAULT_FROM_EMAIL}>', banner=banner,
         )
         return True
