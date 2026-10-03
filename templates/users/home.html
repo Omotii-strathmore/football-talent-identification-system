@@ -627,6 +627,20 @@
             cursor:default;
         }
 
+        /* Light theme: a softer spotlight and a bright tour card that matches the page. */
+        :root[data-theme="light"] .tour-dim { background:rgba(23,22,15,.28); }
+        :root[data-theme="light"] .tour-highlight { box-shadow:0 0 0 3px var(--green), 0 0 0 6000px rgba(23,22,15,.32); }
+        :root[data-theme="light"] .tour-tooltip { background:#FFFFFF; border-color:#E3DECC; border-top:4px solid var(--green); box-shadow:0 18px 40px rgba(23,22,15,.18); }
+        :root[data-theme="light"] .tour-step-label { color:var(--green); }
+        :root[data-theme="light"] .tour-nav-btn { border-color:#D9D3BF; }
+        :root[data-theme="light"] .tour-nav-btn.tour-next-btn { background:var(--green); border-color:var(--green); color:#FFFFFF; }
+        :root[data-theme="light"] .tour-skip-btn:hover { color:var(--green); }
+        :root[data-theme="light"] .tour-replay-btn { background:var(--green); color:#FFFFFF; box-shadow:0 8px 20px rgba(0,107,63,.3); }
+        :root[data-theme="light"] .tour-replay-btn:hover { background:#008A50; }
+
+        /* Dark theme: a gold top edge so the card stands out from the dark page. */
+        :root:not([data-theme="light"]) .tour-tooltip { border-top:4px solid var(--gold); }
+
         .tour-replay-btn {
             position:fixed;
             bottom:22px;
@@ -1137,6 +1151,11 @@
                 nextBtn.textContent = currentStep === steps.length - 1 ? 'Got it' : 'Next';
                 positionForTarget(step.target);
             }
+
+            // Re-place the spotlight once the lettering has loaded or the window changes size.
+            function refreshSpot() { if (active) positionForTarget(steps[currentStep].target); }
+            window.addEventListener('resize', refreshSpot);
+            if (document.fonts && document.fonts.ready) { document.fonts.ready.then(refreshSpot); }
 
             function startTour() {
                 active = true;
