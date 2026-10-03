@@ -152,3 +152,23 @@ class PlayerDashboardTests(TestCase):
         self.assertNotIn('Calm finishing, keep it up', page)
         self.assertContains(self.client.get(reverse('upload_video')), 'Calm finishing, keep it up')
         self.assertIn('Profile strength', page)
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class PhotoPositionTests(TestCase):
+    def test_player_moves_their_photo_inside_the_circle(self):
+        player = make_player('jack2@gmail.com', 'Jack Sese', 'stars')
+        self.client.force_login(player)
+        url = reverse('photo_position')
+        self.assertEqual(self.client.post(url, {'x': '40', 'y': '20'}).status_code, 400)  # no photo yet
+        profile = player.player_profile
+        profile.profile_photo = SimpleUploadedFile('p.jpg', b'x', content_type='image/jpeg')
+        profile.save()
+        self.assertEqual(self.client.post(url, {'x': 'left', 'y': '20'}).status_code, 400)
+        response = self.client.post(url, {'x': '140', 'y': '22.6'})
+        self.assertEqual(response.json(), {'ok': True, 'position': '100% 23%'})
+        profile.refresh_from_db()
+        self.assertEqual(profile.photo_position, '100% 23%')
+        page = self.client.get(reverse('player_dashboard')).content.decode()
+        self.assertIn('object-position: 100% 23%', page)
+        self.assertIn('data-photo-ring', page)

@@ -147,7 +147,7 @@
                         <div class="card-body">
                             <div class="d-flex align-items-start gap-3 mb-3">
                                 {% if profile.profile_photo %}
-                                    <img src="{{ profile.profile_photo.url }}" alt="{{ profile.full_name }}" class="player-photo">
+                                    <img src="{{ profile.profile_photo.url }}" style="object-position: {{ profile.photo_position|default:'50% 30%' }}" data-photo-img alt="{{ profile.full_name }}" class="player-photo">
                                 {% else %}
                                     <div class="player-photo-fallback">{{ profile.full_name|slice:':1'|upper }}</div>
                                 {% endif %}

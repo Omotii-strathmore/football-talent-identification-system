@@ -14,7 +14,7 @@
         <div class="card-body">
             {% if scout_profile.profile_photo %}
                 <div class="mb-3">
-                    <img src="{{ scout_profile.profile_photo.url }}" alt="Scout profile photo" class="hero-avatar">
+                    <img src="{{ scout_profile.profile_photo.url }}" style="object-position: {{ scout_profile.photo_position|default:'50% 30%' }}" data-photo-img alt="Scout profile photo" class="hero-avatar">
                 </div>
             {% endif %}
 

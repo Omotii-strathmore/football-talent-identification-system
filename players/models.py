@@ -101,6 +101,8 @@ class PlayerProfile(models.Model):
         blank=True,
         null=True
     )
+    # Which part of the photo shows inside round frames, as "x% y%" (chosen by dragging the photo).
+    photo_position = models.CharField(max_length=20, default='50% 30%', blank=True)
 
     bio = models.TextField(
         blank=True,

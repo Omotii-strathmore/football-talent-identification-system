@@ -36,6 +36,8 @@ class Scout(models.Model):
         blank=True,
         null=True
     )
+    # Which part of the photo shows inside round frames, as "x% y%" (chosen by dragging the photo).
+    photo_position = models.CharField(max_length=20, default='50% 30%', blank=True)
 
     verified = models.BooleanField(default=False)
     # Which football the scout looks for: Stars (men), Starlets (women) or both.

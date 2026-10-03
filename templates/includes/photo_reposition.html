@@ -1,0 +1,110 @@
+{% comment %}
+Tap the gold-ringed photo, then drag the picture inside the circle to choose what shows. Needs `photo_url`
+and `photo_position` ("x% y%"). Saving updates every copy of the photo on the page ([data-photo-img]).
+{% endcomment %}
+<div class="pr-modal" id="pr-modal" hidden role="dialog" aria-modal="true" aria-labelledby="pr-title"
+     data-save-url="{% url 'photo_position' %}" data-position="{{ photo_position|default:'50% 30%' }}">
+    <div class="pr-panel">
+        <h3 id="pr-title">&#128247; Move your photo</h3>
+        <p class="pr-hint">Drag the picture to choose what shows inside the circle. This is how scouts will see you.</p>
+        <div class="pr-frame" id="pr-frame" style="background-image: url('{{ photo_url }}');" aria-label="Your photo. Drag, or use the arrow keys, to move it." tabindex="0"></div>
+        <div class="pr-actions">
+            <button type="button" class="pr-btn pr-ghost" data-pr-reset>Centre</button>
+            <span class="pr-space"></span>
+            <button type="button" class="pr-btn pr-ghost" data-pr-close>Cancel</button>
+            <button type="button" class="pr-btn pr-save" data-pr-save>Save</button>
+        </div>
+        <p class="pr-msg" id="pr-msg" aria-live="polite"></p>
+    </div>
+</div>
+<style>
+    [data-photo-ring] { cursor: pointer; }
+    [data-photo-ring]:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    .pr-modal { position: fixed; inset: 0; z-index: 2100; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(4,12,8,.75); }
+    .pr-modal[hidden] { display: none; }
+    .pr-panel { width: min(400px, 100%); background: #fffdf7; border-radius: 22px; padding: 22px; text-align: center; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+    .pr-panel h3 { font-weight: 800; font-size: 1.25rem; color: #0b4d2c; margin: 0 0 6px; }
+    .pr-hint { color: #475569; font-size: .9rem; margin: 0 0 16px; }
+    .pr-frame { width: 240px; height: 240px; margin: 0 auto 18px; border-radius: 50%; background-size: cover; background-repeat: no-repeat; cursor: grab; touch-action: none;
+        box-shadow: 0 0 0 5px #fff, 0 0 0 10px #f6c453, 0 14px 30px rgba(0,0,0,.3); }
+    .pr-frame.dragging { cursor: grabbing; }
+    .pr-frame:focus-visible { outline: 3px dashed #0b4d2c; outline-offset: 14px; }
+    .pr-actions { display: flex; gap: 8px; align-items: center; }
+    .pr-space { flex: 1; }
+    .pr-btn { border-radius: 999px; padding: 9px 18px; font-weight: 800; border: 1px solid #cbd5e1; background: #fff; color: #0f172a; }
+    .pr-save { background: #006b3f; border-color: #006b3f; color: #fff; }
+    .pr-save:hover { background: #00552f; }
+    .pr-msg { min-height: 1.2em; margin: 10px 0 0; font-size: .85rem; color: #b91c1c; }
+</style>
+<script>
+(function () {
+    var modal = document.getElementById('pr-modal');
+    if (!modal) return;
+    var frame = document.getElementById('pr-frame');
+    var msg = document.getElementById('pr-msg');
+    var pos = parse(modal.dataset.position);
+    var saved = pos.slice();
+    var drag = null;
+
+    function parse(text) {
+        var parts = (text || '50% 30%').match(/[\d.]+/g) || [50, 30];
+        return [Number(parts[0]), Number(parts[1] === undefined ? 30 : parts[1])];
+    }
+    function clamp(v) { return Math.max(0, Math.min(100, v)); }
+    function show() { frame.style.backgroundPosition = pos[0] + '% ' + pos[1] + '%'; }
+    function csrf() { var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; }
+
+    function open() { pos = saved.slice(); show(); msg.textContent = ''; modal.hidden = false; frame.focus(); }
+    function close() { modal.hidden = true; }
+
+    document.querySelectorAll('[data-photo-ring]').forEach(function (ring) {
+        ring.addEventListener('click', function (e) {
+            if (e.target.closest('a')) return;   // the camera button still opens the edit page
+            open();
+        });
+        ring.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    });
+
+    // Dragging the picture moves it the same way as the finger: drag right to see more of the left side.
+    frame.addEventListener('pointerdown', function (e) {
+        drag = { x: e.clientX, y: e.clientY, start: pos.slice() };
+        frame.setPointerCapture(e.pointerId);
+        frame.classList.add('dragging');
+    });
+    frame.addEventListener('pointermove', function (e) {
+        if (!drag) return;
+        var size = frame.clientWidth;
+        pos = [clamp(drag.start[0] - (e.clientX - drag.x) / size * 100), clamp(drag.start[1] - (e.clientY - drag.y) / size * 100)];
+        show();
+    });
+    ['pointerup', 'pointercancel'].forEach(function (type) {
+        frame.addEventListener(type, function () { drag = null; frame.classList.remove('dragging'); });
+    });
+    frame.addEventListener('keydown', function (e) {
+        var step = e.shiftKey ? 10 : 3;
+        var moves = { ArrowLeft: [-step, 0], ArrowRight: [step, 0], ArrowUp: [0, -step], ArrowDown: [0, step] };
+        if (!moves[e.key]) return;
+        e.preventDefault();
+        pos = [clamp(pos[0] - moves[e.key][0]), clamp(pos[1] - moves[e.key][1])];
+        show();
+    });
+
+    modal.querySelector('[data-pr-reset]').addEventListener('click', function () { pos = [50, 30]; show(); });
+    modal.querySelector('[data-pr-close]').addEventListener('click', close);
+    modal.addEventListener('click', function (e) { if (e.target === modal) close(); });
+    document.addEventListener('keydown', function (e) { if (!modal.hidden && e.key === 'Escape') close(); });
+
+    modal.querySelector('[data-pr-save]').addEventListener('click', function () {
+        var body = new URLSearchParams({ x: pos[0].toFixed(0), y: pos[1].toFixed(0) });
+        fetch(modal.dataset.saveUrl, { method: 'POST', body: body, credentials: 'same-origin', headers: { 'X-CSRFToken': csrf() } })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.ok) { msg.textContent = data.message || 'Could not save. Please try again.'; return; }
+                saved = parse(data.position);
+                document.querySelectorAll('[data-photo-img]').forEach(function (img) { img.style.objectPosition = data.position; });
+                close();
+            })
+            .catch(function () { msg.textContent = 'Could not save. Check your connection and try again.'; });
+    });
+})();
+</script>

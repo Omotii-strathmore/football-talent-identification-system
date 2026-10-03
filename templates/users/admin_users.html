@@ -81,9 +81,9 @@
                 <div class="um-card {% if not u.is_active %}is-off{% endif %}">
                     <div class="um-top um-who">
                         {% if u.role == 'player' and p.profile_photo %}
-                            <img class="um-avatar" src="{{ p.profile_photo.url }}" alt="">
+                            <img class="um-avatar" src="{{ p.profile_photo.url }}" style="object-position: {{ p.photo_position|default:'50% 30%' }}" alt="">
                         {% elif u.role == 'scout' and s.profile_photo %}
-                            <img class="um-avatar" src="{{ s.profile_photo.url }}" alt="">
+                            <img class="um-avatar" src="{{ s.profile_photo.url }}" style="object-position: {{ s.photo_position|default:'50% 30%' }}" alt="">
                         {% else %}
                             <div class="um-avatar {% if u.is_staff %}staff{% elif u.role == 'scout' %}scout{% endif %}">{{ u.full_name|slice:':1'|upper }}</div>
                         {% endif %}

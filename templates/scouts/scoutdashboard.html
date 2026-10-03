@@ -1,106 +1,84 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static football %}
 
 {% block title %}Scout Dashboard{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/site-tour.css' %}">
+<link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="dashboard-hero mb-4">
-        <div class="d-flex justify-content-between align-items-start gap-3">
-            <div>
-                <h2 class="fw-bold mb-1">Welcome to Scout Dashboard, {{ first_name }}</h2>
-                <p class="text-muted mb-2">Organization: {{ scout_profile.organization }}</p>
-                <p class="text-muted mb-0">Specialization: {{ scout_profile.specialization }}</p>
-
-                {% if scout_profile.verification_status == 'approved' %}
-                    <span class="badge bg-success mt-2">Status: Verified</span>
-                {% elif scout_profile.verification_status == 'rejected' %}
-                    <span class="badge bg-warning text-dark mt-2">Status: Not verified yet</span>
-                    <p class="mt-2 mb-1">We could not verify your document this time. Please don't be discouraged: we check every scout carefully to keep young players safe. Upload a clearer document and we will gladly review it again.</p>
-                    <a href="{% url 'scout_resubmit_verification' %}" class="btn btn-sm btn-warning">Try again &#8635;</a>
-                {% else %}
-                    <span class="badge bg-warning text-dark mt-2">Status: Pending Verification</span>
+    <section class="ts-hero-g">
+        <div class="d-flex justify-content-between align-items-center gap-4 flex-wrap">
+            <div class="flex-fill">
+                <div class="eyebrow">Scout dashboard</div>
+                <h2 class="mb-1" style="font-size:clamp(1.5rem,3vw,2.1rem)">Welcome to Scout Dashboard, {{ first_name }}</h2>
+                <p class="ts-sub mb-3">Discover talent, post trials, and help young players grow with honest feedback.</p>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    {% if scout_profile.verification_status == 'approved' %}
+                        <span class="ts-chip ok">&#9989; Verified scout</span>
+                    {% elif scout_profile.verification_status == 'rejected' %}
+                        <span class="ts-chip wait">Not verified yet</span>
+                    {% else %}
+                        <span class="ts-chip wait">&#9203; Pending verification</span>
+                    {% endif %}
+                    {% if scout_profile.scouts_for %}<span class="ts-chip gold">{{ scout_profile.scouts_for|category_badge }}</span>{% endif %}
+                    <span class="ts-chip">&#127979; {{ scout_profile.organization }}</span>
+                    <span class="ts-chip">&#127919; {{ scout_profile.specialization|capfirst }}</span>
+                </div>
+                {% if scout_profile.verification_status == 'rejected' %}
+                    <p class="mt-3 mb-2 ts-sub">We could not verify your document this time. Please don't be discouraged: we check every scout carefully to keep young players safe. Upload a clearer document and we will gladly review it again.</p>
+                    <a href="{% url 'scout_resubmit_verification' %}" class="btn btn-sm btn-warning fw-bold">Try again &#8635;</a>
                 {% endif %}
             </div>
-
-            {% if scout_profile.profile_photo %}
-                <img src="{{ scout_profile.profile_photo.url }}" alt="{{ first_name }}" class="hero-avatar">
-            {% else %}
-                <div class="hero-avatar-fallback">{{ first_name|slice:':1'|upper }}</div>
-            {% endif %}
+            <div class="ts-photo"{% if scout_profile.profile_photo %} data-photo-ring role="button" tabindex="0" aria-label="Move your photo inside the circle" title="Tap to move your photo"{% endif %}>
+                {% if scout_profile.profile_photo %}
+                    <img src="{{ scout_profile.profile_photo.url }}" style="object-position: {{ scout_profile.photo_position|default:'50% 30%' }}" data-photo-img alt="{{ first_name }}">
+                {% else %}
+                    <div class="ts-initial" aria-hidden="true">{{ first_name|slice:':1'|upper }}</div>
+                {% endif %}
+                <a class="ts-photo__edit" href="{% url 'scout_edit_details' %}" title="Change your photo" aria-label="Change your photo">&#128247;</a>
+            </div>
         </div>
+    </section>
+
+    <div class="dash-stack">
+    <div class="row g-3 mb-4 ts-stats">
+        <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#0b4d2c"><div class="card-body"><span class="stat-icon">&#128226;</span><div class="stat-value">{{ posted_count }}</div><p class="text-muted mb-0">Posted Opportunities</p></div></div></div>
+        <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#16a34a"><div class="card-body"><span class="stat-icon">&#9989;</span><div class="stat-value">{{ active_count }}</div><p class="text-muted mb-0">Active Opportunities</p></div></div></div>
+        <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#3b82f6"><div class="card-body"><span class="stat-icon">&#128203;</span><div class="stat-value">{{ applications_count }}</div><p class="text-muted mb-0">Total Applications</p></div></div></div>
+    </div>
+
+    <div class="dash-actions ts-actions mb-4">
+        <h4 class="ts-head"><span class="ic" aria-hidden="true">&#9889;</span>Quick Actions</h4>
+        <div class="ts-tiles">
+            <a href="{% url 'post_opportunity' %}" id="tour-post-opportunity" class="ts-tile green"><span class="ic">&#128226;</span><span><strong>Post Opportunity</strong><small>Invite players to a trial</small></span></a>
+            <a href="{% url 'manage_posted_opportunities' %}" id="tour-manage-opportunities" class="ts-tile blue"><span class="ic">&#128221;</span><span><strong>Manage Opportunities</strong><small>Edit, close and see applicants</small></span></a>
+            <a href="{% url 'scout_player_directory' %}" id="tour-player-directory" class="ts-tile gold"><span class="ic">&#128269;</span><span><strong>View Players</strong><small>Profiles, videos and badges</small></span></a>
+            <a href="{% url 'scout_shortlist' %}" id="tour-my-interests" class="ts-tile rose"><span class="ic">&#10084;&#65039;</span><span><strong>My Interests ({{ shortlist_count }})</strong><small>Players you are following</small></span></a>
+        </div>
+    </div>
     </div>
 
     {% for badge in my_badges %}
-        <div class="card mb-4">
-            <div class="card-body d-flex flex-wrap align-items-center gap-3">
-                {% if badge.earned %}
-                    {% include 'includes/badges.html' with badges=my_badges %}
-                    <span class="text-muted small">Thank you for guiding young players with your feedback.</span>
-                {% else %}
-                    {% include 'includes/badges.html' with badges=my_badges show_locked=True %}
-                    <span class="small">You have given feedback to <strong>{{ badge.progress }} of {{ badge.goal }}</strong> players. Your honest words help them grow.</span>
-                {% endif %}
-            </div>
+        <div class="ts-card mb-4 d-flex flex-wrap align-items-center gap-3">
+            {% if badge.earned %}
+                {% include 'includes/badges.html' with badges=my_badges %}
+                <span class="text-muted small">Thank you for guiding young players with your feedback.</span>
+            {% else %}
+                {% include 'includes/badges.html' with badges=my_badges show_locked=True %}
+                <span class="small">You have given feedback to <strong>{{ badge.progress }} of {{ badge.goal }}</strong> players. Your honest words help them grow.</span>
+            {% endif %}
         </div>
     {% endfor %}
-
-    <div class="dash-stack">
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-4">
-            <div class="card stat-card h-100 text-center">
-                <div class="card-body">
-                    <div class="stat-value">{{ posted_count }}</div>
-                    <p class="text-muted mb-0">Posted Opportunities</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4">
-            <div class="card stat-card h-100 text-center">
-                <div class="card-body">
-                    <div class="stat-value">{{ active_count }}</div>
-                    <p class="text-muted mb-0">Active Opportunities</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-4">
-            <div class="card stat-card h-100 text-center">
-                <div class="card-body">
-                    <div class="stat-value">{{ applications_count }}</div>
-                    <p class="text-muted mb-0">Total Applications</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="dash-actions panel-soft p-3 p-md-4 mb-4">
-            <h4 class="section-title">Quick Actions</h4>
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <a href="{% url 'post_opportunity' %}" id="tour-post-opportunity" class="btn btn-primary w-100">Post Opportunity</a>
-                </div>
-                <div class="col-md-3">
-                    <a href="{% url 'manage_posted_opportunities' %}" id="tour-manage-opportunities" class="btn btn-outline-primary w-100">Manage Posted Opportunities</a>
-                </div>
-                <div class="col-md-3">
-                    <a href="{% url 'scout_player_directory' %}" id="tour-player-directory" class="btn btn-outline-dark w-100">View Player Profiles & Videos</a>
-                </div>
-                <div class="col-md-3">
-                    <a href="{% url 'scout_shortlist' %}" id="tour-my-interests" class="btn btn-outline-danger w-100">❤ My Interests ({{ shortlist_count }})</a>
-                </div>
-            </div>
-    </div>
-    </div>
 
     <div class="row g-3">
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h5 class="mb-3">Recent Opportunities</h5>
+                    <h5 class="ts-head"><span class="ic" aria-hidden="true">&#127942;</span>Recent Opportunities</h5>
                     {% if recent_opportunities %}
                         <ul class="list-group list-group-flush">
                             {% for opportunity in recent_opportunities %}
@@ -127,7 +105,7 @@
         <div class="col-lg-6">
             <div class="card shadow-sm border-0 h-100">
                 <div class="card-body">
-                    <h5 class="mb-3">Recent Applications</h5>
+                    <h5 class="ts-head"><span class="ic" aria-hidden="true">&#128203;</span>Recent Applications</h5>
                     {% if recent_applications %}
                         <ul class="list-group list-group-flush">
                             {% for application in recent_applications %}
@@ -149,7 +127,7 @@
 
     {% if recent_replies %}
     <div class="panel-soft p-3 p-md-4 mt-4">
-        <h4 class="section-title">Recent Player Replies</h4>
+        <h4 class="ts-head"><span class="ic" aria-hidden="true">&#128172;</span>Recent Player Replies</h4>
         <div class="list-group list-group-flush">
             {% for feedback in recent_replies %}
                 <div class="list-group-item px-0">
@@ -168,6 +146,7 @@
     </div>
     {% endif %}
 </div>
+{% if scout_profile.profile_photo %}{% include 'includes/photo_reposition.html' with photo_url=scout_profile.profile_photo.url photo_position=scout_profile.photo_position %}{% endif %}
 {% endblock %}
 
 {% block extra_js %}

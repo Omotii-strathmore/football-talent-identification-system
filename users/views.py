@@ -1373,3 +1373,20 @@ def updates_feed_view(request):
         'updates': items,
         'seen_url': reverse('update_seen', args=[0]) if request.user.is_authenticated else '',
     })
+
+
+@login_required
+@require_POST
+def photo_position_view(request):
+    """Save which part of the profile photo shows inside the round frame (dragged by the person)."""
+    try:
+        x = min(100.0, max(0.0, float(request.POST.get('x', ''))))
+        y = min(100.0, max(0.0, float(request.POST.get('y', ''))))
+    except ValueError:
+        return JsonResponse({'ok': False, 'message': 'Invalid position.'}, status=400)
+    owner = getattr(request.user, 'player_profile', None) if request.user.role == 'player' else getattr(request.user, 'scout_profile', None)
+    if owner is None or not owner.profile_photo:
+        return JsonResponse({'ok': False, 'message': 'Add a profile photo first.'}, status=400)
+    owner.photo_position = f'{x:.0f}% {y:.0f}%'
+    owner.save(update_fields=['photo_position'])
+    return JsonResponse({'ok': True, 'position': owner.photo_position})

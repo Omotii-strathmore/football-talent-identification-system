@@ -123,9 +123,9 @@
                 </div>
                 {% endif %}
             </div>
-            <div class="p-photo">
+            <div class="p-photo"{% if profile.profile_photo %} data-photo-ring role="button" tabindex="0" aria-label="Move your photo inside the circle" title="Tap to move your photo"{% endif %}>
                 {% if profile and profile.profile_photo %}
-                    <img src="{{ profile.profile_photo.url }}" alt="{{ first_name }}">
+                    <img src="{{ profile.profile_photo.url }}" style="object-position: {{ profile.photo_position|default:'50% 30%' }}" data-photo-img alt="{{ first_name }}">
                 {% else %}
                     <div class="p-initial" aria-hidden="true">{{ first_name|slice:':1'|upper }}</div>
                 {% endif %}
@@ -198,6 +198,7 @@
     {% endif %}
 
 </div>
+{% if profile.profile_photo %}{% include 'includes/photo_reposition.html' with photo_url=profile.profile_photo.url photo_position=profile.photo_position %}{% endif %}
 {% endblock %}
 
 {% block extra_js %}

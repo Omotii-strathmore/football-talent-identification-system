@@ -10,6 +10,7 @@ urlpatterns = [
 
     path('register/', views.register_view, name='register'),
     path('register/check-email/', views.check_email_view, name='check_email'),
+    path('account/photo-position/', views.photo_position_view, name='photo_position'),
     path('account/email/', views.account_email_view, name='account_email'),
     path('ai/assist/', views.ai_assist_view, name='ai_assist'),
 

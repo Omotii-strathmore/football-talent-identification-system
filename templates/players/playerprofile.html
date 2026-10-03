@@ -6,6 +6,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/dob-picker.css' %}">
+<link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
 <style>
     .profile-hero {
         background: linear-gradient(120deg, #0f172a, #1e293b);
@@ -303,9 +304,11 @@
     }
 
     .edit-section-title {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0f172a;
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #0b4d2c;
+        border-left: 5px solid #f6c453;
+        padding-left: 12px;
         margin-bottom: 14px;
         padding-bottom: 10px;
         border-bottom: 1px solid rgba(148, 163, 184, 0.18);
@@ -321,27 +324,27 @@
         <a href="{% url 'player_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
     </div>
 
-    <div class="profile-hero mb-4">
-        <div class="d-flex justify-content-between align-items-start gap-4 flex-wrap">
+    <div class="ts-hero-g">
+        <div class="d-flex justify-content-between align-items-center gap-4 flex-wrap">
             <div class="flex-fill">
-                <h3 class="fw-bold mb-1">{{ profile.full_name }}</h3>
-                <p class="text-muted mb-2">Manage your playing profile, highlight your experience, and help scouts find the right fit.</p>
+                <div class="eyebrow">My profile</div>
+                <h3 class="mb-1" style="font-size:clamp(1.5rem,3vw,2.1rem)">{{ profile.full_name }}</h3>
+                <p class="ts-sub mb-3">Manage your playing profile, highlight your experience, and help scouts find the right fit.</p>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    {% if profile.category %}<span class="profile-chip">{{ profile.category|category_person }}</span> {% endif %}<span class="profile-chip">{{ profile.position }}</span>
-                    {% if profile.secondary_position %}
-                        <span class="profile-chip">{{ profile.secondary_position }}</span>
-                    {% endif %}
-                    {% if profile.current_club %}
-                        <span class="profile-chip">{{ profile.current_club }}</span>
-                    {% endif %}
+                    {% if profile.category %}<span class="ts-chip gold">{{ profile.category|category_person }}</span>{% endif %}
+                    <span class="ts-chip">&#9917; {{ profile.position }}</span>
+                    {% if profile.secondary_position %}<span class="ts-chip">&#128260; {{ profile.secondary_position }}</span>{% endif %}
+                    {% if profile.current_club %}<span class="ts-chip">&#127967;&#65039; {{ profile.current_club }}</span>{% endif %}
+                    {% if profile.location %}<span class="ts-chip">&#128205; {{ profile.location }}</span>{% endif %}
                 </div>
             </div>
-            <div class="text-end">
+            <div class="ts-photo"{% if profile.profile_photo %} data-photo-ring role="button" tabindex="0" aria-label="Move your photo inside the circle" title="Tap to move your photo"{% endif %}>
                 {% if profile.profile_photo %}
-                    <img src="{{ profile.profile_photo.url }}" alt="{{ profile.full_name }}" class="profile-photo-lg">
+                    <img src="{{ profile.profile_photo.url }}" style="object-position: {{ profile.photo_position|default:'50% 30%' }}" data-photo-img alt="{{ profile.full_name }}">
                 {% else %}
-                    <div class="profile-photo-fallback">{{ profile.full_name|slice:':1'|upper }}</div>
+                    <div class="ts-initial" aria-hidden="true">{{ profile.full_name|slice:':1'|upper }}</div>
                 {% endif %}
+                {% if not edit_mode %}<a class="ts-photo__edit" href="?edit=true" title="Change your photo" aria-label="Change your photo">&#128247;</a>{% endif %}
             </div>
         </div>
     </div>
@@ -350,7 +353,7 @@
         <div class="profile-section mb-4">
             <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
                 <div>
-                    <h4 class="section-title mb-2">Profile Summary</h4>
+                    <h4 class="ts-head"><span class="ic" aria-hidden="true">&#128203;</span>Profile Summary</h4>
                     <p class="text-muted">A more complete profile helps scouts understand your strengths and football journey.</p>
                 </div>
                 <a href="?edit=true" class="btn btn-primary btn-sm align-self-start">Edit Profile</a>
@@ -424,7 +427,7 @@
             </div>
 
             <div class="profile-section">
-                <h5>Football experience</h5>
+                <h5 class="ts-head"><span class="ic" aria-hidden="true">&#127967;&#65039;</span>Football experience</h5>
                 <div class="experience-timeline">
                     {% if profile.previous_club %}
                         <div class="experience-entry">
@@ -452,17 +455,17 @@
             </div>
 
             <div class="profile-section mt-4">
-                <h5>About</h5>
+                <h5 class="ts-head"><span class="ic" aria-hidden="true">&#128221;</span>About</h5>
                 <p class="mb-0">{{ profile.bio|default:'No bio provided yet.' }}</p>
             </div>
 
             <div class="profile-section mt-4" id="emails">
-                <h5>Emails</h5>
+                <h5 class="ts-head"><span class="ic" aria-hidden="true">&#9993;&#65039;</span>Emails</h5>
                 {% include 'includes/email_settings.html' with profile=profile %}
             </div>
 
             <div class="profile-section mt-4">
-                <h5>Contact permissions</h5>
+                <h5 class="ts-head"><span class="ic" aria-hidden="true">&#129309;</span>Contact permissions</h5>
                 <div class="alert alert-info py-2 mb-3">
                     With your consent, interested scouts could reach out directly.
                 </div>
@@ -476,7 +479,7 @@
 
             <div class="profile-section mt-4">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-                    <h5 class="mb-0">Uploaded videos</h5>
+                    <h5 class="ts-head mb-0"><span class="ic" aria-hidden="true">&#127909;</span>Uploaded videos</h5>
                     <a href="{% url 'upload_video' %}" class="btn btn-outline-primary btn-sm">Manage videos</a>
                 </div>
                 {% if videos %}
@@ -509,7 +512,7 @@
     {% else %}
         <div class="panel-soft p-3 p-md-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="section-title mb-0">Edit Profile</h4>
+                <h4 class="ts-head mb-0"><span class="ic" aria-hidden="true">&#9999;&#65039;</span>Edit Profile</h4>
                 <a href="{% url 'player_profile' %}" class="btn btn-outline-secondary btn-sm">Cancel</a>
             </div>
 
@@ -522,7 +525,7 @@
                 {{ form.non_field_errors }}
 
                 <div class="edit-section-card">
-                    <p class="edit-section-title mb-0">Personal details</p>
+                    <p class="edit-section-title mb-0"><span aria-hidden="true">&#128100;</span> Personal details</p>
                     <div class="row">
                         <div class="col-md-8">{{ form.full_name|as_crispy_field }}</div>
                         <div class="col-md-4">{{ form.date_of_birth|as_crispy_field }}</div>
@@ -534,7 +537,7 @@
                 </div>
 
                 <div class="edit-section-card">
-                    <p class="edit-section-title mb-0">Football details</p>
+                    <p class="edit-section-title mb-0"><span aria-hidden="true">&#9917;</span> Football details</p>
                     {{ form.category|as_crispy_field }}
                     <div class="row">
                         <div class="col-md-6">{{ form.position|as_crispy_field }}</div>
@@ -558,13 +561,13 @@
                 </div>
 
                 <div class="edit-section-card">
-                    <p class="edit-section-title mb-0">About & bio</p>
+                    <p class="edit-section-title mb-0"><span aria-hidden="true">&#128221;</span> About & bio</p>
                     {{ form.bio|as_crispy_field }}
                     {% include 'includes/ai_assist.html' with kind='bio' target='id_bio' hint='e.g. left-footed winger, fast, love dribbling, dream to play in the Premier League, training every evening' ai_assist_loaded=True %}
                 </div>
 
                 <div class="edit-section-card">
-                    <p class="edit-section-title mb-0">Contact permissions</p>
+                    <p class="edit-section-title mb-0"><span aria-hidden="true">&#129309;</span> Contact permissions</p>
                     <div class="row">
                         <div class="col-md-6">{{ form.contact_email|as_crispy_field }}</div>
                         <div class="col-md-6">{{ form.contact_phone|as_crispy_field }}</div>
@@ -577,6 +580,7 @@
         </div>
     {% endif %}
 </div>
+{% if profile.profile_photo %}{% include 'includes/photo_reposition.html' with photo_url=profile.profile_photo.url photo_position=profile.photo_position %}{% endif %}
 {% endblock %}
 
 {% block extra_js %}
