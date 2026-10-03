@@ -15,7 +15,7 @@ the earlier updates one by one (Older / Newer).
         </div>
         <div class="tsv__body" id="tsv-body"></div>
         <div class="tsv__foot">
-            <button type="button" class="tsv__nav" id="tsv-older">&larr; Older</button>
+            <button type="button" class="tsv__nav" id="tsv-older">&larr; Earlier updates</button>
             <span class="tsv__count" id="tsv-count"></span>
             <button type="button" class="tsv__nav" id="tsv-newer">Newer &rarr;</button>
             <button type="button" class="tsv__ok" data-tsv-close>Close</button>
@@ -61,6 +61,8 @@ the earlier updates one by one (Older / Newer).
     function csrf() { var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; }
     function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
     function getRead() { try { return localStorage.getItem(READ_KEY); } catch (e) { return null; } }
+    // Seen in the automatic pop-up counts as read too, so U then offers the earlier updates.
+    function getSeen() { try { return localStorage.getItem('talantaSokaUpdateSeen'); } catch (e) { return null; } }
     function setRead(id) { try { localStorage.setItem(READ_KEY, String(id)); } catch (e) {} }
 
     function show(i) {
@@ -74,9 +76,11 @@ the earlier updates one by one (Older / Newer).
         el('tsv-older').hidden = el('tsv-newer').hidden = el('tsv-count').hidden = false;
         el('tsv-older').disabled = i >= feed.length - 1;
         el('tsv-newer').disabled = i <= 0;
-        if (i === 0) setRead(u.id);
-        // Reading it here counts as seeing it, so the automatic pop-up will not appear as well.
-        try { localStorage.setItem('talantaSokaUpdateSeen', String(u.id)); } catch (e) {}
+        // Reading the newest one here counts as seeing it, so the automatic pop-up will not appear as well.
+        if (i === 0) {
+            setRead(u.id);
+            try { localStorage.setItem('talantaSokaUpdateSeen', String(u.id)); } catch (e) {}
+        }
         if (seenUrl) fetch(seenUrl.replace('/0/', '/' + u.id + '/'), { method: 'POST', headers: { 'X-CSRFToken': csrf() }, credentials: 'same-origin' }).catch(function () {});
     }
     function showCaughtUp() {
@@ -99,7 +103,8 @@ the earlier updates one by one (Older / Newer).
         document.body.style.overflow = 'hidden';
         var start = function () {
             var newest = feed[0];
-            if (newest && newest.recent && String(newest.id) !== getRead()) { show(0); } else { showCaughtUp(); }
+            var done = newest && (String(newest.id) === getRead() || String(newest.id) === getSeen());
+            if (newest && newest.recent && !done) { show(0); } else { showCaughtUp(); }
             box.querySelector('.tsv__ok').focus();
         };
         if (feed) { start(); return; }
@@ -120,6 +125,7 @@ the earlier updates one by one (Older / Newer).
     document.addEventListener('keydown', function (e) {
         if (!box.hidden) {
             if (e.key === 'Escape') closeBox();
+            else if ((e.key === 'u' || e.key === 'U') && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); closeBox(); }
             else if (e.key === 'ArrowLeft' && !el('tsv-older').hidden) el('tsv-older').click();
             else if (e.key === 'ArrowRight' && !el('tsv-newer').hidden) el('tsv-newer').click();
             return;
