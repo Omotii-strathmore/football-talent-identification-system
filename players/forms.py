@@ -234,7 +234,7 @@ class PlayerVideoForm(forms.ModelForm):
     def clean_video_file(self):
         video_file = self.cleaned_data.get('video_file')
         if video_file:
-            max_size_mb = 100
+            max_size_mb = 75  # kinder to players uploading on mobile data
             if video_file.size > max_size_mb * 1024 * 1024:
-                raise forms.ValidationError(f'Video file is too large. Please keep it under {max_size_mb}MB.')
+                raise forms.ValidationError(f'Video file is too large. Please keep it under {max_size_mb}MB: a short clip of 1 to 2 minutes works best.')
         return video_file

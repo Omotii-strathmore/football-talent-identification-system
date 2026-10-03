@@ -258,3 +258,17 @@ BREVO_SENDER_EMAIL = os.environ.get('BREVO_SENDER_EMAIL', EMAIL_HOST_USER)
 if BREVO_API_KEY:
     EMAIL_BACKEND = 'config.email_backends.BrevoEmailBackend'
     DEFAULT_FROM_EMAIL = BREVO_SENDER_EMAIL
+
+# Safety lock: on Render (the live site) refuse to start with unsafe settings, rather than run quietly unsafe.
+# Laptops are not affected. Render sets RENDER=true for every service.
+if os.environ.get('RENDER'):
+    _problems = []
+    if not os.environ.get('DJANGO_SECRET_KEY'):
+        _problems.append('DJANGO_SECRET_KEY is missing, so the public practice key would be used')
+    if DEBUG:
+        _problems.append('DJANGO_DEBUG must be False on the live site')
+    if not USE_R2:
+        _problems.append('R2_BUCKET_NAME is missing or off, so uploads would be lost at the next deploy')
+    if _problems:
+        from django.core.exceptions import ImproperlyConfigured
+        raise ImproperlyConfigured('Unsafe live settings: ' + '; '.join(_problems) + '. Fix them in Render > Environment.')
