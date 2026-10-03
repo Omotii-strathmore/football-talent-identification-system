@@ -20,7 +20,13 @@
     .lang-switch { border: 1px solid var(--line, rgba(255,255,255,.2)); background: transparent; color: inherit; border-radius: 999px; padding: 4px 12px; font-weight: 700; font-size: .8rem; }
     html[data-theme="light"] .about-card, html[data-theme="light"] .about-promises li { background: #fff; border-color: #dfe7e1; }
     html[data-theme="light"] .about-hero .motto { color: #b8860b; }
-    @media (max-width: 640px) { .about-grid, .about-ss { grid-template-columns: 1fr; } }
+    .story p { font-size: 1.04rem; line-height: 1.75; }
+    .story .story-open { font-size: 1.35rem; font-weight: 800; margin-bottom: 6px; color: #f6c453; }
+    .story-quote { margin: 18px 0; padding: 14px 18px; border-left: 4px solid #f6c453; border-radius: 10px;
+        font-size: 1.35rem; font-weight: 800; font-style: italic; color: #f6c453; background: rgba(246, 196, 83, .08); }
+    html[data-theme="light"] .story .story-open { color: #006b3f; }
+    html[data-theme="light"] .story-quote { color: #8a6500; background: #fff8e1; }
+    @media (max-width: 640px) { .about-grid, .about-ss { grid-template-columns: 1fr; } .story-quote { font-size: 1.15rem; } }
 </style>
 {% endblock %}
 
@@ -41,8 +47,15 @@
         <span class="motto">&ldquo;Nionekane nikicheza kwa TV!&rdquo;</span>
     </div>
 
-    <h2>Who we are</h2>
-    <p>Talanta Soka was born as an academic project at Strathmore University, built by a team of <strong>ambitious, driven BBIT students</strong> who love football and believe in one simple idea: <strong>your talent deserves to be seen.</strong> Across Kenya, from estate pitches to village fields, there are players with magic in their feet who are never noticed, just because no scout was there that day. That is the dream we are chasing with you: to see you on the big stage, and to hear you say <em>&ldquo;Nionekane nikicheza kwa TV!&rdquo;</em></p>
+    <h2>Our story</h2>
+    <div class="story">
+        <p class="story-open">It starts with a child.</p>
+        <p>Shoes worn thin, knees covered in dust, walking home late in the evening after hours of <em>kucheza kwa vumbi</em> &#128517; on the estate pitch. Supper goes cold while their eyes stay glued to the TV: Messi gliding past three defenders, Ronaldo rising high for a header. And quietly, a dream is born: <strong>one day, that could be me.</strong></p>
+        <blockquote class="story-quote">&ldquo;Nionekane nikicheza kwa TV!&rdquo;</blockquote>
+        <p>Across Kenya, from estate pitches to village fields, thousands of children carry that same dream. Many have magic in their feet. But too often nobody who matters is watching: no scout was there that day, and the talent fades away unseen.</p>
+        <p><strong>Talanta Soka was born to change that.</strong> It started as an academic project at Strathmore University, built by a team of <strong>ambitious, driven BBIT students</strong> who grew up loving the game and believe one simple thing: <strong>your talent deserves to be seen.</strong></p>
+        <p>We are here to put your skills in front of the right people, open doors to real trials and opportunities, and walk with you every step of the way. Your dream is our mission, and we want the very best for you.</p>
+    </div>
 
     <h2>Why we exist</h2>
     <p>Too many gifted players never get a fair chance, and scouts struggle to find them. Talanta Soka brings both together in one safe place: players show their game, verified scouts discover them, and real trials and tournaments are open to everyone. No connections needed, just your game.</p>
@@ -99,8 +112,15 @@
         <span class="motto">&ldquo;Nionekane nikicheza kwa TV!&rdquo;</span>
     </div>
 
-    <h2>Sisi ni nani</h2>
-    <p>Talanta Soka ilianza kama mradi wa masomo katika Chuo Kikuu cha Strathmore, ikijengwa na timu ya <strong>wanafunzi wa BBIT wenye ndoto kubwa na bidii</strong> wanaopenda mpira na wanaoamini jambo moja: <strong>talanta yako inastahili kuonekana.</strong> Kote Kenya, kutoka viwanja vya mtaa hadi vya kijijini, kuna wachezaji wenye vipaji ambao hawaonekani kwa sababu tu hakuna scout aliyekuwepo siku hiyo. Hiyo ndiyo ndoto tunayoifuata pamoja nawe: kukuona kwenye jukwaa kubwa, na kukusikia ukisema <em>&ldquo;Nionekane nikicheza kwa TV!&rdquo;</em></p>
+    <h2>Hadithi yetu</h2>
+    <div class="story">
+        <p class="story-open">Inaanza na mtoto.</p>
+        <p>Viatu vimechakaa, magoti yamejaa vumbi, anarudi nyumbani jioni sana baada ya masaa ya <em>kucheza kwa vumbi</em> &#128517; kwenye uwanja wa mtaa. Chakula kinapoa huku macho yake yamekodolewa kwenye TV: Messi akiwapita mabeki watatu, Ronaldo akiruka juu kupiga kichwa. Na kimya kimya, ndoto inazaliwa: <strong>siku moja, hiyo inaweza kuwa mimi.</strong></p>
+        <blockquote class="story-quote">&ldquo;Nionekane nikicheza kwa TV!&rdquo;</blockquote>
+        <p>Kote Kenya, kutoka viwanja vya mtaa hadi vya vijijini, maelfu ya watoto wanabeba ndoto hiyo hiyo. Wengi wana vipaji vya ajabu miguuni. Lakini mara nyingi hakuna mtu muhimu anayeangalia: hakuna scout aliyekuwepo siku hiyo, na talanta inapotea bila kuonekana.</p>
+        <p><strong>Talanta Soka ilizaliwa kubadilisha hilo.</strong> Ilianza kama mradi wa masomo katika Chuo Kikuu cha Strathmore, ikijengwa na timu ya <strong>wanafunzi wa BBIT wenye ndoto kubwa na bidii</strong> waliokua wakipenda mpira, na wanaoamini jambo moja: <strong>talanta yako inastahili kuonekana.</strong></p>
+        <p>Tuko hapa kuweka ujuzi wako mbele ya watu sahihi, kufungua milango ya trials na fursa halisi, na kutembea nawe kila hatua. Ndoto yako ndiyo dhamira yetu, na tunakutakia kilicho bora zaidi.</p>
+    </div>
 
     <h2>Kwa nini tupo</h2>
     <p>Wachezaji wengi wenye vipaji hawapati nafasi ya haki, na ma-scout wanapata shida kuwapata. Talanta Soka inawaleta pamoja mahali salama: wachezaji wanaonyesha game yao, ma-scout walio-verified wanawagundua, na trials na mashindano ya kweli yako wazi kwa wote. Huhitaji connection, ni game yako tu.</p>

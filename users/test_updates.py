@@ -145,5 +145,6 @@ class UpdatesViewerAndAboutTests(TestCase):
     def test_about_page_in_english_and_swahili(self):
         page = self.client.get(reverse('about'))
         self.assertContains(page, 'ambitious, driven BBIT students')
-        self.assertContains(page, 'Kuhusu sisi')
+        self.assertContains(page, 'Hadithi yetu')
+        self.assertContains(page, 'kucheza kwa vumbi')
         self.assertContains(page, 'Stars &amp; Starlets')

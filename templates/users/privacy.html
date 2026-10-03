@@ -5,9 +5,11 @@
 {% block extra_head %}{% include 'includes/legal_theme_head.html' %}
 <style>
     .legal .story-link { font-size: 1.08rem; padding: 12px 16px; border-left: 4px solid #f6c453; border-radius: 10px; background: rgba(246, 196, 83, .08); }
-    .legal .story-link a { white-space: nowrap; color: #f6c453 !important; }
+    .legal .story-link .story-btn { white-space: nowrap; font-weight: 500; text-decoration: none; color: #4ade80 !important;
+        border-bottom: 1px solid rgba(74, 222, 128, .45); }
+    .legal .story-link .story-btn:hover { border-bottom-color: #4ade80; }
     html[data-theme="light"] .legal .story-link { background: #fff8e1; }
-    html[data-theme="light"] .legal .story-link a { color: #006b3f !important; }
+    html[data-theme="light"] .legal .story-link .story-btn { color: #006b3f !important; border-bottom-color: rgba(0, 107, 63, .4); }
 </style>
 {% endblock %}
 
@@ -23,7 +25,7 @@
 <p><span class="legal-updated">&#128197; Last updated: 2 October 2026</span></p>
 
 <div class="legal">
-    <p class="story-link">Talanta Soka connects football players with verified scouts through structured football opportunities. <a href="{% url 'about' %}"><strong>Read our story &rarr;</strong></a></p>
+    <p class="story-link">Talanta Soka connects football players with verified scouts through structured football opportunities. <a href="{% url 'about' %}" class="story-btn">Read our story &rarr;</a></p>
     <p>This policy explains what personal information we collect, why, who can see it, and the choices you have. It is written to meet the Kenya Data Protection Act, 2019. For any privacy question or request, contact us at <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>.</p>
 
     <h2>1. Information we collect</h2>
