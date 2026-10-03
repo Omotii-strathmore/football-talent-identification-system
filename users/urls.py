@@ -11,6 +11,8 @@ urlpatterns = [
     path('register/', views.register_view, name='register'),
     path('register/check-email/', views.check_email_view, name='check_email'),
     path('account/photo-position/', views.photo_position_view, name='photo_position'),
+    path('management/notifications/<int:notification_id>/', views.admin_notification_open, name='admin_notification_open'),
+    path('management/notifications/read-all/', views.admin_notifications_read_all, name='admin_notifications_read_all'),
     path('account/email/', views.account_email_view, name='account_email'),
     path('ai/assist/', views.ai_assist_view, name='ai_assist'),
 

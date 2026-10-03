@@ -117,6 +117,9 @@
         /* Keep "Report a concern" at the bottom centre of the screen, even on short pages. */
         body { min-height: 100vh; display: flex; flex-direction: column; }
         .site-report { margin-top: auto; padding: 28px 16px 18px; position: relative; z-index: 5; }
+        .admin-bell { position: relative; font-size: 1.2rem; text-decoration: none; }
+        .admin-bell span { position: absolute; top: -6px; right: -10px; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 999px;
+            background: #dc2626; color: #fff; font-size: .68rem; font-weight: 800; display: grid; place-items: center; }
         .site-report__pill { display: inline-block; padding: 8px 16px; border-radius: 999px; background: rgba(255,255,255,.92); color: #334155;
             box-shadow: 0 6px 18px rgba(15,23,42,.12); border: 1px solid rgba(148,163,184,.25); }
         .site-report__pill a { color: #c81e1e; font-weight: 700; }
@@ -195,6 +198,9 @@
                         });
                     })();
                 </script>
+                {% endif %}
+                {% if user.is_staff %}
+                <a href="{% url 'admin_dashboard' %}#notifications" class="admin-bell me-3" title="Notifications" aria-label="Notifications{% if admin_unread %}: {{ admin_unread }} new{% endif %}">&#128276;{% if admin_unread %}<span>{{ admin_unread }}</span>{% endif %}</a>
                 {% endif %}
                 <span class="navbar-text me-3">
                     {{ user.full_name }}

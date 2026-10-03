@@ -32,6 +32,9 @@ def site_extras(request):
     context['public_page'] = bool(match and match.url_name == 'public_opportunities')
 
     user = getattr(request, 'user', None)
+    if user is not None and user.is_authenticated and user.is_staff:
+        from .models import AdminNotification
+        context['admin_unread'] = AdminNotification.objects.filter(read_at__isnull=True).count()
     if user is not None and user.is_authenticated and not user.is_staff:
         # Show the newest update this person has not seen yet, once, as a pop-up on their pages.
         receipt = (UpdateReceipt.objects.filter(user=user, seen_at__isnull=True)

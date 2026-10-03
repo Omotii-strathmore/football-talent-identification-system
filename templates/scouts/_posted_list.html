@@ -1,0 +1,21 @@
+{% load football %}
+{% if items %}
+    <div class="po-list mb-4">
+        {% for opportunity in items %}
+            <article class="po-item">
+                {% if opportunity.poster_image %}<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster">{% endif %}
+                <div class="in">
+                    <h4>{{ opportunity.title }}</h4>
+                    <div class="po-pills">
+                        <span class="ts-pill gold">{{ opportunity.category|category_badge }}</span>
+                        <span class="ts-pill">&#128197; {{ opportunity.deadline|date:'j M Y' }}</span>
+                        <span class="ts-pill">&#128101; {{ opportunity.applications.count }}{% if opportunity.max_applications %} / {{ opportunity.max_applications }}{% endif %}</span>
+                    </div>
+                    <a href="{% url 'manage_posted_opportunities' %}" class="btn btn-sm btn-outline-success rounded-pill fw-bold mt-3">See applicants &rarr;</a>
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="ts-empty mb-4"><div class="big">&#128226;</div><p class="text-muted mb-0">Nothing here yet.</p></div>
+{% endif %}

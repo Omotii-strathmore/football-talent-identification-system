@@ -1,118 +1,196 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load static football %}
 
 {% block title %}Post Opportunity{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
+<style>
+    .po-card { background: #fff; border-radius: 22px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 12px 30px rgba(15,23,42,.06); padding: 22px; margin-bottom: 26px; }
+    .po-step { display: flex; gap: 14px; padding: 18px 0; border-top: 1px solid #eef2f6; }
+    .po-step:first-of-type { border-top: 0; padding-top: 4px; }
+    .po-num { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-weight: 800; background: #f6c453; color: #3b2a05; box-shadow: 0 4px 10px rgba(201,151,30,.35); }
+    .po-body { flex: 1; min-width: 0; }
+    .po-body h3 { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 4px 0 2px; }
+    .po-why { font-size: .85rem; color: #64748b; margin: 0 0 10px; }
+    .po-body .form-control, .po-body .form-select { border-radius: 12px; padding: 10px 14px; }
+    .po-label { font-weight: 700; color: #334155; font-size: .9rem; margin-bottom: 4px; display: block; }
+    .po-err { color: #b91c1c; font-size: .86rem; font-weight: 600; margin-top: 6px; }
+    .po-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+    .po-cats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+    .po-cat input { position: absolute; opacity: 0; pointer-events: none; }
+    .po-cat span { display: block; text-align: center; padding: 14px 8px; border-radius: 14px; border: 2px solid #e2e8f0; background: #fff; cursor: pointer; font-weight: 700; color: #334155; transition: all .15s ease; }
+    .po-cat span b { display: block; font-size: 1.6rem; font-weight: 400; margin-bottom: 4px; }
+    .po-cat span small { display: block; font-weight: 500; color: #64748b; font-size: .78rem; }
+    .po-cat input:checked + span { border-color: #f6c453; background: #fffaf0; color: #3b2a05; box-shadow: 0 6px 16px rgba(201,151,30,.2); }
+    .po-cat input:focus-visible + span { outline: 3px solid #0b4d2c; outline-offset: 2px; }
+    .po-poster { border: 2px dashed #9fd8b4; border-radius: 16px; background: #f0fdf4; padding: 20px; text-align: center; cursor: pointer; }
+    .po-poster:hover { border-color: #006b3f; }
+    .po-poster img { max-height: 220px; max-width: 100%; border-radius: 12px; display: none; margin: 0 auto 8px; }
+    .po-poster strong { color: #0b4d2c; }
+    .btn-publish { background: #006b3f; color: #fff; font-weight: 800; border-radius: 999px; padding: 13px 28px; border: 0; width: 100%; font-size: 1.05rem; }
+    .btn-publish:hover { background: #00552f; color: #fff; }
+    .po-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .po-item { background: #fff; border-radius: 18px; border: 1px solid rgba(148,163,184,.2); box-shadow: 0 8px 22px rgba(15,23,42,.05); overflow: hidden; }
+    .po-item img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .po-item .in { padding: 14px 16px; }
+    .po-item h4 { font-size: 1rem; font-weight: 800; margin: 0 0 8px; color: #0f172a; }
+    .po-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+    .po-tabs { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: #fff; border: 1px solid rgba(148,163,184,.25); }
+    .po-tabs a { border-radius: 999px; padding: 7px 16px; font-weight: 700; font-size: .88rem; color: #334155; text-decoration: none; }
+    .po-tabs a.on { background: #0b4d2c; color: #fff; }
+    @media (max-width: 767.98px) {
+        .po-card { padding: 16px; }
+        .po-grid { grid-template-columns: 1fr; }
+        .po-cats { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-	<div class="d-flex justify-content-between align-items-center mb-3">
-		<h2 class="mb-0">Post Opportunity</h2>
-		<div class="d-flex gap-2">
-			<a href="{% url 'manage_posted_opportunities' %}" class="btn btn-outline-primary">Manage Applications</a>
-			<a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
-		</div>
-	</div>
+    <section class="ts-hero-g">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <div>
+                <div class="eyebrow">Scout</div>
+                <h2 class="mb-1" style="font-size:clamp(1.5rem,3vw,2.1rem)">&#128226; Post a trial or tournament</h2>
+                <p class="ts-sub mb-0">A clear post brings the right players. It takes about two minutes.</p>
+            </div>
+            <a href="{% url 'manage_posted_opportunities' %}" class="btn btn-gold">&#128221; Manage applications</a>
+        </div>
+    </section>
 
-	{% if not is_verified %}
-		<div class="alert alert-warning">
-			Your scout account is still pending verification,and Only approved scouts can post opportunities.
-		</div>
-	{% endif %}
+    {% if not is_verified %}
+        <div class="ed-lock mb-3" style="display:flex;gap:10px;background:#fffaf0;border:1px solid #f2d78a;border-radius:14px;padding:12px 14px;color:#5a4300">
+            <span aria-hidden="true">&#9203;</span><span>Your scout account is waiting for verification. You can prepare a post, but only approved scouts can publish.</span>
+        </div>
+    {% endif %}
 
-	<div class="card mb-4">
-		<div class="card-body">
-			<form method="post" enctype="multipart/form-data" novalidate>
-				{% csrf_token %}
-				{{ form|crispy }}
-				{% if is_verified %}{% include 'includes/ai_assist.html' with kind='opportunity' target='id_description' hint='e.g. U-17 trials for midfielders and forwards, Kasarani grounds, bring boots and shin guards, free entry, coaches from Gor Mahia academy watching' %}{% endif %}
-				{% if is_verified %}
-					<button type="submit" class="btn btn-primary mt-2">Publish Opportunity</button>
-				{% else %}
-					<button type="button" class="btn btn-secondary mt-2" disabled>Publish Opportunity (Awaiting Verification)</button>
-				{% endif %}
-			</form>
-		</div>
-	</div>
+    <form method="post" enctype="multipart/form-data" novalidate class="po-card">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
 
-	<div class="d-flex gap-2 mb-3">
-		<a href="{% url 'post_opportunity' %}?view=available" class="btn btn-sm {% if selected_view == 'available' %}btn-primary{% else %}btn-outline-primary{% endif %}">Available</a>
-		<a href="{% url 'post_opportunity' %}?view=history" class="btn btn-sm {% if selected_view == 'history' %}btn-secondary{% else %}btn-outline-secondary{% endif %}">History</a>
-	</div>
+        <div class="po-step">
+            <div class="po-num">1</div>
+            <div class="po-body">
+                <h3>What is it?</h3>
+                <p class="po-why">A short, clear name players will recognise.</p>
+                <div class="po-grid">
+                    <div>
+                        <label class="po-label" for="id_title">Title</label>
+                        <input type="text" name="title" id="id_title" maxlength="150" class="form-control" value="{{ form.title.value|default:'' }}" placeholder="e.g. U-19 Academy Trials">
+                        {% if form.title.errors %}<div class="po-err">{{ form.title.errors|striptags }}</div>{% endif %}
+                    </div>
+                    <div>
+                        <label class="po-label" for="id_organization">Organisation</label>
+                        <input type="text" name="organization" id="id_organization" maxlength="150" class="form-control" value="{{ form.organization.value|default:'' }}" placeholder="Club or academy name">
+                        {% if form.organization.errors %}<div class="po-err">{{ form.organization.errors|striptags }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
 
-	{% if selected_view == 'available' %}
-	<h4>Available Opportunities</h4>
-		{% if available_opportunities %}
-		<div class="table-responsive">
-			<table class="table table-bordered table-striped">
-				<thead>
-					<tr>
-						<th>Title</th>
-						<th>Organization</th>
-						<th>Deadline</th>
-						<th>Application Limit</th>
-						<th>Applications</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for opportunity in available_opportunities %}
-						<tr>
-							<td>{{ opportunity.title }}</td>
-							<td>{{ opportunity.organization }}</td>
-							<td>{{ opportunity.deadline }}</td>
-							<td>{{ opportunity.max_applications|default:'Not set' }}</td>
-							<td>{{ opportunity.applications.count }}</td>
-						</tr>
-						{% if opportunity.poster_image %}
-						<tr>
-							<td colspan="5">
-								<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" style="max-width: 240px; border-radius: 10px;">
-							</td>
-						</tr>
-						{% endif %}
-					{% endfor %}
-				</tbody>
-			</table>
-		</div>
-		{% else %}
-			<div class="alert alert-info">No active opportunities posted right now.</div>
-		{% endif %}
-	{% else %}
-		<h4>Opportunities History</h4>
-		{% if history_opportunities %}
-		<div class="table-responsive">
-			<table class="table table-bordered table-striped">
-				<thead>
-					<tr>
-						<th>Title</th>
-						<th>Organization</th>
-						<th>Deadline</th>
-						<th>Application Limit</th>
-						<th>Applications</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for opportunity in history_opportunities %}
-						<tr>
-							<td>{{ opportunity.title }}</td>
-							<td>{{ opportunity.organization }}</td>
-							<td>{{ opportunity.deadline }}</td>
-							<td>{{ opportunity.max_applications|default:'Not set' }}</td>
-							<td>{{ opportunity.applications.count }}</td>
-						</tr>
-						{% if opportunity.poster_image %}
-						<tr>
-							<td colspan="5">
-								<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" style="max-width: 240px; border-radius: 10px;">
-							</td>
-						</tr>
-						{% endif %}
-					{% endfor %}
-				</tbody>
-			</table>
-		</div>
-		{% else %}
-			<div class="alert alert-light border">No expired opportunities in history yet.</div>
-		{% endif %}
-	{% endif %}
+        <div class="po-step">
+            <div class="po-num">2</div>
+            <div class="po-body">
+                <h3>Who is it for?</h3>
+                <p class="po-why">Players can apply only to their own category, or to trials open to all.</p>
+                <div class="po-cats" role="radiogroup" aria-label="Who is it for">
+                    {% for value, label in form.fields.category.choices %}{% if value %}
+                        <label class="po-cat">
+                            <input type="radio" name="category" value="{{ value }}" {% if form.category.value == value %}checked{% elif not form.category.value and value == 'open' %}checked{% endif %}>
+                            <span><b aria-hidden="true">{% if value == 'stars' %}&#11088;{% elif value == 'starlets' %}&#127775;{% else %}&#9917;{% endif %}</b>{% if value == 'stars' %}Stars{% elif value == 'starlets' %}Starlets{% else %}Open to all{% endif %}<small>{% if value == 'stars' %}Men's football{% elif value == 'starlets' %}Women's football{% else %}Stars and Starlets{% endif %}</small></span>
+                        </label>
+                    {% endif %}{% endfor %}
+                </div>
+                {% if form.category.errors %}<div class="po-err">{{ form.category.errors|striptags }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="po-step">
+            <div class="po-num">3</div>
+            <div class="po-body">
+                <h3>Describe it</h3>
+                <p class="po-why">Ages, positions, what to bring, cost (free is best), and who will be watching.</p>
+                <textarea name="description" id="id_description" rows="5" class="form-control" placeholder="e.g. Open trials for Stars aged 16 to 19, all positions. Bring boots, shin guards and water. Free entry.">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}<div class="po-err">{{ form.description.errors|striptags }}</div>{% endif %}
+                {% if is_verified %}{% include 'includes/ai_assist.html' with kind='opportunity' target='id_description' hint='e.g. U-17 trials for midfielders and forwards, Kasarani grounds, bring boots and shin guards, free entry, coaches from Gor Mahia academy watching' %}{% endif %}
+            </div>
+        </div>
+
+        <div class="po-step">
+            <div class="po-num">4</div>
+            <div class="po-body">
+                <h3>Add a poster <span class="text-muted fw-normal" style="font-size:.85rem">(optional)</span></h3>
+                <p class="po-why">Posts with a poster catch more eyes. Players can open it in full.</p>
+                <div class="po-poster" id="po-poster" role="button" tabindex="0" aria-label="Choose a poster image">
+                    <img id="po-poster-img" alt="Poster preview">
+                    <div id="po-poster-text"><div style="font-size:2rem">&#128444;&#65039;</div><strong>Click or tap to choose a poster</strong><div class="po-why mb-0">JPG or PNG</div></div>
+                </div>
+                <input type="file" name="poster_image" id="id_poster_image" accept="image/*" hidden>
+                {% if form.poster_image.errors %}<div class="po-err">{{ form.poster_image.errors|striptags }}</div>{% endif %}
+            </div>
+        </div>
+
+        <div class="po-step">
+            <div class="po-num">5</div>
+            <div class="po-body">
+                <h3>Where and when?</h3>
+                <p class="po-why">Shortlisted players get a reminder on the trial day and are asked afterwards whether they went.</p>
+                <div class="po-grid">
+                    <div>
+                        <label class="po-label" for="id_location">&#128205; Venue</label>
+                        <input type="text" name="location" id="id_location" maxlength="120" class="form-control" value="{{ form.location.value|default:'' }}" placeholder="e.g. Camp Toyoyo, Nairobi">
+                        {% if form.location.errors %}<div class="po-err">{{ form.location.errors|striptags }}</div>{% endif %}
+                    </div>
+                    <div>
+                        <label class="po-label" for="id_deadline">&#128197; Application deadline</label>
+                        <input type="date" name="deadline" id="id_deadline" class="form-control" value="{{ form.deadline.value|default:''|stringformat:'s' }}" min="{% now 'Y-m-d' %}">
+                        {% if form.deadline.errors %}<div class="po-err">{{ form.deadline.errors|striptags }}</div>{% endif %}
+                    </div>
+                    <div>
+                        <label class="po-label" for="id_event_date">&#9917; Trial / tournament date <span class="text-muted fw-normal">(optional)</span></label>
+                        <input type="date" name="event_date" id="id_event_date" class="form-control" value="{{ form.event_date.value|default:''|stringformat:'s' }}" min="{% now 'Y-m-d' %}">
+                        {% if form.event_date.errors %}<div class="po-err">{{ form.event_date.errors|striptags }}</div>{% endif %}
+                    </div>
+                    <div>
+                        <label class="po-label" for="id_max_applications">&#128101; Places <span class="text-muted fw-normal">(optional)</span></label>
+                        <input type="number" name="max_applications" id="id_max_applications" min="1" class="form-control" value="{{ form.max_applications.value|default:'' }}" placeholder="e.g. 40">
+                        {% if form.max_applications.errors %}<div class="po-err">{{ form.max_applications.errors|striptags }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if is_verified %}
+            <button type="submit" class="btn btn-publish mt-2">Publish &#128226;</button>
+        {% else %}
+            <button type="button" class="btn btn-secondary rounded-pill w-100 mt-2" disabled>Publish (waiting for verification)</button>
+        {% endif %}
+    </form>
+
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h4 class="ts-head mb-0"><span class="ic" aria-hidden="true">&#127942;</span>Your posts</h4>
+        <div class="po-tabs">
+            <a href="{% url 'post_opportunity' %}?view=available" class="{% if selected_view == 'available' %}on{% endif %}">Open</a>
+            <a href="{% url 'post_opportunity' %}?view=history" class="{% if selected_view == 'history' %}on{% endif %}">Past</a>
+        </div>
+    </div>
+    {% if selected_view == 'available' %}{% with items=available_opportunities %}{% include 'scouts/_posted_list.html' %}{% endwith %}
+    {% else %}{% with items=history_opportunities %}{% include 'scouts/_posted_list.html' %}{% endwith %}{% endif %}
 </div>
+<script>
+    (function () {
+        var box = document.getElementById('po-poster'), input = document.getElementById('id_poster_image');
+        var img = document.getElementById('po-poster-img'), text = document.getElementById('po-poster-text');
+        box.addEventListener('click', function () { input.click(); });
+        box.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+        input.addEventListener('change', function () {
+            var file = input.files && input.files[0];
+            if (!file) return;
+            img.src = URL.createObjectURL(file); img.style.display = 'block';
+            text.innerHTML = '<strong>' + file.name.replace(/[<>&]/g, '') + '</strong><div class="po-why mb-0">Tap to choose a different poster</div>';
+        });
+    })();
+</script>
 {% endblock %}

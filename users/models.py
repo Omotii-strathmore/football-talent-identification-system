@@ -203,3 +203,32 @@ class AuthThrottle(models.Model):
 
     def __str__(self):
         return self.key
+
+
+class AdminNotification(models.Model):
+    """Things the administrator should know about, shown on the admin dashboard."""
+    KIND_CHOICES = [
+        ('scout_new', 'New scout to verify'),
+        ('scout_resubmit', 'Scout sent a new document'),
+        ('scout_changed', 'Scout changed their details'),
+        ('feedback', 'New feedback'),
+        ('milestone', 'Milestone'),
+    ]
+    ICONS = {'scout_new': '\U0001F50E', 'scout_resubmit': '\U0001F4C4', 'scout_changed': '\u270F\uFE0F',
+             'feedback': '\U0001F4AC', 'milestone': '\U0001F389'}
+
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES)
+    message = models.CharField(max_length=255)
+    link = models.CharField(max_length=200, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    read_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.message
+
+    @property
+    def icon(self):
+        return self.ICONS.get(self.kind, '\U0001F514')

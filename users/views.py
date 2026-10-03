@@ -51,7 +51,7 @@ from .forms import (
     PasswordResetConfirmForm,
     SiteUpdateForm,
 )
-from .models import User, OneTimeCode, SiteFeedback, SiteUpdate, UpdateReceipt
+from .models import AdminNotification, User, OneTimeCode, SiteFeedback, SiteUpdate, UpdateReceipt
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +100,7 @@ def submit_feedback_view(request):
     feedback_id = request.POST.get('feedback_id')
     if feedback_id and feedback_id.isdigit():
         feedback = SiteFeedback.objects.filter(id=feedback_id, user=request.user).first()
+    is_new = feedback is None
     if feedback is None:
         feedback = SiteFeedback(user=request.user, role=request.user.role)
     feedback.rating = rating
@@ -107,6 +108,9 @@ def submit_feedback_view(request):
     feedback.comment = comment
     feedback.page = request.POST.get('page', '')[:255]
     feedback.save()
+    if is_new:
+        from .notify import notify_admins
+        notify_admins('feedback', f'{request.user.full_name} ({request.user.role}) rated Talanta Soka "{rating}"', reverse('admin_feedback'))
     return JsonResponse({'ok': True, 'feedback_id': feedback.id})
 
 
@@ -442,7 +446,7 @@ def complete_profile_view(request):
         if form.is_valid():
             if user.role == 'player':
                 is_minor = bool(form.cleaned_data.get('guardian_consent')) and _calculate_age(form.cleaned_data['date_of_birth']) < 18
-                profile, _ = PlayerProfile.objects.update_or_create(
+                profile, profile_created = PlayerProfile.objects.update_or_create(
                     user=user,
                     defaults={
                         'full_name': user.full_name,
@@ -457,13 +461,16 @@ def complete_profile_view(request):
                         'guardian_declined_at': None,
                     }
                 )
+                if profile_created:
+                    from .notify import check_milestone
+                    check_milestone('player')
                 if is_minor:
                     if send_guardian_email(request, profile):
                         messages.info(request, f'We emailed {mask_email(profile.guardian_email)} so your parent or guardian can approve your account.')
                     else:
                         messages.warning(request, 'We could not email your parent or guardian yet. You can resend it from your dashboard after logging in.')
             else:
-                Scout.objects.update_or_create(
+                _, scout_created = Scout.objects.update_or_create(
                     user=user,
                     defaults={
                         'organization': form.cleaned_data['organization'],
@@ -473,6 +480,11 @@ def complete_profile_view(request):
                         'profile_photo': form.cleaned_data.get('profile_photo'),
                     }
                 )
+                from .notify import check_milestone, notify_admins
+                notify_admins('scout_new', f'New scout to verify: {user.full_name} ({form.cleaned_data["organization"]})',
+                              reverse('admin_verifications'))
+                if scout_created:
+                    check_milestone('scout')
 
             request.session['pending_user_id'] = user.id
             request.session['pending_user_email'] = user.email
@@ -622,6 +634,8 @@ def admin_dashboard_view(request):
             'applications_count': applications_count,
             'feedback_count': feedback_count,
             'updates_count': SiteUpdate.objects.count(),
+            'notifications': AdminNotification.objects.all()[:10],
+            'unread_notifications': AdminNotification.objects.filter(read_at__isnull=True).count(),
         },
     )
 
@@ -1390,3 +1404,21 @@ def photo_position_view(request):
     owner.photo_position = f'{x:.0f}% {y:.0f}%'
     owner.save(update_fields=['photo_position'])
     return JsonResponse({'ok': True, 'position': owner.photo_position})
+
+
+
+@user_passes_test(_is_staff_user, login_url='login')
+def admin_notification_open(request, notification_id):
+    """Mark a notification as read and go to the page it is about."""
+    note = get_object_or_404(AdminNotification, pk=notification_id)
+    if note.read_at is None:
+        note.read_at = timezone.now()
+        note.save(update_fields=['read_at'])
+    return redirect(note.link or 'admin_dashboard')
+
+
+@user_passes_test(_is_staff_user, login_url='login')
+@require_POST
+def admin_notifications_read_all(request):
+    AdminNotification.objects.filter(read_at__isnull=True).update(read_at=timezone.now())
+    return redirect('admin_dashboard')

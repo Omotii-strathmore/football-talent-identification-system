@@ -103,12 +103,37 @@ class ScoutEditDetailsForm(forms.ModelForm):
 		help_text='Select one specialization.',
 	)
 
+	# Needed only when the organisation or speciality changes: our team checks the new details against it.
+	verification_document = forms.FileField(
+		required=False,
+		label='New verification document',
+		help_text='A coaching licence, a signed club or academy letter, or an official accreditation that shows your new details. PDF or Word.',
+		validators=[FileExtensionValidator(['pdf', 'doc', 'docx'])],
+		widget=forms.ClearableFileInput(attrs={'accept': '.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document'}),
+	)
+
 	class Meta:
 		model = Scout
 		fields = ["organization", "specialization", "profile_photo"]
 		widgets = {
 			"organization": forms.TextInput(attrs={"placeholder": "Organization worked with"}),
 		}
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self._original = ((self.instance.organization or '').strip().lower(), self.instance.specialization or '')
+
+	@property
+	def needs_new_document(self):
+		data = getattr(self, 'cleaned_data', {})
+		organization = (data.get('organization') or '').strip().lower()
+		return (organization, data.get('specialization') or '') != self._original
+
+	def clean(self):
+		cleaned = super().clean()
+		if self.needs_new_document and not cleaned.get('verification_document'):
+			self.add_error('verification_document', 'You changed your organisation or speciality. Please upload a document that shows the new details, so our team can verify it.')
+		return cleaned
 
 
 	def clean_organization(self):

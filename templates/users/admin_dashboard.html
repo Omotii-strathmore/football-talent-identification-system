@@ -14,6 +14,51 @@
         <p class="text-muted mb-0">Monitor system activity and manage users and scout verification.</p>
     </div>
 
+    <section class="an-card mb-4" id="notifications">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <h4 class="an-title mb-0">&#128276; Notifications {% if unread_notifications %}<span class="an-count">{{ unread_notifications }} new</span>{% endif %}</h4>
+            {% if unread_notifications %}
+            <form method="post" action="{% url 'admin_notifications_read_all' %}">{% csrf_token %}<button type="submit" class="btn btn-sm btn-outline-secondary rounded-pill">Mark all as read</button></form>
+            {% endif %}
+        </div>
+        {% if notifications %}
+            <ul class="an-list">
+                {% for note in notifications %}
+                    <li class="{% if not note.read_at %}is-new{% endif %}">
+                        <a href="{% url 'admin_notification_open' note.id %}">
+                            <span class="an-ic" aria-hidden="true">{{ note.icon }}</span>
+                            <span class="an-msg">{{ note.message }}</span>
+                            <span class="an-when">{{ note.created_at|timesince }} ago</span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted mb-0">All quiet. New scouts, re-sent documents, scouts' changes, feedback and every 5 new players or scouts will show here.</p>
+        {% endif %}
+    </section>
+    <style>
+        .an-card { background:#fff; border-radius:18px; padding:18px 20px; border:1px solid rgba(148,163,184,.2); box-shadow:0 10px 26px rgba(15,23,42,.06); }
+        .an-title { font-weight:800; font-size:1.15rem; }
+        .an-count { display:inline-block; margin-left:6px; font-size:.75rem; font-weight:800; background:#dc2626; color:#fff; border-radius:999px; padding:3px 10px; vertical-align:middle; }
+        .an-list { list-style:none; margin:0; padding:0; }
+        .an-list li { border-top:1px solid #eef2f6; }
+        .an-list li:first-child { border-top:0; }
+        .an-list a { display:flex; gap:12px; align-items:center; padding:10px 6px; text-decoration:none; color:#334155; border-radius:10px; }
+        .an-list a:hover { background:#f8fafc; }
+        .an-list li.is-new a { color:#0f172a; font-weight:700; }
+        .an-list li.is-new .an-ic { box-shadow:0 0 0 3px #fde68a; }
+        .an-ic { width:36px; height:36px; border-radius:50%; background:#f1f5f9; display:grid; place-items:center; flex-shrink:0; }
+        .an-msg { flex:1; min-width:0; }
+        .an-when { font-size:.78rem; color:#94a3b8; white-space:nowrap; font-weight:500; }
+        html.admin-tech .an-card { background:var(--t-panel)!important; border-color:var(--t-line)!important; }
+        html.admin-tech .an-list a { color:var(--t-text); }
+        html.admin-tech .an-list li.is-new a { color:#fff; }
+        html.admin-tech .an-list a:hover { background:rgba(56,189,248,.08); }
+        html.admin-tech .an-ic { background:#13213b; }
+        html.admin-tech .an-list li { border-top-color:var(--t-line); }
+    </style>
+
     <div class="ss-admin mb-4">
         <div><span class="ss-num">&#11088; {{ stars_count }}</span><span class="ss-lbl">Stars players</span></div>
         <div><span class="ss-num">&#127775; {{ starlets_count }}</span><span class="ss-lbl">Starlets players</span></div>

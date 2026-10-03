@@ -445,7 +445,21 @@ def edit_details(request):
     if request.method == 'POST':
         form = ScoutEditDetailsForm(request.POST, request.FILES, instance=scout_profile)
         if form.is_valid():
-            form.save()
+            scout = form.save(commit=False)
+            if form.needs_new_document:
+                # New details must be checked again: the account waits for the administrator's approval.
+                scout.verification_document = form.cleaned_data['verification_document']
+                scout.verified = False
+                scout.verification_status = 'pending'
+                scout.save()
+                from users.notify import notify_admins
+                notify_admins('scout_changed',
+                              f'{request.user.full_name} changed their organisation or speciality to "{scout.organization}" / {scout.specialization}. New document to check.',
+                              reverse('admin_verifications'))
+                messages.success(request, 'Thank you! Your new details and document were sent for review. Until our team approves them, '
+                                          'your account shows "Pending verification" and player profiles are paused.')
+                return redirect('scout_dashboard')
+            scout.save()
             messages.success(request, 'Scout details updated successfully.')
             return redirect('scout_edit_details')
     else:
@@ -477,6 +491,9 @@ def resubmit_verification(request):
             scout.verified = False
             scout.verification_status = 'pending'
             scout.save()
+            from users.notify import notify_admins
+            notify_admins('scout_resubmit', f'{request.user.full_name} ({scout.organization}) sent a new verification document.',
+                          reverse('admin_verifications'))
             messages.success(request, 'Thank you! Your new document has been sent. Our team will review it and email you.')
             return redirect('scout_dashboard')
     else:

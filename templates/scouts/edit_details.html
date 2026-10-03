@@ -1,39 +1,122 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load static football %}
 
 {% block title %}Edit Scout Details{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
+<style>
+    .ed-card { background: #fff; border-radius: 22px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 12px 30px rgba(15,23,42,.06); padding: 22px; margin-bottom: 22px; }
+    .ed-label { font-weight: 800; color: #0f172a; margin-bottom: 4px; display: block; }
+    .ed-why { font-size: .85rem; color: #64748b; margin: 0 0 8px; }
+    .ed-card .form-control, .ed-card .form-select { border-radius: 12px; padding: 10px 14px; }
+    .ed-err { color: #b91c1c; font-size: .86rem; font-weight: 600; margin-top: 6px; }
+    .ed-lock { display: flex; gap: 10px; align-items: flex-start; background: #fffaf0; border: 1px solid #f2d78a; border-radius: 14px; padding: 12px 14px; font-size: .9rem; color: #5a4300; }
+    .ed-doc { display: none; margin-top: 16px; padding: 16px; border-radius: 16px; border: 2px dashed #f2d78a; background: #fffdf5; }
+    .ed-doc.show { display: block; animation: ed-in .25s ease; }
+    @keyframes ed-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+    .ed-doc h3 { font-size: 1rem; font-weight: 800; color: #7a5600; margin: 0 0 4px; }
+    .ed-photo { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+    .btn-save { background: #006b3f; color: #fff; font-weight: 800; border-radius: 999px; padding: 12px 30px; border: 0; }
+    .btn-save:hover { background: #00552f; color: #fff; }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Edit Scout Details</h2>
-        <a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
-    </div>
+    <section class="ts-hero-g">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <div>
+                <div class="eyebrow">Scout account</div>
+                <h2 class="mb-1" style="font-size:clamp(1.5rem,3vw,2.1rem)">&#9999;&#65039; Edit your details</h2>
+                <p class="ts-sub mb-0">Keep your organisation, speciality and photo up to date so players and our team know who you are.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                {% if scout_profile.verification_status == 'approved' %}<span class="ts-chip ok">&#9989; Verified scout</span>{% else %}<span class="ts-chip wait">&#9203; Pending verification</span>{% endif %}
+                {% if scout_profile.scouts_for %}<span class="ts-chip gold">{{ scout_profile.scouts_for|category_badge }}</span>{% endif %}
+            </div>
+        </div>
+    </section>
 
-    <div class="card">
-        <div class="card-body">
-            {% if scout_profile.profile_photo %}
-                <div class="mb-3">
-                    <img src="{{ scout_profile.profile_photo.url }}" style="object-position: {{ scout_profile.photo_position|default:'50% 30%' }}" data-photo-img alt="Scout profile photo" class="hero-avatar">
-                </div>
-            {% endif %}
+    <form method="post" enctype="multipart/form-data" novalidate id="edit-details-form">
+        {% csrf_token %}
+        {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
 
-            <p class="mb-3"><strong>Players you scout:</strong>
+        <div class="ed-card">
+            <h4 class="ts-head"><span class="ic" aria-hidden="true">&#127979;</span>Who you scout for</h4>
+
+            <label class="ed-label" for="id_organization">Organisation</label>
+            <p class="ed-why">The full, official name of your club, academy or organisation.</p>
+            <input type="text" name="organization" id="id_organization" maxlength="150" class="form-control" value="{{ form.organization.value|default:'' }}" data-original="{{ scout_profile.organization }}" placeholder="e.g. Gor Mahia Youth Academy">
+            {% if form.organization.errors %}<div class="ed-err">{{ form.organization.errors|striptags }}</div>{% endif %}
+
+            <label class="ed-label mt-3" for="id_specialization">Speciality</label>
+            <p class="ed-why">The positions you mainly look for.</p>
+            <select name="specialization" id="id_specialization" class="form-select" data-original="{{ scout_profile.specialization }}">
+                {% for value, label in form.fields.specialization.choices %}
+                    <option value="{{ value }}" {% if form.specialization.value == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+            {% if form.specialization.errors %}<div class="ed-err">{{ form.specialization.errors|striptags }}</div>{% endif %}
+
+            <div class="ed-lock mt-3">
+                <span aria-hidden="true">&#128274;</span>
+                <span>Changing your organisation or speciality needs a new document. Your account then shows <strong>Pending verification</strong>, and player profiles are paused until our team approves the change.</span>
+            </div>
+
+            <div class="ed-doc{% if form.verification_document.errors %} show{% endif %}" id="ed-doc">
+                <h3>&#128196; Upload a document for your new details</h3>
+                <p class="ed-why mb-2">A coaching licence, a signed club or academy letter, or an official accreditation that shows your new organisation or speciality. PDF or Word.</p>
+                <input type="file" name="verification_document" id="id_verification_document" class="form-control" accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+                {% if form.verification_document.errors %}<div class="ed-err">{{ form.verification_document.errors|striptags }}</div>{% endif %}
+            </div>
+
+            <p class="ed-why mt-3 mb-0"><strong>Players you scout:</strong>
                 {% if scout_profile.scouts_for == 'starlets' %}&#127775; Starlets (women's football){% elif scout_profile.scouts_for == 'stars' %}&#11088; Stars (men's football){% else %}&#11088;&#127775; Stars and Starlets{% endif %}
-                <br><small class="text-muted">You chose this when you signed up and our team checked it against your document. To change it, <a href="{{ support_compose_url }}" target="_blank" rel="noopener">contact us</a>.</small></p>
-            <form method="post" enctype="multipart/form-data" novalidate>
-                {% csrf_token %}
-                {{ form|crispy }}
-                <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
-            </form>
+                &middot; checked against your document. To change it, <a href="{{ support_compose_url }}" target="_blank" rel="noopener">contact us</a>.</p>
         </div>
-    </div>
 
-    <div class="card mt-4 mb-4">
-        <div class="card-body">
-            <h5 class="mb-3">Emails</h5>
-            {% include 'includes/email_settings.html' %}
+        <div class="ed-card">
+            <h4 class="ts-head"><span class="ic" aria-hidden="true">&#128247;</span>Profile photo</h4>
+            <div class="ed-photo">
+                <div class="ts-photo"{% if scout_profile.profile_photo %} data-photo-ring role="button" tabindex="0" aria-label="Move your photo inside the circle" title="Tap to move your photo"{% endif %}>
+                    {% if scout_profile.profile_photo %}
+                        <img src="{{ scout_profile.profile_photo.url }}" style="object-position: {{ scout_profile.photo_position|default:'50% 30%' }}" data-photo-img alt="Your profile photo">
+                    {% else %}
+                        <div class="ts-initial" aria-hidden="true">{{ request.user.full_name|slice:':1'|upper }}</div>
+                    {% endif %}
+                </div>
+                <div class="flex-fill">
+                    <label class="ed-label" for="id_profile_photo">{% if scout_profile.profile_photo %}Change photo{% else %}Add a photo{% endif %}</label>
+                    <p class="ed-why">Players trust scouts they can put a face to.{% if scout_profile.profile_photo %} Tap your photo to move it inside the circle.{% endif %}</p>
+                    <input type="file" name="profile_photo" id="id_profile_photo" class="form-control" accept="image/*">
+                    {% if form.profile_photo.errors %}<div class="ed-err">{{ form.profile_photo.errors|striptags }}</div>{% endif %}
+                </div>
+            </div>
         </div>
+
+        <div class="text-end mb-4"><button type="submit" class="btn btn-save">Save changes &#10003;</button></div>
+    </form>
+
+    <div class="ed-card">
+        <h4 class="ts-head"><span class="ic" aria-hidden="true">&#9993;&#65039;</span>Emails</h4>
+        {% include 'includes/email_settings.html' %}
     </div>
 </div>
+{% if scout_profile.profile_photo %}{% include 'includes/photo_reposition.html' with photo_url=scout_profile.profile_photo.url photo_position=scout_profile.photo_position %}{% endif %}
+<script>
+    (function () {
+        // Show the document box as soon as the organisation or speciality is changed.
+        var org = document.getElementById('id_organization');
+        var spec = document.getElementById('id_specialization');
+        var doc = document.getElementById('ed-doc');
+        function check() {
+            var changed = org.value.trim().toLowerCase() !== (org.dataset.original || '').trim().toLowerCase() || spec.value !== spec.dataset.original;
+            doc.classList.toggle('show', changed || !!doc.querySelector('.ed-err'));
+        }
+        org.addEventListener('input', check);
+        spec.addEventListener('change', check);
+        check();
+    })();
+</script>
 {% endblock %}
