@@ -44,7 +44,7 @@ Fills a separate practice database with Stars, Starlets, scouts and trials (it r
 
 ```powershell
 $env:DATABASE_URL = "sqlite:///practice.sqlite3"; $env:R2_BUCKET_NAME = "off"
-$env:DJANGO_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"   # emails are printed here, not sent
+$env:DJANGO_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"; $env:PYTHONIOENCODING = "utf-8"   # emails are printed here, not sent
 python manage.py migrate
 python manage.py seed_demo
 python manage.py runserver
