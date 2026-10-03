@@ -1,77 +1,93 @@
 {% extends 'base.html' %}
+{% load football %}
 
 {% block title %}My Applications{% endblock %}
 
 {% block extra_css %}
 <style>
-	.app-status-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 4px 12px;
-		border-radius: 999px;
-		font-size: 0.78rem;
-		font-weight: 700;
+	.ts-hero {
+		position: relative; overflow: hidden; border-radius: 22px; padding: 30px 32px; margin-bottom: 22px; color: #fff;
+		background: radial-gradient(circle at 92% 10%, rgba(246,196,83,.35), transparent 40%), linear-gradient(135deg, #07170d 0%, #0b4d2c 55%, #006b3f 100%);
+		box-shadow: 0 18px 40px rgba(0, 60, 30, .18);
 	}
+	.ts-hero::after { content: "\26BD"; position: absolute; right: 26px; bottom: -18px; font-size: 7rem; opacity: .12; transform: rotate(-15deg); }
+	.ts-hero .eyebrow { color: #f6c453; font-weight: 800; letter-spacing: 2px; font-size: .78rem; text-transform: uppercase; }
+	.ts-hero h1 { font-weight: 800; font-size: clamp(1.7rem, 3.4vw, 2.4rem); margin: 6px 0 6px; }
+	.ts-hero p { color: #d7ecdf; margin: 0 0 16px; max-width: 60ch; }
+	.ts-hero .btn-gold { background: #f6c453; color: #07170d; font-weight: 800; border: 0; border-radius: 999px; padding: 10px 22px; }
+	.ts-hero .btn-gold:hover { background: #ffd56b; }
 
-	.app-status-badge.pending { background: #fef3c7; color: #92400e; }
-	.app-status-badge.shortlisted { background: #dcfce7; color: #166534; }
-	.app-status-badge.rejected { background: #fff3cd; color: #8a6500; }
+	.ts-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+	.ts-stat { background: #fff; border-radius: 18px; padding: 16px 18px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 8px 22px rgba(15,23,42,.05); border-top: 4px solid var(--c); }
+	.ts-stat .icon { font-size: 1.3rem; }
+	.ts-stat .value { font-size: 1.9rem; font-weight: 800; color: #0f172a; line-height: 1.1; margin-top: 4px; }
+	.ts-stat .label { font-size: .82rem; color: #64748b; }
 
-	.app-summary {
-		display: flex;
-		gap: 12px;
-		flex-wrap: wrap;
-		margin-bottom: 18px;
-	}
+	.app-card { position: relative; background: #fff; border-radius: 18px; padding: 20px 22px 18px 26px; margin-bottom: 16px;
+		border: 1px solid rgba(148,163,184,.2); box-shadow: 0 10px 26px rgba(15,23,42,.06); transition: transform .15s ease, box-shadow .15s ease; }
+	.app-card:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(15,23,42,.1); }
+	.app-card::before { content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 6px; border-radius: 0 6px 6px 0; background: var(--c); }
+	.app-card.pending { --c: #f59e0b; }
+	.app-card.shortlisted { --c: #16a34a; }
+	.app-card.rejected { --c: #c9971e; }
+	.app-card h3 { font-size: 1.2rem; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
+	.app-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; color: #475569; font-size: .9rem; margin-bottom: 14px; }
+	.app-status { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 999px; font-weight: 800; font-size: .82rem; white-space: nowrap; }
+	.app-status.pending { background: #fef3c7; color: #92400e; }
+	.app-status.shortlisted { background: #dcfce7; color: #166534; }
+	.app-status.rejected { background: #fff3cd; color: #8a6500; }
 
-	.app-summary-chip {
-		border-radius: 14px;
-		background: #fff;
-		border: 1px solid rgba(148, 163, 184, 0.18);
-		box-shadow: 0 8px 22px rgba(15, 23, 42, 0.05);
-		padding: 12px 18px;
-		min-width: 140px;
-	}
+	.app-steps { display: flex; align-items: center; margin: 0 0 14px; }
+	.app-step { display: flex; align-items: center; gap: 8px; font-size: .84rem; font-weight: 700; color: #94a3b8; white-space: nowrap; }
+	.app-step .dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #e2e8f0; color: #64748b; font-size: .8rem; }
+	.app-step.done { color: #0f5132; }
+	.app-step.done .dot { background: #16a34a; color: #fff; }
+	.app-step.now .dot { background: #f59e0b; color: #fff; box-shadow: 0 0 0 4px rgba(245,158,11,.2); }
+	.app-step.now { color: #92400e; }
+	.app-step.gentle .dot { background: #c9971e; color: #fff; }
+	.app-step.gentle { color: #8a6500; }
+	.app-line { flex: 1; height: 3px; min-width: 18px; margin: 0 10px; border-radius: 3px; background: #e2e8f0; }
+	.app-line.done { background: #16a34a; }
 
-	.app-summary-chip .value {
-		font-size: 1.4rem;
-		font-weight: 800;
-		color: #0f172a;
-	}
+	.app-note { border-radius: 12px; padding: 10px 14px; font-size: .92rem; margin: 0; }
+	.app-note.pending { background: #fffbeb; color: #78350f; }
+	.app-note.shortlisted { background: #f0fdf4; color: #14532d; }
+	.app-note.rejected { background: #fffaf0; color: #6b4e00; }
 
-	.app-summary-chip .label {
-		font-size: 0.78rem;
-		color: #64748b;
+	.app-empty { text-align: center; background: #fff; border-radius: 22px; padding: 42px 20px; border: 1px dashed #cbd5e1; }
+	.app-empty .big { font-size: 3rem; }
+
+	@media (max-width: 767.98px) {
+		.ts-stats { grid-template-columns: repeat(2, 1fr); }
+		.ts-hero { padding: 24px 20px; }
+		.app-card { padding: 18px 16px 16px 20px; }
+		.app-step .label { display: none; }
+		.app-step.now .label, .app-step.gentle .label { display: inline; }
 	}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-	<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-		<h2 class="mb-0">My Applications</h2>
-		<a href="{% url 'view_opportunities' %}" class="btn btn-outline-primary">View Opportunities</a>
-	</div>
+	<section class="ts-hero">
+		<div class="eyebrow">My journey</div>
+		<h1>My Applications</h1>
+		{% if status_counts.shortlisted %}
+			<p>&#11088; You have been shortlisted {{ status_counts.shortlisted }} time{{ status_counts.shortlisted|pluralize }}. Keep training and keep your videos fresh: a scout is watching.</p>
+		{% elif applications %}
+			<p>Every application is a step closer to being seen. Track each one below, and keep applying.</p>
+		{% else %}
+			<p>Your journey starts with one application. Find a trial that fits you and take that step.</p>
+		{% endif %}
+		<a href="{% url 'view_opportunities' %}" class="btn btn-gold">&#9917; Find more trials</a>
+	</section>
 
 	{% if applications %}
-		<div class="app-summary">
-			<div class="app-summary-chip">
-				<div class="value">{{ applications|length }}</div>
-				<div class="label">Total applications</div>
-			</div>
-			<div class="app-summary-chip">
-				<div class="value">{{ status_counts.pending }}</div>
-				<div class="label">Pending</div>
-			</div>
-			<div class="app-summary-chip">
-				<div class="value">{{ status_counts.shortlisted }}</div>
-				<div class="label">Shortlisted</div>
-			</div>
-			<div class="app-summary-chip">
-				<div class="value">{{ status_counts.rejected }}</div>
-				<div class="label">Not selected this time</div>
-			</div>
+		<div class="ts-stats">
+			<div class="ts-stat" style="--c:#0b4d2c"><div class="icon">&#128203;</div><div class="value">{{ applications|length }}</div><div class="label">Total applications</div></div>
+			<div class="ts-stat" style="--c:#f59e0b"><div class="icon">&#9203;</div><div class="value">{{ status_counts.pending }}</div><div class="label">Being reviewed</div></div>
+			<div class="ts-stat" style="--c:#16a34a"><div class="icon">&#11088;</div><div class="value">{{ status_counts.shortlisted }}</div><div class="label">Shortlisted</div></div>
+			<div class="ts-stat" style="--c:#c9971e"><div class="icon">&#127793;</div><div class="value">{{ status_counts.rejected }}</div><div class="label">Not selected this time</div></div>
 		</div>
 
 		{% if status_counts.rejected %}
@@ -80,30 +96,53 @@
 			Every great player has heard &ldquo;not yet&rdquo;. Keep training, upload a fresh clip that shows your best, and apply again: your moment is coming.
 		</div>
 		{% endif %}
-		<div class="table-responsive">
-			<table class="table table-hover align-middle bg-white rounded-3 overflow-hidden">
-				<thead class="table-light">
-					<tr>
-						<th>Opportunity</th>
-						<th>Organization</th>
-						<th>Status</th>
-						<th>Applied On</th>
-					</tr>
-				</thead>
-				<tbody>
-					{% for application in applications %}
-						<tr>
-							<td>{{ application.opportunity.title }}</td>
-							<td>{{ application.opportunity.organization }}</td>
-							<td><span class="app-status-badge {{ application.status }}">{% if application.status == 'rejected' %}Not selected this time{% else %}{{ application.get_status_display }}{% endif %}</span></td>
-							<td>{{ application.applied_at|date:'M d, Y H:i' }}</td>
-						</tr>
-					{% endfor %}
-				</tbody>
-			</table>
-		</div>
+
+		{% for application in applications %}
+			{% with opp=application.opportunity status=application.status %}
+			<article class="app-card {{ status }}">
+				<div class="d-flex justify-content-between align-items-start gap-2 flex-wrap mb-1">
+					<div>
+						<h3>{{ opp.title }}</h3>
+						<span class="badge {% if opp.category == 'starlets' %}text-bg-warning{% elif opp.category == 'stars' %}text-bg-dark{% else %}text-bg-success{% endif %}">{{ opp.category|category_badge }}</span>
+					</div>
+					<span class="app-status {{ status }}">
+						{% if status == 'shortlisted' %}&#11088; Shortlisted{% elif status == 'rejected' %}&#127793; Not selected this time{% else %}&#9203; Being reviewed{% endif %}
+					</span>
+				</div>
+				<div class="app-meta mt-2">
+					<span>&#127979; {{ opp.organization }}</span>
+					<span>&#128205; {{ opp.location }}</span>
+					<span>&#128197; Deadline {{ opp.deadline|date:'j M Y' }}</span>
+					<span>&#9997;&#65039; Applied {{ application.applied_at|date:'j M Y' }}</span>
+				</div>
+
+				<div class="app-steps" aria-label="Application progress">
+					<div class="app-step done"><span class="dot">&#10003;</span><span class="label">Applied</span></div>
+					<div class="app-line done"></div>
+					<div class="app-step {% if status == 'pending' %}now{% else %}done{% endif %}"><span class="dot">{% if status == 'pending' %}&#8943;{% else %}&#10003;{% endif %}</span><span class="label">Reviewed</span></div>
+					<div class="app-line {% if status != 'pending' %}done{% endif %}"></div>
+					<div class="app-step {% if status == 'shortlisted' %}done{% elif status == 'rejected' %}gentle{% endif %}"><span class="dot">{% if status == 'shortlisted' %}&#11088;{% elif status == 'rejected' %}&#127793;{% else %}3{% endif %}</span><span class="label">{% if status == 'rejected' %}Not this time{% else %}Shortlisted{% endif %}</span></div>
+				</div>
+
+				<p class="app-note {{ status }}">
+					{% if status == 'shortlisted' %}
+						<strong>Great news!</strong> The scout liked what they saw. Watch your email and phone, and keep training: they may contact you about the next step.
+					{% elif status == 'rejected' %}
+						Not this one, but your story is still being written. Learn from it, train hard, and apply again.
+					{% else %}
+						The scout is reviewing applications. A fresh, short video on your profile helps you stand out while you wait.
+					{% endif %}
+				</p>
+			</article>
+			{% endwith %}
+		{% endfor %}
 	{% else %}
-		<div class="alert alert-info">No applications yet, and that is fine: every journey starts with one step. <a href="{% url 'view_opportunities' %}">Browse open trials</a> and take yours today. &#9917;</div>
+		<div class="app-empty">
+			<div class="big">&#9917;</div>
+			<h3 class="fw-bold mt-2">No applications yet, and that is fine</h3>
+			<p class="text-muted mb-3">Every journey starts with one step. Browse open trials and take yours today.</p>
+			<a href="{% url 'view_opportunities' %}" class="btn btn-success rounded-pill px-4 fw-bold">Browse open trials</a>
+		</div>
 	{% endif %}
 </div>
 {% endblock %}

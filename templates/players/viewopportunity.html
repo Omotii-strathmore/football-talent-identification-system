@@ -1,152 +1,211 @@
 {% extends 'base.html' %}
 {% load football %}
-{% load crispy_forms_tags %}
 
 {% block title %}Opportunities{% endblock %}
 
 {% block extra_css %}
 <style>
-	.opp-switch {
-		display: inline-flex;
-		gap: 4px;
-		padding: 4px;
-		border-radius: 999px;
-		background: #e2e8f0;
+	.ts-hero {
+		position: relative; overflow: hidden; border-radius: 22px; padding: 30px 32px; margin-bottom: 20px; color: #fff;
+		background: radial-gradient(circle at 90% 0%, rgba(246,196,83,.38), transparent 42%), linear-gradient(135deg, #07170d 0%, #0b4d2c 55%, #006b3f 100%);
+		box-shadow: 0 18px 40px rgba(0, 60, 30, .18);
 	}
+	.ts-hero::after { content: "\26BD"; position: absolute; right: 26px; bottom: -18px; font-size: 7rem; opacity: .12; transform: rotate(-15deg); }
+	.ts-hero .eyebrow { color: #f6c453; font-weight: 800; letter-spacing: 2px; font-size: .78rem; text-transform: uppercase; }
+	.ts-hero h1 { font-weight: 800; font-size: clamp(1.7rem, 3.4vw, 2.4rem); margin: 6px 0 6px; }
+	.ts-hero p { color: #d7ecdf; margin: 0 0 16px; max-width: 62ch; }
+	.ts-hero .btn-gold { background: #f6c453; color: #07170d; font-weight: 800; border: 0; border-radius: 999px; padding: 10px 22px; }
+	.ts-hero .btn-gold:hover { background: #ffd56b; }
+	.ts-hero .btn-ghost { color: #fff; border: 1px solid rgba(255,255,255,.45); border-radius: 999px; padding: 10px 20px; font-weight: 700; }
+	.ts-hero .btn-ghost:hover { background: rgba(255,255,255,.12); color: #fff; }
 
-	.opp-switch .btn {
-		border-radius: 999px !important;
-		border: 0 !important;
-	}
+	.ts-filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 20px; }
+	.ts-pills { display: inline-flex; gap: 4px; padding: 4px; border-radius: 999px; background: #fff; border: 1px solid rgba(148,163,184,.25); box-shadow: 0 6px 16px rgba(15,23,42,.05); }
+	.ts-pills a { border-radius: 999px; padding: 7px 16px; font-weight: 700; font-size: .88rem; color: #334155; text-decoration: none; }
+	.ts-pills a.on { background: #0b4d2c; color: #fff; }
+	.ts-pills a.on.starlets { background: #f6c453; color: #3b2a05; }
 
-	.opp-card {
-		border: 1px solid rgba(148, 163, 184, 0.18);
-		transition: transform .15s ease, box-shadow .15s ease;
-	}
+	.trial { display: flex; flex-direction: column; height: 100%; background: #fff; border-radius: 20px; overflow: hidden;
+		border: 1px solid rgba(148,163,184,.2); box-shadow: 0 10px 26px rgba(15,23,42,.06); transition: transform .15s ease, box-shadow .15s ease; }
+	.trial:hover { transform: translateY(-3px); box-shadow: 0 18px 36px rgba(15,23,42,.12); }
+	.trial__top { position: relative; height: 150px; display: flex; align-items: flex-end; padding: 16px 18px; color: #fff;
+		background: linear-gradient(135deg, #0b4d2c, #006b3f); }
+	.trial__top.stars { background: linear-gradient(135deg, #111827, #374151); }
+	.trial__top.starlets { background: linear-gradient(135deg, #8a6500, #c9971e); }
+	.trial__top img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+	.trial__top.has-img::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.72)); }
+	.trial__top .ball { position: absolute; right: 16px; top: 10px; font-size: 3.4rem; opacity: .18; }
+	.trial__top h3 { position: relative; z-index: 2; margin: 0; font-weight: 800; font-size: 1.25rem; line-height: 1.25; text-shadow: 0 2px 8px rgba(0,0,0,.3); }
+	.trial__badges { position: absolute; z-index: 2; left: 16px; top: 14px; display: flex; gap: 6px; flex-wrap: wrap; }
+	.chip { display: inline-flex; align-items: center; gap: 4px; padding: 4px 11px; border-radius: 999px; font-size: .75rem; font-weight: 800; }
+	.chip.cat { background: rgba(255,255,255,.92); color: #0f172a; }
+	.chip.urgent { background: #fee2e2; color: #b91c1c; }
+	.chip.soon { background: #fef3c7; color: #92400e; }
+	.chip.normal { background: #dcfce7; color: #166534; }
+	.chip.expired { background: #e2e8f0; color: #475569; }
+	.trial__body { padding: 16px 18px 18px; display: flex; flex-direction: column; flex: 1; }
+	.trial__facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-bottom: 12px; }
+	.fact { font-size: .86rem; color: #475569; }
+	.fact strong { display: block; color: #0f172a; font-size: .92rem; }
+	.trial__desc { color: #334155; font-size: .95rem; margin-bottom: 6px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+	.trial__desc.open { -webkit-line-clamp: unset; display: block; }
+	.more { border: 0; background: none; padding: 0; color: #0b4d2c; font-weight: 700; font-size: .86rem; margin-bottom: 12px; align-self: flex-start; }
+	.trial__action { margin-top: auto; }
+	.trial__action textarea { border-radius: 12px; font-size: .9rem; }
+	.btn-apply { background: #006b3f; color: #fff; font-weight: 800; border-radius: 999px; padding: 10px 24px; border: 0; }
+	.btn-apply:hover { background: #00552f; color: #fff; }
+	.applied { display: flex; align-items: center; gap: 10px; background: #f0fdf4; color: #14532d; border-radius: 12px; padding: 10px 14px; font-size: .9rem; }
+	.applied a { font-weight: 700; color: #0b4d2c; }
+	.not-for-you { background: #f8fafc; color: #475569; border-radius: 12px; padding: 10px 14px; font-size: .88rem; margin: 0; }
+	.trial__report { font-size: .78rem; margin: 12px 0 0; }
+	.trial__report a { color: #94a3b8; text-decoration: none; }
+	.trial__report a:hover { color: #dc2626; }
+	.trial.past { opacity: .85; }
+	.trial.past .trial__top { filter: grayscale(.7); }
 
-	.opp-card:hover {
-		transform: translateY(-3px);
-		box-shadow: 0 16px 32px rgba(15, 23, 42, 0.1);
-	}
+	.ts-empty { text-align: center; background: #fff; border-radius: 22px; padding: 42px 20px; border: 1px dashed #cbd5e1; }
+	.ts-empty .big { font-size: 3rem; }
 
-	.opp-badge {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 3px 10px;
-		border-radius: 999px;
-		font-size: 0.72rem;
-		font-weight: 700;
-	}
-
-	.opp-badge.urgent { background: #fee2e2; color: #b91c1c; }
-	.opp-badge.soon { background: #fef3c7; color: #92400e; }
-	.opp-badge.normal { background: #dcfce7; color: #166534; }
-	.opp-badge.expired { background: #e2e8f0; color: #475569; }
-
-	.opp-meta {
-		font-size: 0.86rem;
-		color: #475569;
-		margin-bottom: 2px;
+	@media (max-width: 767.98px) {
+		.ts-hero { padding: 24px 20px; }
+		.trial__top { height: 130px; }
 	}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-	<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-		<h2 class="mb-0">Opportunities</h2>
-		<a href="{% url 'my_applications' %}" class="btn btn-outline-primary">My Applications</a>
-	</div>
+	<section class="ts-hero">
+		<div class="eyebrow">Trials &amp; tournaments</div>
+		<h1>Your next step starts here</h1>
+		<p>
+			{% if selected_view == 'history' %}Past trials, kept here for your reference.
+			{% elif player_category == 'starlets' %}Showing trials for &#127775; Starlets and those open to everyone. Pick one, tell the scout why you fit, and apply.
+			{% elif player_category == 'stars' %}Showing trials for &#11088; Stars and those open to everyone. Pick one, tell the scout why you fit, and apply.
+			{% else %}Real trials from verified scouts. Pick one, tell the scout why you fit, and apply.{% endif %}
+		</p>
+		<div class="d-flex flex-wrap gap-2">
+			<a href="{% url 'my_applications' %}" class="btn btn-gold">&#128203; My Applications ({{ applied_ids|length }})</a>
+		</div>
+	</section>
 
-	<div class="opp-switch mb-3">
-		<a href="{% url 'view_opportunities' %}?view=available" class="btn btn-sm {% if selected_view == 'available' %}btn-primary{% else %}btn-light{% endif %}">Available</a>
-		<a href="{% url 'view_opportunities' %}?view=history" class="btn btn-sm {% if selected_view == 'history' %}btn-secondary{% else %}btn-light{% endif %}">History</a>
-	</div>
-	<div class="d-flex flex-wrap gap-2 mb-3" aria-label="Stars or Starlets">
-		<a href="?view={{ selected_view }}&cat=all" class="btn btn-sm {% if selected_category == 'all' %}btn-dark{% else %}btn-outline-dark{% endif %}">All</a>
-		<a href="?view={{ selected_view }}&cat=stars" class="btn btn-sm {% if selected_category == 'stars' %}btn-dark{% else %}btn-outline-dark{% endif %}">&#11088; Stars</a>
-		<a href="?view={{ selected_view }}&cat=starlets" class="btn btn-sm {% if selected_category == 'starlets' %}btn-warning{% else %}btn-outline-warning{% endif %}">&#127775; Starlets</a>
+	<div class="ts-filters">
+		<div class="ts-pills" aria-label="Available or past trials">
+			<a href="?view=available&cat={{ selected_category }}" class="{% if selected_view == 'available' %}on{% endif %}">Open now</a>
+			<a href="?view=history&cat={{ selected_category }}" class="{% if selected_view == 'history' %}on{% endif %}">Past</a>
+		</div>
+		<div class="ts-pills" aria-label="Stars or Starlets">
+			<a href="?view={{ selected_view }}&cat=all" class="{% if selected_category == 'all' %}on{% endif %}">All</a>
+			<a href="?view={{ selected_view }}&cat=stars" class="{% if selected_category == 'stars' %}on{% endif %}">&#11088; Stars</a>
+			<a href="?view={{ selected_view }}&cat=starlets" class="{% if selected_category == 'starlets' %}on starlets{% endif %}">&#127775; Starlets</a>
+		</div>
 	</div>
 
 	{% if selected_view == 'available' %}
 		{% if available_opportunities %}
-		<div class="row g-3">
+		<div class="row g-4">
 			{% for opportunity in available_opportunities %}
-				<div class="col-md-6">
-					<div class="card opp-card h-100">
-						{% if opportunity.poster_image %}
-							<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="card-img-top" style="height:200px;object-fit:cover;">
-						{% endif %}
-						<div class="card-body">
-							<div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-								<h5 class="card-title mb-0">{{ opportunity.title }}</h5>
+				<div class="col-md-6 col-xl-4">
+					<article class="trial">
+						<div class="trial__top {{ opportunity.category }}{% if opportunity.poster_image %} has-img{% endif %}">
+							{% if opportunity.poster_image %}<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster">{% else %}<span class="ball" aria-hidden="true">&#9917;</span>{% endif %}
+							<div class="trial__badges">
+								<span class="chip cat">{{ opportunity.category|category_badge }}</span>
 								{% if opportunity.days_left <= 2 %}
-									<span class="opp-badge urgent">{% if opportunity.days_left <= 0 %}Closes today{% else %}{{ opportunity.days_left }}d left{% endif %}</span>
+									<span class="chip urgent">&#9200; {% if opportunity.days_left <= 0 %}Closes today{% else %}{{ opportunity.days_left }} days left{% endif %}</span>
 								{% elif opportunity.days_left <= 7 %}
-									<span class="opp-badge soon">{{ opportunity.days_left }}d left</span>
+									<span class="chip soon">{{ opportunity.days_left }} days left</span>
 								{% else %}
-									<span class="opp-badge normal">{{ opportunity.days_left }}d left</span>
+									<span class="chip normal">{{ opportunity.days_left }} days left</span>
 								{% endif %}
 							</div>
-							<p class="mb-2"><span class="badge {% if opportunity.category == 'starlets' %}text-bg-warning{% elif opportunity.category == 'stars' %}text-bg-dark{% else %}text-bg-success{% endif %}">{{ opportunity.category|category_badge }}</span></p>
-							<p class="opp-meta">🏷️ {{ opportunity.organization }}</p>
-							<p class="opp-meta">📍 {{ opportunity.location }}</p>
-							<p class="opp-meta mb-2">🗓️ Deadline: {{ opportunity.deadline }}</p>
-							<p class="card-text">{{ opportunity.description }}</p>
-							<p class="small mb-2"><a href="{{ report_concern_url }}" target="_blank" rel="noopener" class="text-danger">&#128681; Report a concern</a></p>
-
-							{% if opportunity.id in applied_ids %}
-								<button class="btn btn-success" disabled>✓ Already Applied</button>
-							{% elif not player_category %}
-								<p class="small text-muted mb-0">Tell us whether you play with the Stars or the Starlets on your <a href="{% url 'player_dashboard' %}">dashboard</a> to apply.</p>
-							{% elif not opportunity.can_apply %}
-								<p class="small text-muted mb-0">This one is for {% if opportunity.category == 'starlets' %}&#127775; Starlets (women's football){% else %}&#11088; Stars (men's football){% endif %}.</p>
-							{% else %}
-								<form method="post" action="{% url 'apply_opportunity' opportunity.id %}">
-									{% csrf_token %}
-									<div class="mb-2">
-										{{ application_form.motivation }}
-									</div>
-									<button type="submit" class="btn btn-primary">Apply</button>
-								</form>
-							{% endif %}
+							<h3>{{ opportunity.title }}</h3>
 						</div>
-					</div>
+						<div class="trial__body">
+							<div class="trial__facts">
+								<div class="fact">&#127979; Organised by<strong>{{ opportunity.organization }}</strong></div>
+								<div class="fact">&#128205; Where<strong>{{ opportunity.location }}</strong></div>
+								<div class="fact">&#128197; Apply by<strong>{{ opportunity.deadline|date:'j M Y' }}</strong></div>
+								{% if opportunity.max_applications %}<div class="fact">&#128101; Places<strong>Up to {{ opportunity.max_applications }}</strong></div>{% endif %}
+							</div>
+							<p class="trial__desc" id="desc-{{ opportunity.id }}">{{ opportunity.description }}</p>
+							<button type="button" class="more" data-more="desc-{{ opportunity.id }}" hidden>Read more</button>
+
+							<div class="trial__action">
+								{% if opportunity.id in applied_ids %}
+									<div class="applied"><span style="font-size:1.3rem">&#9989;</span><span>You applied. <a href="{% url 'my_applications' %}">Track it in My Applications</a></span></div>
+								{% elif not player_category %}
+									<p class="not-for-you">Tell us whether you play with the Stars or the Starlets on your <a href="{% url 'player_dashboard' %}">dashboard</a> to apply.</p>
+								{% elif not opportunity.can_apply %}
+									<p class="not-for-you">This one is for {% if opportunity.category == 'starlets' %}&#127775; Starlets (women's football){% else %}&#11088; Stars (men's football){% endif %}.</p>
+								{% else %}
+									<form method="post" action="{% url 'apply_opportunity' opportunity.id %}">
+										{% csrf_token %}
+										<label for="mot-{{ opportunity.id }}" class="form-label small fw-semibold mb-1">Why are you a good fit? <span class="text-muted fw-normal">(optional)</span></label>
+										<textarea name="motivation" id="mot-{{ opportunity.id }}" rows="2" class="form-control mb-2" placeholder="e.g. I'm a left-footed midfielder who loves to create chances."></textarea>
+										<button type="submit" class="btn btn-apply w-100">Apply now &#9917;</button>
+									</form>
+								{% endif %}
+								<p class="trial__report"><a href="{{ report_concern_url }}" target="_blank" rel="noopener">&#128681; Report this trial</a></p>
+							</div>
+						</div>
+					</article>
 				</div>
 			{% endfor %}
 		</div>
 		{% else %}
-			<div class="alert alert-info">No active opportunities available right now.</div>
+			<div class="ts-empty">
+				<div class="big">&#127775;</div>
+				<h3 class="fw-bold mt-2">No open trials right now</h3>
+				<p class="text-muted mb-0">New trials are added by verified scouts. Keep your profile and videos ready, and check back soon.</p>
+			</div>
 		{% endif %}
 	{% else %}
 		{% if history_opportunities %}
-		<div class="row g-3">
+		<div class="row g-4">
 			{% for opportunity in history_opportunities %}
-				<div class="col-md-6">
-					<div class="card opp-card h-100 border-secondary">
-						{% if opportunity.poster_image %}
-							<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster" class="card-img-top" style="height:200px;object-fit:cover;">
-						{% endif %}
-						<div class="card-body">
-							<div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-								<h5 class="card-title mb-0">{{ opportunity.title }}</h5>
-								<span class="opp-badge expired">Expired</span>
+				<div class="col-md-6 col-xl-4">
+					<article class="trial past">
+						<div class="trial__top {{ opportunity.category }}{% if opportunity.poster_image %} has-img{% endif %}">
+							{% if opportunity.poster_image %}<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster">{% else %}<span class="ball" aria-hidden="true">&#9917;</span>{% endif %}
+							<div class="trial__badges">
+								<span class="chip cat">{{ opportunity.category|category_badge }}</span>
+								<span class="chip expired">Closed</span>
 							</div>
-							<p class="mb-2"><span class="badge {% if opportunity.category == 'starlets' %}text-bg-warning{% elif opportunity.category == 'stars' %}text-bg-dark{% else %}text-bg-success{% endif %}">{{ opportunity.category|category_badge }}</span></p>
-							<p class="opp-meta">🏷️ {{ opportunity.organization }}</p>
-							<p class="opp-meta">📍 {{ opportunity.location }}</p>
-							<p class="opp-meta mb-2">🗓️ Deadline: {{ opportunity.deadline }}</p>
-							<p class="card-text">{{ opportunity.description }}</p>
-							<button class="btn btn-outline-secondary" disabled>History - View Only</button>
+							<h3>{{ opportunity.title }}</h3>
 						</div>
-					</div>
+						<div class="trial__body">
+							<div class="trial__facts">
+								<div class="fact">&#127979; Organised by<strong>{{ opportunity.organization }}</strong></div>
+								<div class="fact">&#128205; Where<strong>{{ opportunity.location }}</strong></div>
+								<div class="fact">&#128197; Closed<strong>{{ opportunity.deadline|date:'j M Y' }}</strong></div>
+							</div>
+							<p class="trial__desc" id="hdesc-{{ opportunity.id }}">{{ opportunity.description }}</p>
+							<button type="button" class="more" data-more="hdesc-{{ opportunity.id }}" hidden>Read more</button>
+							{% if opportunity.id in applied_ids %}<div class="applied mt-auto"><span>&#9989;</span><span>You applied to this one.</span></div>{% endif %}
+						</div>
+					</article>
 				</div>
 			{% endfor %}
 		</div>
 		{% else %}
-			<div class="alert alert-light border">No expired opportunities in history yet.</div>
+			<div class="ts-empty">
+				<div class="big">&#128197;</div>
+				<h3 class="fw-bold mt-2">No past trials yet</h3>
+				<p class="text-muted mb-0">Closed trials will appear here.</p>
+			</div>
 		{% endif %}
 	{% endif %}
 </div>
+<script>
+	// "Read more" only where a description is cut short.
+	document.querySelectorAll('[data-more]').forEach(function (button) {
+		var text = document.getElementById(button.dataset.more);
+		if (text && text.scrollHeight > text.clientHeight + 2) { button.hidden = false; }
+		button.addEventListener('click', function () {
+			var open = text.classList.toggle('open');
+			button.textContent = open ? 'Show less' : 'Read more';
+		});
+	});
+</script>
 {% endblock %}
