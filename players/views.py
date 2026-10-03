@@ -14,6 +14,23 @@ from players.models import PlayerProfile, PlayerVideo
 from players.badges import player_badges
 from scouts.models import FairPlayAward, ScoutVideoFeedback
 
+def _profile_strength(profile, videos_count):
+    """How complete a profile is (0-100), and the most useful next step."""
+    steps = [
+        (bool(profile.profile_photo), 'Add a clear profile photo'),
+        (videos_count >= 1, 'Upload your first video'),
+        (bool((profile.bio or '').strip()), 'Write a short bio about your game'),
+        (bool(profile.secondary_position), 'Add a second position you can play'),
+        (bool(profile.height_cm and profile.weight_kg), 'Add your height and weight'),
+        (bool((profile.football_experience or '').strip()), 'Describe your football experience'),
+        (bool(profile.current_club or profile.previous_club), 'Add your current or previous club'),
+        (videos_count >= 3, 'Upload 3 videos for a full highlight reel'),
+    ]
+    done = sum(1 for ok, _ in steps if ok)
+    next_tip = next((tip for ok, tip in steps if not ok), '')
+    return {'percent': round(done * 100 / len(steps)), 'next': next_tip}
+
+
 @login_required
 def dashboard(request):
     if request.user.role != 'player':
@@ -37,6 +54,7 @@ def dashboard(request):
 
     if unread_feedback_count:
         messages.info(request, f'You have {unread_feedback_count} unread scout feedback item(s).')
+    my_badges = player_badges(profile, video_count=videos_count, application_count=applications_count) if profile else []
 
     return render(
         request,
@@ -47,7 +65,11 @@ def dashboard(request):
             'applications_count': applications_count,
             'videos_count': videos_count,
             'videos': videos,
-            'my_badges': player_badges(profile, video_count=videos_count, application_count=applications_count) if profile else [],
+            'my_badges': my_badges,
+            'badges_earned': sum(1 for badge in my_badges if badge['earned']),
+            'feedback_entries': feedback_entries,
+            'unread_feedback_count': unread_feedback_count,
+            'strength': _profile_strength(profile, videos_count) if profile else None,
             'new_fair_play': (
                 FairPlayAward.objects.select_related('scout').filter(
                     profile=profile, created_at__gte=timezone.now() - timedelta(days=14))

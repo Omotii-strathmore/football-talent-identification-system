@@ -69,7 +69,7 @@
                                     {% endif %}
                                     <div>
                                         <h5 class="card-title mb-1">{{ entry.profile.full_name }}</h5>
-                                        <p class="text-muted mb-1">{% if entry.profile.category %}<span class="badge text-bg-warning me-1">{{ entry.profile.category|category_badge }}</span>{% endif %}Position: {{ entry.profile.position }}</p>
+                                        <p class="text-muted mb-1">{% if entry.profile.category %}<span class="badge {% if entry.profile.category == 'stars' %}text-bg-dark{% else %}text-bg-warning{% endif %} me-1">{{ entry.profile.category|category_person }}</span>{% endif %}Position: {{ entry.profile.position }}</p>
                                         <p class="text-muted mb-0">Age: {{ entry.profile.age }} | Location: {{ entry.profile.location }}</p>
                                     </div>
                                 </div>

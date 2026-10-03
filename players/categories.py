@@ -28,6 +28,16 @@ EMOJI = {STARS: '⭐', STARLETS: '\U0001F31F', OPEN: '⚽', BOTH: '⭐\U0001F31F
 SHORT = {STARS: 'Stars', STARLETS: 'Starlets', OPEN: 'Open to all', BOTH: 'Stars & Starlets'}
 
 
+PERSON = {STARS: 'Star', STARLETS: 'Starlet'}
+
+
+def person_badge(category):
+    """How one player is described: "Star" or "Starlet", with its emoji."""
+    if category not in PERSON:
+        return ''
+    return f'{EMOJI[category]} {PERSON[category]}'
+
+
 def badge(category):
     """Short label with its emoji, e.g. "Starlets" with a glowing star."""
     if category not in SHORT:

@@ -17,6 +17,73 @@
     }
     .guardian-banner.is-declined { background: #fff1f2; border-color: #fca5a5; color: #7f1d1d; }
     .guardian-banner-icon { font-size: 1.8rem; line-height: 1; }
+
+    /* Hero */
+    .p-hero { position: relative; overflow: hidden; border-radius: 24px; padding: 28px 30px; margin-bottom: 22px; color: #fff;
+        background: radial-gradient(circle at 88% 0%, rgba(246,196,83,.35), transparent 42%), linear-gradient(135deg, #07170d 0%, #0b4d2c 55%, #006b3f 100%);
+        box-shadow: 0 18px 40px rgba(0, 60, 30, .18); }
+    .p-hero::after { content: "\26BD"; position: absolute; right: 150px; bottom: -30px; font-size: 8rem; opacity: .07; transform: rotate(-15deg); }
+    .p-hero__row { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
+    .p-hero .eyebrow { color: #f6c453; font-weight: 800; letter-spacing: 2px; font-size: .76rem; text-transform: uppercase; }
+    .p-hero h1 { font-weight: 800; font-size: clamp(1.6rem, 3.2vw, 2.3rem); margin: 4px 0 12px; }
+    .p-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+    .p-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: .86rem; font-weight: 700;
+        background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: #fff; }
+    .p-chip.gold { background: #f6c453; color: #3b2a05; border-color: #f6c453; }
+    .p-avatar { width: 108px; height: 108px; border-radius: 50%; object-fit: cover; border: 4px solid #f6c453; box-shadow: 0 10px 26px rgba(0,0,0,.35); flex-shrink: 0; }
+    .p-avatar-fallback { width: 108px; height: 108px; border-radius: 50%; display: grid; place-items: center; font-size: 2.6rem; font-weight: 800; flex-shrink: 0;
+        background: #fff8e1; color: #0b4d2c; border: 4px solid #f6c453; }
+    .p-strength { position: relative; z-index: 1; margin-top: 18px; max-width: 560px; }
+    .p-strength__top { display: flex; justify-content: space-between; font-size: .86rem; color: #d7ecdf; margin-bottom: 6px; }
+    .p-strength__bar { height: 10px; border-radius: 999px; background: rgba(255,255,255,.18); overflow: hidden; }
+    .p-strength__bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6c453, #ffe08a); }
+    .p-strength__tip { font-size: .86rem; color: #fff; margin-top: 8px; }
+    .p-strength__tip a { color: #f6c453; font-weight: 700; }
+
+    /* Stats */
+    .p-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
+    .p-stat { background: #fff; border-radius: 18px; padding: 16px 18px; border: 1px solid rgba(148,163,184,.18);
+        box-shadow: 0 8px 22px rgba(15,23,42,.05); border-top: 4px solid var(--c); text-decoration: none; color: inherit; transition: transform .15s ease; }
+    .p-stat:hover { transform: translateY(-2px); color: inherit; }
+    .p-stat .icon { font-size: 1.3rem; }
+    .p-stat .value { font-size: 1.9rem; font-weight: 800; color: #0f172a; line-height: 1.1; margin-top: 4px; }
+    .p-stat .label { font-size: .84rem; color: #64748b; }
+
+    /* Quick actions */
+    .p-actions { background: #fff; border-radius: 20px; padding: 20px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 10px 26px rgba(15,23,42,.06); margin-bottom: 22px; }
+    .p-actions h4 { font-weight: 800; font-size: 1.15rem; margin: 0 0 14px; }
+    .p-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+    .p-tile { display: flex; gap: 12px; align-items: center; padding: 16px; border-radius: 16px; text-decoration: none; border: 1px solid var(--b); background: var(--bg);
+        transition: transform .15s ease, box-shadow .15s ease; }
+    .p-tile:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(15,23,42,.1); }
+    .p-tile .ic { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 1.4rem; background: var(--ic); flex-shrink: 0; }
+    .p-tile strong { display: block; color: #0f172a; font-size: 1rem; }
+    .p-tile small { color: #475569; font-size: .8rem; }
+    .p-tile.green { --b: #b7e4c7; --bg: #f0fdf4; --ic: #006b3f; }
+    .p-tile.green .ic { color: #fff; }
+    .p-tile.gold { --b: #f2d78a; --bg: #fffaf0; --ic: #f6c453; }
+    .p-tile.blue { --b: #bfdbfe; --bg: #eff6ff; --ic: #dbeafe; }
+    .p-tile.slate { --b: #e2e8f0; --bg: #f8fafc; --ic: #e2e8f0; }
+
+    /* Badges and feedback */
+    .p-card { background: #fff; border-radius: 20px; padding: 20px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 10px 26px rgba(15,23,42,.06); margin-bottom: 22px; }
+    .p-card h4 { font-weight: 800; font-size: 1.15rem; margin: 0 0 4px; }
+    .fb-item { border-top: 1px solid #eef2f6; padding: 14px 0; }
+    .fb-item:first-of-type { border-top: 0; }
+    .fb-quote { background: #f8fafc; border-left: 4px solid #0b4d2c; border-radius: 10px; padding: 10px 14px; margin: 8px 0; }
+
+    @media (max-width: 991.98px) { .p-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 767.98px) {
+        .p-hero { padding: 22px 18px; }
+        .p-hero__row { flex-direction: column-reverse; align-items: flex-start; }
+        .p-avatar, .p-avatar-fallback { width: 76px; height: 76px; font-size: 1.9rem; }
+        .p-stats { grid-template-columns: repeat(2, 1fr); }
+        .p-tile { padding: 12px; }
+        .p-tile small { display: none; }
+        .p-tile { gap: 8px; flex-direction: column; align-items: flex-start; }
+        .p-tile .ic { width: 38px; height: 38px; font-size: 1.15rem; border-radius: 12px; }
+        .p-tile strong { font-size: .9rem; }
+    }
 </style>
 {% endblock %}
 
@@ -39,25 +106,42 @@
             background:linear-gradient(135deg,#fff8e1,#fef3c7); border:1px solid #f6c453; color:#3b2f00; }
         .category-ask .btn { min-width:150px; line-height:1.2; }
     </style>
-{% endif %}
-<div class="dashboard-hero mb-4">
-        <div class="d-flex justify-content-between align-items-start gap-3">
+    {% endif %}
+
+    <section class="p-hero">
+        <div class="p-hero__row">
             <div>
-                <h2 class="mb-1 fw-bold">Welcome to Player Dashboard, {{ first_name }}</h2>
+                <div class="eyebrow">Player dashboard</div>
+                <h1>Karibu, {{ first_name }} &#128075;</h1>
                 {% if profile %}
-                    <p class="text-muted mb-0">{{ profile.full_name }} | {% if profile.category %}{{ profile.category|category_badge }} | {% endif %}{{ profile.position }}{% if profile.secondary_position %} / {{ profile.secondary_position }}{% endif %} | {{ profile.location }}</p>
-                {% else %}
-                    <p class="text-muted mb-0">Welcome player.</p>
+                <div class="p-chips">
+                    {% if profile.category %}<span class="p-chip gold">{{ profile.category|category_person }}</span>{% endif %}
+                    <span class="p-chip">&#9917; {{ profile.position }}{% if profile.secondary_position %} / {{ profile.secondary_position }}{% endif %}</span>
+                    <span class="p-chip">&#128205; {{ profile.location }}</span>
+                    {% if profile.age %}<span class="p-chip">&#127874; {{ profile.age }} years</span>{% endif %}
+                    {% if profile.height_cm %}<span class="p-chip">&#128207; {{ profile.height_cm }} cm</span>{% endif %}
+                    {% if profile.weight_kg %}<span class="p-chip">&#9878;&#65039; {{ profile.weight_kg }} kg</span>{% endif %}
+                </div>
                 {% endif %}
             </div>
-
             {% if profile and profile.profile_photo %}
-                <img src="{{ profile.profile_photo.url }}" alt="{{ first_name }}" class="hero-avatar">
+                <img src="{{ profile.profile_photo.url }}" alt="{{ first_name }}" class="p-avatar">
             {% else %}
-                <div class="hero-avatar-fallback">{{ first_name|slice:':1'|upper }}</div>
+                <div class="p-avatar-fallback" aria-hidden="true">{{ first_name|slice:':1'|upper }}</div>
             {% endif %}
         </div>
-    </div>
+        {% if strength %}
+        <div class="p-strength">
+            <div class="p-strength__top"><span>Profile strength</span><strong>{{ strength.percent }}%</strong></div>
+            <div class="p-strength__bar" role="progressbar" aria-valuenow="{{ strength.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ strength.percent }}%"></span></div>
+            {% if strength.next %}
+                <p class="p-strength__tip mb-0">Next step: {{ strength.next }}. <a href="{% url 'player_profile' %}?edit=true">Do it now &rarr;</a></p>
+            {% else %}
+                <p class="p-strength__tip mb-0">&#127942; Your profile is complete. Scouts can see your full story.</p>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
 
     {% if guardian_pending %}
         <div class="guardian-banner mb-4 {% if profile.guardian_declined_at %}is-declined{% endif %}">
@@ -93,143 +177,60 @@
         </div>
     {% endfor %}
 
-    {% if my_badges %}
-        <div class="card mb-4" id="my-badges">
-            <div class="card-body">
-                <h5 class="fw-bold mb-1">&#127941; My badges</h5>
-                <p class="text-muted small mb-3">Badges show scouts your effort and character. Faded ones are still waiting for you: here is how to earn them.</p>
-                {% include 'includes/badges.html' with badges=my_badges show_locked=True %}
-            </div>
-        </div>
-    {% endif %}
-
     <div class="dash-stack">
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-6 col-lg-3">
-            <div class="card stat-card h-100 text-center">
-                <div class="card-body">
-                    <div class="stat-value">{{ applications_count }}</div>
-                    <p class="text-muted mb-0">Applications</p>
-                </div>
-            </div>
+        <div class="p-stats">
+            <a class="p-stat" style="--c:#0b4d2c" href="{% url 'my_applications' %}"><div class="icon">&#128203;</div><div class="value">{{ applications_count }}</div><div class="label">Applications</div></a>
+            <a class="p-stat" style="--c:#16a34a" href="{% url 'upload_video' %}"><div class="icon">&#127909;</div><div class="value">{{ videos_count }}</div><div class="label">Videos</div></a>
+            <a class="p-stat" style="--c:#f6c453" href="#my-badges"><div class="icon">&#127941;</div><div class="value">{{ badges_earned }}</div><div class="label">Badges earned</div></a>
+            <a class="p-stat" style="--c:#3b82f6" href="#scout-feedback"><div class="icon">&#128172;</div><div class="value">{{ feedback_entries|length }}</div><div class="label">Scout feedback{% if unread_feedback_count %} &middot; <strong class="text-warning">{{ unread_feedback_count }} new</strong>{% endif %}</div></a>
         </div>
-        <div class="col-6 col-md-6 col-lg-3">
-            <div class="card stat-card h-100 text-center">
-                <div class="card-body">
-                    <div class="stat-value">{{ videos_count }}</div>
-                    <p class="text-muted mb-0">Uploaded Videos</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-6 col-lg-3">
-            <div class="card stat-card h-100 text-center">
-                <div class="card-body">
-                    <div class="stat-value">{{ profile.position|default:'-' }}</div>
-                    <p class="text-muted mb-0">Primary Position</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-6 col-lg-3">
-            <div class="card stat-card h-100 text-center">
-                <div class="card-body">
-                    <div class="stat-value">{{ profile.secondary_position|default:'-' }}</div>
-                    <p class="text-muted mb-0">Secondary Position</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-6 col-lg-3">
-            <div class="card stat-card h-100 text-center">
-                <div class="card-body">
-                    <div class="stat-value">{{ profile.height_cm|default:'-' }}</div>
-                    <p class="text-muted mb-0">Height (cm)</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-6 col-md-6 col-lg-3">
-            <div class="card stat-card h-100 text-center">
-                <div class="card-body">
-                    <div class="stat-value">{{ profile.weight_kg|default:'-' }}</div>
-                    <p class="text-muted mb-0">Weight (kg)</p>
-                </div>
+
+        <div class="dash-actions p-actions">
+            <h4>Quick actions</h4>
+            <div class="p-tiles">
+                <a href="{% url 'player_profile' %}" id="tour-my-profile" class="p-tile slate"><span class="ic">&#128100;</span><span><strong>My Profile</strong><small>Your story, positions and clubs</small></span></a>
+                <a href="{% url 'upload_video' %}" id="tour-upload-video" class="p-tile green"><span class="ic">&#127909;</span><span><strong>Upload Video ({{ videos_count }})</strong><small>Show scouts your best moments</small></span></a>
+                <a href="{% url 'view_opportunities' %}" id="tour-view-opportunities" class="p-tile gold"><span class="ic">&#127942;</span><span><strong>View Opportunities</strong><small>Open trials and tournaments</small></span></a>
+                <a href="{% url 'my_applications' %}" id="tour-my-applications" class="p-tile blue"><span class="ic">&#128203;</span><span><strong>My Applications ({{ applications_count }})</strong><small>Track every application</small></span></a>
             </div>
         </div>
     </div>
 
-    <div class="dash-actions panel-soft p-3 p-md-4">
-        <h4 class="section-title">Quick Actions</h4>
-    <div class="row g-3 mb-4">
-        <div class="col-md-3">
-            <a href="{% url 'player_profile' %}" id="tour-my-profile" class="btn btn-outline-dark w-100">My Profile</a>
-        </div>
-        <div class="col-md-3">
-            <a href="{% url 'upload_video' %}" id="tour-upload-video" class="btn btn-success w-100">Upload Video ({{ videos_count }})</a>
-        </div>
-        <div class="col-md-3">
-            <a href="{% url 'view_opportunities' %}" id="tour-view-opportunities" class="btn btn-primary w-100">View Opportunities</a>
-        </div>
-        <div class="col-md-3">
-            <a href="{% url 'my_applications' %}" id="tour-my-applications" class="btn btn-outline-primary w-100">My Applications ({{ applications_count }})</a>
-        </div>
-    </div>
-    </div>
-    </div>
-
-    {% if feedback_entries %}
-    <div class="panel-soft p-3 p-md-4 mt-4">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h4 class="section-title mb-0">Scout Feedback</h4> <a href="{{ report_concern_url }}" target="_blank" rel="noopener" class="small text-danger ms-2">&#128681; Report a concern</a>
-            {% if unread_feedback_count %}
-                <span class="badge bg-warning text-dark">{{ unread_feedback_count }} unread</span>
-            {% endif %}
-        </div>
-
-        <div class="list-group list-group-flush">
-            {% for feedback in feedback_entries %}
-                <div class="list-group-item px-0">
-                    <div class="d-flex justify-content-between align-items-start gap-2">
-                        <div>
-                            <strong>{{ feedback.scout.full_name }}</strong>
-                            <span class="text-muted">({{ feedback.scout.scout_profile.organization|default:'Scout' }})</span>
-                        </div>
-                        <div class="text-end">
-                            <small class="text-muted d-block">{{ feedback.updated_at|date:'M d, Y H:i' }}</small>
-                            {% if feedback.is_seen %}
-                                <span class="badge bg-success">Seen</span>
-                            {% else %}
-                                <span class="badge bg-warning text-dark">Unread</span>
-                            {% endif %}
-                        </div>
-                    </div>
-                    <p class="text-muted mb-1 mt-1">Video: {{ feedback.video.title }}</p>
-                    <p class="mb-2 mt-1">{{ feedback.comment }}</p>
-
-                    {% if feedback.player_reply %}
-                        <div class="alert alert-light border py-2 mb-2">
-                            <strong>Your reply:</strong><br>{{ feedback.player_reply|linebreaksbr }}
-                        </div>
-                    {% endif %}
-
-                    {% if feedback.player_reaction %}
-                        <div class="small text-muted mb-2">
-                            <strong>Your reaction:</strong> {{ feedback.player_reaction }}
-                        </div>
-                    {% endif %}
-
-                    {% if feedback.scout_reply %}
-                        <div class="small text-muted mb-2">
-                            <strong>Scout's response:</strong><br>{{ feedback.scout_reply|linebreaksbr }}
-                        </div>
-                    {% endif %}
-
-                    <a href="{% url 'upload_video' %}" class="btn btn-outline-primary btn-sm">
-                        {% if feedback.player_reply %}Reply again{% else %}Reply to this feedback{% endif %}
-                    </a>
-                </div>
-            {% endfor %}
-        </div>
-    </div>
+    {% if my_badges %}
+        <section class="p-card" id="my-badges">
+            <h4>&#127941; My badges <span class="text-muted fw-normal fs-6">&middot; {{ badges_earned }} of {{ my_badges|length }}</span></h4>
+            <p class="text-muted small mb-3">Badges show scouts your effort and character. Faded ones are still waiting for you: here is how to earn them.</p>
+            {% include 'includes/badges.html' with badges=my_badges show_locked=True %}
+        </section>
     {% endif %}
 
+    <section class="p-card" id="scout-feedback">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <h4 class="mb-0">&#128172; Scout feedback</h4>
+            {% if unread_feedback_count %}<span class="badge bg-warning text-dark">{{ unread_feedback_count }} unread</span>{% endif %}
+        </div>
+        {% for feedback in feedback_entries %}
+            <div class="fb-item">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                    <div>
+                        <strong>{{ feedback.scout.full_name }}</strong>
+                        <span class="text-muted">&middot; {{ feedback.scout.scout_profile.organization|default:'Scout' }}</span>
+                        <div class="small text-muted">On your video &ldquo;{{ feedback.video.title }}&rdquo;</div>
+                    </div>
+                    <div class="text-end">
+                        <small class="text-muted d-block">{{ feedback.updated_at|date:'j M Y' }}</small>
+                        {% if feedback.is_seen %}<span class="badge bg-success">Seen</span>{% else %}<span class="badge bg-warning text-dark">New</span>{% endif %}
+                    </div>
+                </div>
+                <div class="fb-quote">{{ feedback.comment|linebreaksbr }}</div>
+                {% if feedback.player_reply %}<div class="small mb-1"><strong>Your reply:</strong> {{ feedback.player_reply|linebreaksbr }}</div>{% endif %}
+                {% if feedback.scout_reply %}<div class="small text-muted mb-1"><strong>Scout's response:</strong> {{ feedback.scout_reply|linebreaksbr }}</div>{% endif %}
+                <a href="{% url 'upload_video' %}" class="btn btn-outline-success btn-sm rounded-pill mt-1">{% if feedback.player_reply %}Reply again{% else %}Reply to this feedback{% endif %}</a>
+            </div>
+        {% empty %}
+            <p class="text-muted mb-0">No scout feedback yet. Keep uploading short, clear videos: scouts leave feedback on the clips that catch their eye. &#127909;</p>
+        {% endfor %}
+    </section>
 </div>
 {% endblock %}
 

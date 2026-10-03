@@ -327,7 +327,7 @@
                 <h3 class="fw-bold mb-1">{{ profile.full_name }}</h3>
                 <p class="text-muted mb-2">Manage your playing profile, highlight your experience, and help scouts find the right fit.</p>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                    {% if profile.category %}<span class="profile-chip">{{ profile.category|category_badge }}</span> {% endif %}<span class="profile-chip">{{ profile.position }}</span>
+                    {% if profile.category %}<span class="profile-chip">{{ profile.category|category_person }}</span> {% endif %}<span class="profile-chip">{{ profile.position }}</span>
                     {% if profile.secondary_position %}
                         <span class="profile-chip">{{ profile.secondary_position }}</span>
                     {% endif %}

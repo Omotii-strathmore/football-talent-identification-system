@@ -66,7 +66,9 @@
 	.trial__report { font-size: .78rem; margin: 12px 0 0; }
 	.trial__report a { color: #94a3b8; text-decoration: none; }
 	.trial__report a:hover { color: #dc2626; }
-	.trial.past .trial__body { opacity: .85; }
+	/* Closed trials turn grey so it is clear they have ended. */
+	.trial.past { opacity: .85; }
+	.trial.past .trial__top { filter: grayscale(.85); }
 
 	.ts-empty { text-align: center; background: #fff; border-radius: 22px; padding: 42px 20px; border: 1px dashed #cbd5e1; }
 	.ts-empty .big { font-size: 3rem; }

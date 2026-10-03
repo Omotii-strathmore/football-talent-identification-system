@@ -154,7 +154,7 @@
 
                                 <div>
                                     <h5 class="card-title mb-1">{{ profile.full_name }}</h5>
-                                    <p class="text-muted mb-1">{% if profile.category %}<span class="badge text-bg-warning me-1">{{ profile.category|category_badge }}</span>{% endif %}Position: {{ profile.position }}</p>
+                                    <p class="text-muted mb-1">{% if profile.category %}<span class="badge {% if profile.category == 'stars' %}text-bg-dark{% else %}text-bg-warning{% endif %} me-1">{{ profile.category|category_person }}</span>{% endif %}Position: {{ profile.position }}</p>
                                     <p class="text-muted mb-0">Age: {{ profile.age }} | Location: {{ profile.location }}</p>
                                     {% if profile.earned_badges %}<div class="mt-2">{% include 'includes/badges.html' with badges=profile.earned_badges small=True %}</div>{% endif %}
                                 </div>
