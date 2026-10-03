@@ -8,15 +8,16 @@ from datetime import date
 from django.conf import settings
 
 HELPFUL_SCOUT_PLAYERS = 10
-GOOD_LISTENER_REPLIES = 3
+GOOD_LISTENER_REPLIES = 5
+FAIR_PLAY_SCOUTS = 2
 
 PLAYER_BADGES = [
     ('ready', '✅', 'Ready to be Scouted', 'Add a profile photo, your position, a short bio and at least one video.'),
     ('reel', '\U0001F3A5', 'Highlight Reel', 'Upload 3 videos so scouts can see more of your game.'),
     ('first_step', '\U0001F680', 'First Step', 'Apply to your first trial.'),
-    ('listener', '\U0001F4AC', 'Good Listener', "Reply to scouts' feedback on your videos 3 times."),
+    ('listener', '\U0001F4AC', 'Good Listener', "Reply to scouts' feedback on your videos 5 times."),
     ('pioneer', '\U0001F331', 'Pioneer', 'For players who joined Talanta Soka in its first season.'),
-    ('fair_play', '\U0001F91D', 'Fair Play', 'Given by verified scouts for respect, teamwork and discipline.'),
+    ('fair_play', '\U0001F91D', 'Fair Play', 'Two verified scouts recognise the same quality in you, such as Respect or Teamwork.'),
 ]
 
 
@@ -45,28 +46,30 @@ def player_badges(profile, video_count=None, application_count=None, awards=None
         reply_count = ScoutVideoFeedback.objects.filter(video__profile=profile).exclude(player_reply='').count()
     if awards is None:
         awards = list(profile.fair_play_awards.select_related('scout').all())
+    # Fair Play: each scout recognises qualities; the badge unlocks when two scouts name the same one.
+    counts = {}
+    for award in awards:
+        for label in award.quality_labels:
+            counts[label] = counts.get(label, 0) + 1
+    agreed = sorted((label for label, n in counts.items() if n >= FAIR_PLAY_SCOUTS), key=lambda label: -counts[label])
     earned = {
         'ready': bool(profile.profile_photo and profile.position and (profile.bio or '').strip() and video_count >= 1),
         'reel': video_count >= 3,
         'first_step': application_count >= 1,
         'listener': reply_count >= GOOD_LISTENER_REPLIES,
         'pioneer': is_pioneer(profile.user),
-        'fair_play': bool(awards),
+        'fair_play': bool(agreed),
     }
     detail = {}
-    if awards:
-        counts = {}
-        for award in awards:
-            for label in award.quality_labels:
-                counts[label] = counts.get(label, 0) + 1
-        top = sorted(counts, key=lambda label: -counts[label])[:3]
-        detail['fair_play'] = ' · '.join(part for part in [f'×{len(awards)}' if len(awards) > 1 else '', ', '.join(top)] if part)
+    if agreed:
+        detail['fair_play'] = ', '.join(agreed[:3])
     # Progress towards the badges that count something, shown like a game ("1 / 3 videos").
+    best = max(counts.values(), default=0)
     progress = {
         'reel': (min(video_count, 3), 3, 'videos'),
         'first_step': (min(application_count, 1), 1, 'trial applications'),
         'listener': (min(reply_count, GOOD_LISTENER_REPLIES), GOOD_LISTENER_REPLIES, 'replies to scouts'),
-        'fair_play': (min(len(awards), 1), 1, 'Fair Play badge from a scout'),
+        'fair_play': (min(best, FAIR_PLAY_SCOUTS), FAIR_PLAY_SCOUTS, 'scouts recognising the same quality'),
     }
     badges = []
     for key, emoji, name, hint in PLAYER_BADGES:

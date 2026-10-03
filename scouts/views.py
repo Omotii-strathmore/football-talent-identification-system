@@ -121,8 +121,6 @@ def player_directory(request):
         .filter(_players_q(request))
     )
     fair_play_only = request.GET.get('fair_play') == '1'
-    if fair_play_only:
-        profiles = profiles.filter(fair_play_awards__isnull=False).distinct()
 
     # Scouts of one category only ever see that category (already applied by _players_q).
     # Scouts of both can narrow the list with the Stars / Starlets buttons.
@@ -211,6 +209,9 @@ def player_directory(request):
         ]
         profile.my_fair_play = my_awards.get(profile.id)
         profile.can_fair_play = profile.is_shortlisted or profile.id in my_awards or can_award_fair_play(request.user, profile)
+    if fair_play_only:
+        # Only players who have unlocked the badge: two scouts recognised the same quality.
+        profiles = [profile for profile in profiles if any(b['key'] == 'fair_play' for b in profile.earned_badges)]
 
     return render(
         request,
@@ -302,7 +303,8 @@ def scout_award_fair_play(request):
         return redirect(target)
 
     FairPlayAward.objects.update_or_create(scout=request.user, profile=profile, defaults={'qualities': ','.join(chosen)})
-    messages.success(request, f'\U0001F91D Thank you! {first_name} now has your Fair Play badge.')
+    messages.success(request, f'\U0001F91D Thank you! You recognised {first_name}. When two scouts recognise the same quality, '
+                              f'{first_name} unlocks the Fair Play badge.')
     return redirect(target)
 
 

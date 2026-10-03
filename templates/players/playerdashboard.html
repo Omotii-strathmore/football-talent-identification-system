@@ -164,18 +164,18 @@
     {% for award in new_fair_play %}
         <div class="alert alert-success d-flex align-items-center gap-2 mb-3" role="status">
             <span style="font-size:1.4rem" aria-hidden="true">&#129309;</span>
-            <div><strong>Well done!</strong> {{ award.scout.full_name }} gave you a <strong>Fair Play</strong> badge for {{ award.quality_labels|join:", " }}. Keep being that player. &#128170;&#127998;</div>
+            <div><strong>Well done!</strong> {{ award.scout.full_name }} recognised your <strong>{{ award.quality_labels|join:", " }}</strong>. When two scouts recognise the same quality, you unlock the Fair Play badge. Keep being that player. &#128170;&#127998;</div>
         </div>
     {% endfor %}
 
     <div class="dash-stack">
     <div class="row g-3 mb-4 p-stats">
-        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#0b4d2c"><div class="card-body"><span class="stat-icon">&#128203;</span><div class="stat-value">{{ applications_count }}</div><p class="text-muted mb-0">Applications</p></div></div></div>
-        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#16a34a"><div class="card-body"><span class="stat-icon">&#127909;</span><div class="stat-value">{{ videos_count }}</div><p class="text-muted mb-0">Uploaded Videos</p></div></div></div>
-        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#f6c453"><div class="card-body"><span class="stat-icon">&#9917;</span><div class="stat-value">{{ profile.position|default:'-' }}</div><p class="text-muted mb-0">Primary Position</p></div></div></div>
-        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#f6c453"><div class="card-body"><span class="stat-icon">&#128260;</span><div class="stat-value">{{ profile.secondary_position|default:'-' }}</div><p class="text-muted mb-0">Secondary Position</p></div></div></div>
-        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#3b82f6"><div class="card-body"><span class="stat-icon">&#128207;</span><div class="stat-value">{{ profile.height_cm|default:'-' }}</div><p class="text-muted mb-0">Height (cm)</p></div></div></div>
-        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#3b82f6"><div class="card-body"><span class="stat-icon">&#9878;&#65039;</span><div class="stat-value">{{ profile.weight_kg|default:'-' }}</div><p class="text-muted mb-0">Weight (kg)</p></div></div></div>
+        <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#0b4d2c"><div class="card-body"><span class="stat-icon">&#128203;</span><div class="stat-value">{{ applications_count }}</div><p class="text-muted mb-0">Applications</p></div></div></div>
+        <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#16a34a"><div class="card-body"><span class="stat-icon">&#127909;</span><div class="stat-value">{{ videos_count }}</div><p class="text-muted mb-0">Uploaded Videos</p></div></div></div>
+        <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#f6c453"><div class="card-body"><span class="stat-icon">&#9917;</span><div class="stat-value">{{ profile.position|default:'-' }}</div><p class="text-muted mb-0">Primary Position</p></div></div></div>
+        <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#f6c453"><div class="card-body"><span class="stat-icon">&#128260;</span><div class="stat-value">{{ profile.secondary_position|default:'-' }}</div><p class="text-muted mb-0">Secondary Position</p></div></div></div>
+        <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#3b82f6"><div class="card-body"><span class="stat-icon">&#128207;</span><div class="stat-value">{{ profile.height_cm|default:'-' }}</div><p class="text-muted mb-0">Height (cm)</p></div></div></div>
+        <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#3b82f6"><div class="card-body"><span class="stat-icon">&#9878;&#65039;</span><div class="stat-value">{{ profile.weight_kg|default:'-' }}</div><p class="text-muted mb-0">Weight (kg)</p></div></div></div>
     </div>
 
     <div class="dash-actions p-actions">

@@ -50,11 +50,11 @@ class BadgeTests(TestCase):
                                            description='Trials', location='Thika', deadline=deadline, category='starlets')
         Application.objects.create(player=self.player, opportunity=trial)
         self.assertIn('first_step', earned(self.profile))
-        # Good Listener needs replies to 3 pieces of scout feedback.
-        for number in range(3):
+        # Good Listener needs replies to 5 pieces of scout feedback.
+        for number in range(5):
             video = first if number == 0 else add_video(self.profile, f'Clip {number}')
             ScoutVideoFeedback.objects.create(scout=self.scout_user, video=video, comment='Good movement',
-                                              player_reply='Thank you coach' if number < 2 else '')
+                                              player_reply='Thank you coach' if number < 4 else '')
         self.assertNotIn('listener', earned(self.profile))
         feedback = ScoutVideoFeedback.objects.filter(player_reply='').first()
         feedback.player_reply = 'I will work on it'
@@ -78,11 +78,27 @@ class BadgeTests(TestCase):
         self.client.post(url, {'profile_id': self.profile.id, 'qualities': ['respect', 'teamwork', 'made-up']})
         award = FairPlayAward.objects.get()
         self.assertEqual(award.quality_labels, ['Respect', 'Teamwork'])
+        # One scout is not enough: the badge unlocks when two scouts recognise the same quality.
+        self.assertNotIn('fair_play', earned(self.profile))
+        second = self.second_scout()
+        FairPlayAward.objects.create(scout=second, profile=self.profile, qualities='discipline')
+        self.assertNotIn('fair_play', earned(self.profile))
+        FairPlayAward.objects.filter(scout=second).update(qualities='discipline,teamwork')
         self.assertIn('fair_play', earned(self.profile))
+        fair_play = [b for b in player_badges(self.profile) if b['key'] == 'fair_play'][0]
+        self.assertEqual(fair_play['detail'], 'Teamwork')
+        FairPlayAward.objects.filter(scout=second).delete()
         self.client.post(url, {'profile_id': self.profile.id, 'qualities': ['humility']})
         self.assertEqual(FairPlayAward.objects.get().quality_labels, ['Humility'])
         self.client.post(url, {'profile_id': self.profile.id, 'action': 'withdraw'})
         self.assertFalse(FairPlayAward.objects.exists())
+
+    def second_scout(self):
+        user = User.objects.create_user('amina@gmail.com', 'Talanta#2026', full_name='Coach Amina', role='scout')
+        Scout.objects.create(user=user, organization='Coast Talent Hub', specialization='general', verified=True,
+                             verification_status='approved', scouts_for='both',
+                             verification_document=SimpleUploadedFile('d.pdf', b'%PDF-1.4', content_type='application/pdf'))
+        return user
 
     def test_scouts_cannot_award_players_outside_their_category(self):
         self.client.force_login(self.scout_user)
@@ -96,12 +112,14 @@ class BadgeTests(TestCase):
         self.client.force_login(self.player)
         page = self.client.get(reverse('player_dashboard'))
         self.assertContains(page, 'My badges')
-        self.assertContains(page, 'Coach Grace gave you a <strong>Fair Play</strong> badge for Respect, On time')
+        self.assertContains(page, 'Coach Grace recognised your <strong>Respect, On time</strong>')
         self.assertContains(page, 'Highlight Reel')  # still to earn, shown faded with how to earn it
 
     def test_directory_shows_badges_and_filters_fair_play(self):
         other = make_player('mercy@gmail.com', 'Mercy Atieno', 'starlets')
         FairPlayAward.objects.create(scout=self.scout_user, profile=self.profile, qualities='respect')
+        FairPlayAward.objects.create(scout=self.second_scout(), profile=self.profile, qualities='respect')
+        FairPlayAward.objects.create(scout=self.scout_user, profile=other.player_profile, qualities='respect')
         self.client.force_login(self.scout_user)
         page = self.client.get(reverse('scout_player_directory'))
         self.assertContains(page, 'Fair Play')

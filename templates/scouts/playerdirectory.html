@@ -201,7 +201,7 @@
                                 {% if profile.can_fair_play %}
                                     <button class="btn btn-sm {% if profile.my_fair_play %}btn-success{% else %}btn-outline-success{% endif %}" type="button"
                                             data-bs-toggle="collapse" data-bs-target="#fairplay-{{ profile.id }}" aria-expanded="false" aria-controls="fairplay-{{ profile.id }}">
-                                        &#129309; {% if profile.my_fair_play %}Fair Play given{% else %}Award Fair Play{% endif %}
+                                        &#129309; {% if profile.my_fair_play %}Fair Play recognised{% else %}Recognise Fair Play{% endif %}
                                     </button>
                                 {% endif %}
                             </div>
@@ -221,9 +221,9 @@
                                             </label>
                                         {% endfor %}
                                     </div>
-                                    <p class="text-muted small mb-2">Give it only for character you have seen yourself. The player is told, and it shows on their profile.</p>
+                                    <p class="text-muted small mb-2">Only for character you have seen yourself. When two scouts recognise the same quality, the player unlocks the Fair Play badge.</p>
                                     <div class="d-flex gap-2">
-                                        <button type="submit" class="btn btn-success btn-sm">{% if profile.my_fair_play %}Update badge{% else %}Give Fair Play badge{% endif %}</button>
+                                        <button type="submit" class="btn btn-success btn-sm">{% if profile.my_fair_play %}Update{% else %}Recognise{% endif %}</button>
                                         {% if profile.my_fair_play %}<button type="submit" name="action" value="withdraw" class="btn btn-outline-secondary btn-sm">Withdraw</button>{% endif %}
                                     </div>
                                 </form>

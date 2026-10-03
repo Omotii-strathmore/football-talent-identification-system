@@ -159,6 +159,9 @@ class Command(BaseCommand):
         achieng = PlayerProfile.objects.get(user__email='achieng@demo.ke')
         ScoutPlayerShortlist.objects.get_or_create(scout=grace, profile=achieng)
         FairPlayAward.objects.get_or_create(scout=grace, profile=achieng, defaults={'qualities': 'respect,teamwork'})
+        amina = User.objects.get(email='amina@demo.ke')
+        ScoutPlayerShortlist.objects.get_or_create(scout=amina, profile=achieng)
+        FairPlayAward.objects.get_or_create(scout=amina, profile=achieng, defaults={'qualities': 'respect,discipline'})
 
         title, teaser, points = DEMO_UPDATE
         SiteUpdate.objects.get_or_create(title=title, defaults={'teaser': teaser, 'points': points, 'created_by': admin})
