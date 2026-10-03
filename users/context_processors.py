@@ -27,6 +27,9 @@ def site_extras(request):
     # A label on every page when running on the laptop's practice database (demo accounts), never on the live site.
     from django.db import connection
     context['practice_mode'] = str(connection.settings_dict.get('NAME', '')).endswith('practice.sqlite3')
+    # Public pages (the trials page) keep the landing-page header even for signed-in people.
+    match = getattr(request, 'resolver_match', None)
+    context['public_page'] = bool(match and match.url_name == 'public_opportunities')
 
     user = getattr(request, 'user', None)
     if user is not None and user.is_authenticated and not user.is_staff:

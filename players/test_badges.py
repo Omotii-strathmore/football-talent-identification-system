@@ -198,14 +198,18 @@ class ScoutRepliesTests(TestCase):
 
 
 class NavigationTests(TestCase):
-    def test_name_goes_to_own_dashboard_and_landing_knows_you_are_signed_in(self):
+    def test_name_goes_to_own_dashboard_and_public_pages_keep_their_header(self):
         player = make_player('nav@gmail.com', 'Nav Player', 'stars')
         self.client.force_login(player)
         page = self.client.get(reverse('player_profile')).content.decode()
         self.assertIn(f'title="My dashboard" href="{reverse("player_dashboard")}"', page)
         self.assertNotIn('>View Players<', page)
+        # The landing page keeps its original buttons, signed in or not.
         landing = self.client.get(reverse('home')).content.decode()
-        self.assertIn('My dashboard', landing)
-        self.assertIn(reverse('logout'), landing)
-        self.client.logout()
-        self.assertNotIn('My dashboard', self.client.get(reverse('home')).content.decode())
+        self.assertNotIn('My dashboard', landing)
+        self.assertIn('id="tour-signup"', landing)
+        # The public trials page shows the public header, not the account one.
+        trials = self.client.get(reverse('public_opportunities')).content.decode()
+        self.assertIn('Sign Up</a>', trials)
+        self.assertNotIn('Logout', trials)
+        self.assertNotIn('Profile</a>', trials)

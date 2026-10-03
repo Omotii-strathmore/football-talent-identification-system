@@ -127,7 +127,7 @@
         .navbar .nav-cta:hover { background: #00552f; }
     </style>
 </head>
-{% if user.is_authenticated and not user.is_staff %}{% firstof '1' as show_bottombar %}{% endif %}
+{% if user.is_authenticated and not user.is_staff and not public_page %}{% firstof '1' as show_bottombar %}{% endif %}
 <body{% if show_bottombar %} class="has-bottombar"{% endif %}>
 {% include 'includes/practice_ribbon.html' %}
 
@@ -135,7 +135,7 @@
 
     <div class="container">
 
-        <a class="navbar-brand notranslate" translate="no" title="My dashboard" href="{% if user.is_authenticated and user.is_staff %}{% url 'admin_dashboard' %}{% elif user.is_authenticated and user.role == 'player' %}{% url 'player_dashboard' %}{% elif user.is_authenticated and user.role == 'scout' %}{% url 'scout_dashboard' %}{% else %}{% url 'home' %}{% endif %}">
+        <a class="navbar-brand notranslate" translate="no" title="My dashboard" href="{% if public_page %}{% url 'home' %}{% elif user.is_authenticated and user.is_staff %}{% url 'admin_dashboard' %}{% elif user.is_authenticated and user.role == 'player' %}{% url 'player_dashboard' %}{% elif user.is_authenticated and user.role == 'scout' %}{% url 'scout_dashboard' %}{% else %}{% url 'home' %}{% endif %}">
             Talanta Soka
         </a>
 
@@ -153,7 +153,8 @@
 
             <ul class="navbar-nav me-auto">
 
-                {% if user.is_authenticated and user.is_staff %}
+                {% if public_page %}
+                {% elif user.is_authenticated and user.is_staff %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'admin_users' %}">Users</a></li>
                 {% elif user.is_authenticated and user.role == 'player' %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'player_profile' %}">Profile</a></li>
@@ -163,7 +164,7 @@
                     <a class="nav-link" href="#" data-open-updates>&#127381; Updates</a>
                 </li>
 
-                {% if user.is_authenticated and user.role == 'scout' and not user.is_staff %}
+                {% if user.is_authenticated and user.role == 'scout' and not user.is_staff and not public_page %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'scout_edit_details' %}">Edit Details</a>
                     </li>
@@ -171,7 +172,7 @@
 
             </ul>
 
-            {% if not user.is_authenticated %}
+            {% if not user.is_authenticated or public_page %}
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'home' %} is-current{% endif %}" href="{% url 'home' %}">Home</a></li>
                     <li class="nav-item"><a class="nav-link{% if request.resolver_match.url_name == 'public_opportunities' %} is-current{% endif %}"{% if request.resolver_match.url_name == 'public_opportunities' %} aria-current="page"{% endif %} href="{% url 'public_opportunities' %}">Trials &amp; Tournaments</a></li>
@@ -179,7 +180,7 @@
                     <li class="nav-item"><a class="nav-link nav-cta" href="{% url 'register' %}">Sign Up</a></li>
                 </ul>
             {% endif %}
-            {% if user.is_authenticated %}
+            {% if user.is_authenticated and not public_page %}
                 {% if user.is_staff %}
                 <button type="button" class="admin-theme-switch" id="admin-theme-switch" title="Switch the admin look">&#128421;&#65039; Tech mode</button>
                 <script>
