@@ -64,7 +64,6 @@ def send_welcome_email(user):
            'Every great player started somewhere, and today you took your first step. Keep training, keep believing.\n\n')
         + 'Your next steps:\n' + '\n'.join(f'- {s}' for s in next_steps)
         + f'\n\nSign in: {settings.SITE_URL}/login/\n\n'
-        '"As iron sharpens iron, so one person sharpens another." (Proverbs 27:17)\n'
         'Mungu akubariki in every match.\n\nNionekane nikicheza kwa TV!\nTalanta Soka'
     )
     try:
