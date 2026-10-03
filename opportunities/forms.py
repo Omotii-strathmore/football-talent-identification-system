@@ -22,15 +22,16 @@ class OpportunityForm(forms.ModelForm):
 
     class Meta:
         model = Opportunity
-        fields = ['title', 'organization', 'category', 'description', 'poster_image', 'location', 'deadline', 'max_applications']
-        labels = {'category': 'Who is it for?'}
-        help_texts = {'category': "Stars are men's football and Starlets are women's football. Players can only apply to their own category or to opportunities open to all."}
+        fields = ['title', 'organization', 'category', 'description', 'poster_image', 'location', 'deadline', 'event_date', 'max_applications']
+        labels = {'category': 'Who is it for?', 'deadline': 'Application deadline', 'event_date': 'Trial / tournament date (optional)'}
+        help_texts = {'event_date': 'The day players should come. Shortlisted players get a reminder that morning and are asked afterwards whether they went.', 'category': "Stars are men's football and Starlets are women's football. Players can only apply to their own category or to opportunities open to all."}
         widgets = {
             'title': forms.TextInput(attrs={'placeholder': 'Opportunity title'}),
             'organization': forms.TextInput(attrs={'placeholder': 'Club or organization name'}),
             'description': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Describe requirements and details'}),
             'location': forms.TextInput(attrs={'placeholder': 'City or area'}),
             'deadline': forms.DateInput(attrs={'type': 'date', 'min': timezone.localdate().isoformat()}),
+            'event_date': forms.DateInput(attrs={'type': 'date', 'min': timezone.localdate().isoformat()}),
             'max_applications': forms.NumberInput(attrs={'min': 1, 'placeholder': 'Optional application cap'}),
         }
 
@@ -60,6 +61,13 @@ class OpportunityForm(forms.ModelForm):
                 raise forms.ValidationError('This poster image is already used in another opportunity. Please upload a different poster.')
 
         return poster
+
+    def clean_event_date(self):
+        event_date = self.cleaned_data.get('event_date')
+        deadline = self.cleaned_data.get('deadline')
+        if event_date and deadline and event_date < deadline:
+            raise forms.ValidationError('The trial date should be on or after the application deadline.')
+        return event_date
 
     def clean_max_applications(self):
         limit = self.cleaned_data.get('max_applications')

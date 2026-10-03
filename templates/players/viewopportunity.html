@@ -135,6 +135,7 @@
 								<div class="fact">&#127979; Organised by<strong>{{ opportunity.organization }}</strong></div>
 								<div class="fact">&#128205; Where<strong>{{ opportunity.location }}</strong></div>
 								<div class="fact">&#128197; Apply by<strong>{{ opportunity.deadline|date:'j M Y' }}</strong></div>
+								{% if opportunity.event_date %}<div class="fact">&#9917; Trial day<strong>{{ opportunity.event_date|date:'j M Y' }}</strong></div>{% endif %}
 								{% if opportunity.max_applications %}<div class="fact">&#128101; Places<strong>Up to {{ opportunity.max_applications }}</strong></div>{% endif %}
 							</div>
 							<p class="trial__desc" id="desc-{{ opportunity.id }}">{{ opportunity.description }}</p>

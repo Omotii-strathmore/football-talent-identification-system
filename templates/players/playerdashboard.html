@@ -199,6 +199,7 @@
 
 </div>
 {% if profile.profile_photo %}{% include 'includes/photo_reposition.html' with photo_url=profile.profile_photo.url photo_position=profile.photo_position %}{% endif %}
+{% if trial_followup %}{% include 'includes/trial_followup.html' %}{% endif %}
 {% endblock %}
 
 {% block extra_js %}

@@ -1,6 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 from django.utils import timezone
 from players.categories import can_apply
 
@@ -141,17 +143,67 @@ def my_applications(request):
 		messages.error(request, 'Only players can view applications.')
 		return redirect('scout_dashboard')
 
-	applications = Application.objects.select_related('opportunity').filter(player=request.user)
+	applications = list(Application.objects.select_related('opportunity').filter(player=request.user))
+	mark_trial_stages(applications)
 	status_counts = {
-		'pending': applications.filter(status='pending').count(),
-		'shortlisted': applications.filter(status='shortlisted').count(),
-		'rejected': applications.filter(status='rejected').count(),
+		'pending': sum(1 for a in applications if a.status == 'pending'),
+		'shortlisted': sum(1 for a in applications if a.status == 'shortlisted'),
+		'rejected': sum(1 for a in applications if a.status == 'rejected'),
 	}
 	return render(
 		request,
 		'players/applications.html',
-		{'applications': applications, 'status_counts': status_counts},
+		{'applications': applications, 'status_counts': status_counts, 'trial_followup': pending_followup(request.user)},
 	)
+
+
+def mark_trial_stages(applications):
+	"""For shortlisted players: before the trial day, on the day, or after it."""
+	today = timezone.localdate()
+	for application in applications:
+		day = application.opportunity.trial_day
+		application.trial_day = day
+		application.trial_stage = 'before' if day > today else ('today' if day == today else 'after')
+	return applications
+
+
+def pending_followup(user):
+	"""The oldest trial this shortlisted player has not yet told us about (attended or not), if any."""
+	if not getattr(user, 'is_authenticated', False) or user.role != 'player':
+		return None
+	today = timezone.localdate()
+	for application in (Application.objects.select_related('opportunity')
+						.filter(player=user, status='shortlisted', attended__isnull=True).order_by('opportunity__deadline')):
+		if application.opportunity.trial_day < today:
+			return application
+	return None
+
+
+@login_required
+@require_POST
+def application_attendance(request, application_id):
+	"""The player says whether they went to a trial they were shortlisted for."""
+	application = get_object_or_404(Application.objects.select_related('opportunity'), id=application_id,
+									player=request.user, status='shortlisted')
+	if application.opportunity.trial_day >= timezone.localdate():
+		return JsonResponse({'ok': False, 'message': 'You can tell us after the trial day.'}, status=400)
+	answer = request.POST.get('attended')
+	if answer not in ('yes', 'no'):
+		return JsonResponse({'ok': False, 'message': 'Please choose Yes or No.'}, status=400)
+	note = (request.POST.get('note') or '').strip()[:1000]
+	application.attended = answer == 'yes'
+	application.attendance_note = note
+	application.absence_reason = ''
+	if not application.attended:
+		reason = request.POST.get('reason', '')
+		if reason not in dict(Application.ABSENCE_CHOICES):
+			return JsonResponse({'ok': False, 'message': 'Please choose a reason.'}, status=400)
+		if reason == 'other' and not note:
+			return JsonResponse({'ok': False, 'message': 'Please tell us a little more.'}, status=400)
+		application.absence_reason = reason
+	application.attendance_answered_at = timezone.now()
+	application.save(update_fields=['attended', 'absence_reason', 'attendance_note', 'attendance_answered_at'])
+	return JsonResponse({'ok': True})
 
 
 @login_required

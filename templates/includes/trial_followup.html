@@ -1,0 +1,166 @@
+{% comment %}
+After a trial day, ask a shortlisted player whether they went. Needs `trial_followup` (an Application).
+Opens by itself once per day; "Later" closes it until tomorrow. The [data-open-followup] button opens it too.
+{% endcomment %}
+{% with opp=trial_followup.opportunity %}
+<div class="tf-modal" id="tf-modal" hidden role="dialog" aria-modal="true" aria-labelledby="tf-title"
+     data-url="{% url 'application_attendance' trial_followup.id %}" data-id="{{ trial_followup.id }}">
+    <div class="tf-panel">
+        <button type="button" class="tf-x" data-tf-close aria-label="Close">&times;</button>
+        <div class="tf-head">
+            <span class="tf-badge">&#128227; Quick follow-up</span>
+            <h2 id="tf-title">Did you attend {{ opp.title }}?</h2>
+            <p>{{ opp.organization }} &middot; {{ opp.location }} &middot; {{ opp.trial_day|date:'j M Y' }}</p>
+        </div>
+
+        <div class="tf-body" data-step="ask">
+            <div class="tf-choices">
+                <button type="button" class="tf-choice yes" data-answer="yes"><b>&#9989;</b>Yes, I went</button>
+                <button type="button" class="tf-choice no" data-answer="no"><b>&#10060;</b>No, I didn't</button>
+            </div>
+            <button type="button" class="tf-later" data-tf-close>Ask me later</button>
+        </div>
+
+        <div class="tf-body" data-step="yes" hidden>
+            <p class="tf-big">&#129395; Well done for showing up!</p>
+            <label for="tf-yes-note" class="tf-label">How did it go? <span>(optional)</span></label>
+            <textarea id="tf-yes-note" rows="3" maxlength="1000" placeholder="e.g. I scored once and the coach asked for my number."></textarea>
+            <button type="button" class="tf-submit" data-submit="yes">Submit</button>
+        </div>
+
+        <div class="tf-body" data-step="no" hidden>
+            <p class="tf-big">&#128543; Why not?</p>
+            <div class="tf-reasons" role="radiogroup" aria-label="Why you did not attend">
+                {% for value, label in trial_followup.ABSENCE_CHOICES %}
+                    <label class="tf-reason"><input type="radio" name="tf-reason" value="{{ value }}"><span>{{ label }}</span></label>
+                {% endfor %}
+            </div>
+            <div id="tf-other" hidden>
+                <label for="tf-no-note" class="tf-label">Tell us a little more</label>
+                <textarea id="tf-no-note" rows="2" maxlength="1000" placeholder="What happened?"></textarea>
+            </div>
+            <button type="button" class="tf-submit" data-submit="no">Submit</button>
+        </div>
+
+        <div class="tf-body tf-done" data-step="done-yes" hidden>
+            <p class="tf-big">Let&rsquo;s hope for the best &#128591;&#127998;</p>
+            <p>Keep training and keep your phone close: the scouts may call. Whatever happens, you showed up, and that is what champions do.</p>
+            <button type="button" class="tf-submit" data-tf-close>Close</button>
+        </div>
+        <div class="tf-body tf-done" data-step="done-no" hidden>
+            <p class="tf-big">Your moment will come &#128170;&#127998;</p>
+            <p>Missing one trial is not the end of the story. Keep training, keep your videos fresh, and apply to the next one. We are cheering for you.</p>
+            <div class="d-flex gap-2 justify-content-center flex-wrap">
+                <a href="{% url 'view_opportunities' %}" class="tf-submit">Find the next trial</a>
+                <button type="button" class="tf-ghost" data-tf-close>Close</button>
+            </div>
+        </div>
+        <p class="tf-msg" aria-live="polite"></p>
+    </div>
+</div>
+{% endwith %}
+<style>
+    .tf-modal { position: fixed; inset: 0; z-index: 2090; display: flex; align-items: center; justify-content: center; padding: 16px; background: rgba(4,12,8,.72); backdrop-filter: blur(3px); }
+    .tf-modal[hidden] { display: none; }
+    .tf-panel { position: relative; width: min(560px, 100%); max-height: 92vh; overflow: auto; background: #fffdf7; border-radius: 22px; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+    .tf-x { position: absolute; top: 10px; right: 12px; width: 38px; height: 38px; border: 0; border-radius: 50%; background: rgba(255,255,255,.15); color: #fff; font-size: 26px; line-height: 1; }
+    .tf-head { padding: 24px 26px 20px; color: #fff; background: radial-gradient(circle at 90% 0%, rgba(246,196,83,.35), transparent 45%), linear-gradient(135deg, #07170d, #0b4d2c 60%, #006b3f); border-bottom: 4px solid #f6c453; }
+    .tf-badge { display: inline-block; background: #f6c453; color: #07170d; font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 999px; }
+    .tf-head h2 { font-size: clamp(1.2rem, 3vw, 1.5rem); font-weight: 800; margin: 12px 40px 4px 0; color: #fff; }
+    .tf-head p { margin: 0; color: #d7ecdf; font-size: .9rem; }
+    .tf-body { padding: 22px 26px; text-align: center; }
+    .tf-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .tf-choice { border: 2px solid #e2e8f0; background: #fff; border-radius: 16px; padding: 18px 10px; font-weight: 800; font-size: 1.05rem; color: #0f172a; transition: all .15s ease; }
+    .tf-choice b { display: block; font-size: 2rem; font-weight: 400; margin-bottom: 4px; }
+    .tf-choice.yes:hover { border-color: #16a34a; background: #f0fdf4; }
+    .tf-choice.no:hover { border-color: #f59e0b; background: #fffbeb; }
+    .tf-later, .tf-ghost { margin-top: 14px; border: 0; background: none; color: #64748b; font-weight: 700; }
+    .tf-ghost { border: 1px solid #cbd5e1; border-radius: 999px; padding: 10px 20px; margin-top: 0; }
+    .tf-big { font-size: 1.3rem; font-weight: 800; color: #0b4d2c; margin: 0 0 12px; }
+    .tf-label { display: block; text-align: left; font-weight: 700; color: #334155; margin: 6px 0 6px; }
+    .tf-label span { font-weight: 400; color: #94a3b8; }
+    .tf-body textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; font: inherit; }
+    .tf-reasons { display: grid; gap: 8px; text-align: left; margin-bottom: 8px; }
+    .tf-reason { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 12px; cursor: pointer; background: #fff; }
+    .tf-reason:has(input:checked) { border-color: #f6c453; background: #fffaf0; }
+    .tf-submit { display: inline-block; margin-top: 14px; border: 0; border-radius: 999px; padding: 11px 28px; font-weight: 800; background: #006b3f; color: #fff; text-decoration: none; }
+    .tf-submit:hover { background: #00552f; color: #fff; }
+    .tf-done p { color: #334155; }
+    .tf-msg { color: #b91c1c; text-align: center; min-height: 1em; margin: 0 0 14px; font-weight: 600; }
+    .tf-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2095; overflow: hidden; }
+    .tf-confetti i { position: absolute; top: -20px; width: 9px; height: 16px; border-radius: 3px; animation: tf-fall linear forwards; }
+    @keyframes tf-fall { to { transform: translate(var(--dx), 110vh) rotate(720deg); opacity: .2; } }
+    @media (prefers-reduced-motion: reduce) { .tf-confetti { display: none; } }
+</style>
+<script>
+(function () {
+    var modal = document.getElementById('tf-modal');
+    if (!modal) return;
+    var KEY = 'talantaSokaFollowupLater-' + modal.dataset.id;
+    var msg = modal.querySelector('.tf-msg');
+    function csrf() { var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; }
+    function today() { return new Date().toISOString().slice(0, 10); }
+    function step(name) { modal.querySelectorAll('.tf-body').forEach(function (b) { b.hidden = b.dataset.step !== name; }); msg.textContent = ''; }
+    function open() { step('ask'); modal.hidden = false; }
+    function close(later) {
+        modal.hidden = true;
+        if (later) { try { localStorage.setItem(KEY, today()); } catch (e) {} }
+    }
+    function confetti() {
+        var box = document.createElement('div'); box.className = 'tf-confetti';
+        var colors = ['#f6c453', '#16a34a', '#ef4444', '#3b82f6', '#a855f7', '#ffffff'];
+        for (var i = 0; i < 110; i++) {
+            var p = document.createElement('i');
+            p.style.left = Math.random() * 100 + 'vw';
+            p.style.background = colors[i % colors.length];
+            p.style.animationDuration = (2.2 + Math.random() * 2.2) + 's';
+            p.style.animationDelay = (Math.random() * .6) + 's';
+            p.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px');
+            box.appendChild(p);
+        }
+        document.body.appendChild(box);
+        setTimeout(function () { box.remove(); }, 5500);
+    }
+
+    modal.querySelectorAll('[data-answer]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            if (b.dataset.answer === 'yes') { step('yes'); confetti(); } else { step('no'); }
+        });
+    });
+    modal.querySelectorAll('input[name="tf-reason"]').forEach(function (r) {
+        r.addEventListener('change', function () { document.getElementById('tf-other').hidden = r.value !== 'other' || !r.checked; });
+    });
+    modal.querySelectorAll('[data-tf-close]').forEach(function (b) {
+        b.addEventListener('click', function () { var done = !modal.querySelector('[data-step="done-yes"]').hidden || !modal.querySelector('[data-step="done-no"]').hidden; close(!done); if (done) location.reload(); });
+    });
+    modal.querySelectorAll('[data-submit]').forEach(function (b) {
+        b.addEventListener('click', function () {
+            var yes = b.dataset.submit === 'yes';
+            var body = new URLSearchParams({ attended: yes ? 'yes' : 'no' });
+            if (yes) {
+                body.set('note', document.getElementById('tf-yes-note').value);
+            } else {
+                var chosen = modal.querySelector('input[name="tf-reason"]:checked');
+                if (!chosen) { msg.textContent = 'Please choose a reason.'; return; }
+                body.set('reason', chosen.value);
+                body.set('note', document.getElementById('tf-no-note').value);
+                if (chosen.value === 'other' && !document.getElementById('tf-no-note').value.trim()) { msg.textContent = 'Please tell us a little more.'; return; }
+            }
+            b.disabled = true;
+            fetch(modal.dataset.url, { method: 'POST', body: body, credentials: 'same-origin', headers: { 'X-CSRFToken': csrf() } })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    b.disabled = false;
+                    if (!data.ok) { msg.textContent = data.message || 'Something went wrong. Please try again.'; return; }
+                    step(yes ? 'done-yes' : 'done-no');
+                })
+                .catch(function () { b.disabled = false; msg.textContent = 'Could not send. Check your connection and try again.'; });
+        });
+    });
+    document.querySelectorAll('[data-open-followup]').forEach(function (b) { b.addEventListener('click', function (e) { e.preventDefault(); open(); }); });
+
+    var later = null;
+    try { later = localStorage.getItem(KEY); } catch (e) {}
+    if (later !== today()) { setTimeout(open, 700); }
+})();
+</script>

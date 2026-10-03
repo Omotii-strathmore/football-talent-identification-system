@@ -1,0 +1,26 @@
+{% extends 'emails/base_email.html' %}
+{% block preheader %}Today is the day, {{ first_name }}! {{ title }} at {{ location }}. Don't be late.{% endblock %}
+{% block headline %}
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 12px 0;">
+  <tr><td style="background:#fff3cd;border:1px solid #f2d78a;border-radius:999px;padding:6px 14px;font-size:13px;font-weight:bold;color:#7a5600;">&#11088; You were shortlisted</td></tr>
+</table>
+Today is the day, {{ first_name }}! &#129321;
+{% endblock %}
+{% block body %}
+<p style="margin:0 0 14px 0;">This is it. The scouts at <strong>{{ organization }}</strong> are expecting you today. Show them the player you have trained to be.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:6px 0 18px 0;background:#f1faf4;border-left:4px solid #f6c453;border-radius:8px;">
+  <tr><td style="padding:14px 16px;font-size:15px;line-height:1.8;">
+    <strong style="color:#006b3f;">&#9917; {{ title }}</strong><br>
+    &#128205; {{ location }}<br>
+    &#128197; Today, {{ day }}
+  </td></tr>
+</table>
+<p style="margin:0 0 8px 0;"><strong>Before you leave:</strong></p>
+<p style="margin:0 0 16px 0;line-height:1.8;">&#9989; Boots, shin guards and water<br>&#9989; Arrive early: <strong>don&rsquo;t be late</strong><br>&#9989; Eat well, warm up, and enjoy it</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 10px auto;">
+  <tr><td align="center" bgcolor="#006b3f" style="border-radius:999px;">
+    <a href="{{ link }}" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:bold;color:#ffffff;text-decoration:none;border-radius:999px;">See the trial details &#10140;</a>
+  </td></tr>
+</table>
+<p style="margin:14px 0 0 0;font-size:14px;color:#5b6b62;text-align:center;">All the best! We are cheering for you. &#128170;&#127998;</p>
+{% endblock %}

@@ -96,6 +96,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'config.middleware.DisableClientCacheMiddleware',
+    'config.middleware.DailyTasksMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -261,6 +262,9 @@ if BREVO_API_KEY:
 
 # Players who join on or before this date get the Pioneer badge (the first season).
 PIONEER_UNTIL = os.environ.get('PIONEER_UNTIL', '2026-12-31')
+
+# Trial-day reminders are sent in the background on the first visit each day (straight away while testing).
+TRIAL_REMINDERS_IN_BACKGROUND = 'test' not in __import__('sys').argv
 
 # Safety lock: on Render (the live site) refuse to start with unsafe settings, rather than run quietly unsafe.
 # Laptops are not affected. Render sets RENDER=true for every service.

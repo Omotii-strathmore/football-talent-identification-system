@@ -27,3 +27,20 @@ class DisableClientCacheMiddleware:
             response["Expires"] = "0"
 
         return response
+
+
+class DailyTasksMiddleware:
+    """Small daily jobs that would normally be scheduled, run on the first visit of the day."""
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        response = self.get_response(request)
+        try:
+            from opportunities.reminders import run_once_today
+            run_once_today()
+        except Exception:  # a reminder problem must never break a page
+            import logging
+            logging.getLogger(__name__).exception('Daily tasks failed')
+        return response

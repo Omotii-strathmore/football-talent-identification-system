@@ -39,6 +39,7 @@
                             <span class="ts-pill">&#127979; {{ opportunity.organization }}</span>
                             <span class="ts-pill">&#128205; {{ opportunity.location }}</span>
                             <span class="ts-pill">&#128197; Apply by {{ opportunity.deadline|date:'j M Y' }}</span>
+                            {% if opportunity.event_date %}<span class="ts-pill gold">&#9917; Trial day {{ opportunity.event_date|date:'j M Y' }}</span>{% endif %}
                             <span class="ts-pill">&#128101; {{ apps|length }}{% if opportunity.max_applications %} / {{ opportunity.max_applications }}{% endif %} applicant{{ apps|length|pluralize }}</span>
                         </div>
                         {% if opportunity.max_applications %}
@@ -65,6 +66,8 @@
                                         {% if application.status == 'shortlisted' %}<span class="ts-pill green">&#11088; Shortlisted</span>
                                         {% elif application.status == 'rejected' %}<span class="ts-pill gold">Not selected</span>
                                         {% else %}<span class="ts-pill">&#9203; Waiting for you</span>{% endif %}
+                                        {% if application.attended %}<span class="ts-pill green">&#9989; Attended</span>
+                                        {% elif application.attended == False %}<span class="ts-pill red" title="{{ application.attendance_note }}">Did not attend &middot; {{ application.get_absence_reason_display }}</span>{% endif %}
                                     </div>
                                 </div>
                                 <div class="why">{% if application.motivation %}&ldquo;{{ application.motivation }}&rdquo;{% else %}<span class="text-muted">No message from the player.</span>{% endif %}</div>

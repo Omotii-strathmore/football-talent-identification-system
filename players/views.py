@@ -11,6 +11,7 @@ from opportunities.models import Application
 from players.forms import PlayerProfileForm, PlayerVideoForm
 from players.guardian import can_resend, mask_email, profile_from_token, send_guardian_email
 from players.models import PlayerProfile, PlayerVideo
+from opportunities.views import pending_followup
 from players.badges import player_badges
 from scouts.models import FairPlayAward, ScoutVideoFeedback
 
@@ -66,6 +67,7 @@ def dashboard(request):
             'videos_count': videos_count,
             'videos': videos,
             'my_badges': my_badges,
+            'trial_followup': pending_followup(request.user),
             'badges_earned': sum(1 for badge in my_badges if badge['earned']),
             'strength': _profile_strength(profile, videos_count) if profile else None,
             'new_fair_play': (

@@ -113,6 +113,7 @@
 					<span>&#127979; {{ opp.organization }}</span>
 					<span>&#128205; {{ opp.location }}</span>
 					<span>&#128197; Deadline {{ opp.deadline|date:'j M Y' }}</span>
+					{% if opp.event_date %}<span>&#9917; Trial day {{ opp.event_date|date:'j M Y' }}</span>{% endif %}
 					<span>&#9997;&#65039; Applied {{ application.applied_at|date:'j M Y' }}</span>
 				</div>
 
@@ -125,7 +126,16 @@
 				</div>
 
 				<p class="app-note {{ status }}">
-					{% if status == 'shortlisted' %}
+					{% if status == 'shortlisted' and application.trial_stage == 'today' %}
+						<strong>&#129321; Today is the day!</strong> All the best at {{ opp.title }}. Boots, shin guards, water, and don&rsquo;t be late.
+					{% elif status == 'shortlisted' and application.trial_stage == 'after' and application.attended %}
+						<strong>&#129395; You went!</strong> Let&rsquo;s hope for the best &#128591;&#127998;{% if application.attendance_note %} &middot; <em>&ldquo;{{ application.attendance_note }}&rdquo;</em>{% endif %}
+					{% elif status == 'shortlisted' and application.trial_stage == 'after' and application.attended == False %}
+						<strong>Your moment will come &#128170;&#127998;</strong> Keep training and apply to the next trial. We are cheering for you.
+					{% elif status == 'shortlisted' and application.trial_stage == 'after' %}
+						<strong>&#128227; Follow up:</strong> Did you attend {{ opp.title }}?
+						<button type="button" class="btn btn-sm btn-success rounded-pill fw-bold ms-1" data-open-followup>Tell us</button>
+					{% elif status == 'shortlisted' %}
 						<strong>Great news!</strong> The scout liked what they saw. Watch your email and phone, and keep training: they may contact you about the next step.
 					{% elif status == 'rejected' %}
 						Not this one, but your story is still being written. Learn from it, train hard, and apply again.
@@ -145,4 +155,5 @@
 		</div>
 	{% endif %}
 </div>
+{% if trial_followup %}{% include 'includes/trial_followup.html' %}{% endif %}
 {% endblock %}
