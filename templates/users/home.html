@@ -439,6 +439,9 @@
             text-underline-offset:3px;
         }
 
+        .footer-about { margin-top:18px; }
+        .footer-col--right { text-align:right; align-items:flex-end; }
+        @media (max-width:700px) { .footer-col--right { text-align:left; align-items:flex-start; margin-top:14px; } .footer-about { margin-top:14px; } }
         .footer-col {
             display:flex;
             flex-direction:column;
@@ -672,10 +675,8 @@
                     <ul class="sub" id="home-sub" hidden>
                         <li><a href="#top" data-i18n="nav.top">&#127968; Back to top</a></li>
                         <li><a href="#" data-open-updates data-i18n="nav.updates">&#127381; Updates</a></li>
-                        <li><a href="{% url 'about' %}" data-i18n="nav.about">&#128154; About us</a></li>
                     </ul>
                 </li>
-                <li class="desktop-only"><a href="{% url 'about' %}" data-i18n="nav.aboutShort">About</a></li>
                 <li><a href="{% url 'public_opportunities' %}" id="tour-trials" data-i18n="nav.trials">Trials &amp; Tournaments</a></li>
                 <li><a href="{% url 'login' %}" id="tour-login" data-i18n="nav.login">Login</a></li>
                 <li><a href="{% url 'register' %}" class="cta" id="tour-signup" data-i18n="nav.signup">Sign Up</a></li>
@@ -783,8 +784,6 @@
             <p data-i18n="footer.line1">Talanta Soka | Football Talent Identification and Exposure System</p>
             <p data-i18n="footer.line2">Connecting grassroots players and verified scouts across Kenya.</p>
             <p>
-                <a href="{% url 'about' %}" class="footer-link" data-i18n="footer.about">About us</a>
-                <span aria-hidden="true">&middot;</span>
                 <a href="#" class="footer-link" data-open-updates data-i18n="footer.updates">Updates (press U)</a>
                 <span aria-hidden="true">&middot;</span>
                 <a href="{% url 'privacy' %}" class="footer-link" data-i18n="footer.privacy">Privacy Policy</a>
@@ -792,9 +791,10 @@
                 <a href="{% url 'terms' %}" class="footer-link" data-i18n="footer.terms">Terms of Use</a>
             </p>
         </div>
-        <div class="footer-col" style="text-align:right;">
+        <div class="footer-col footer-col--right">
             <p data-i18n="footer.contact">Contact us</p>
             <p><span data-i18n="footer.emailLabel">Email:</span> <a href="{{ support_compose_url }}" target="_blank" rel="noopener" class="footer-link">{{ support_email }}</a></p>
+            <p class="footer-about"><a href="{% url 'about' %}" class="footer-link" data-i18n="footer.about">About us</a></p>
         </div>
     </footer>
     <script>
