@@ -693,8 +693,13 @@
                     </ul>
                 </li>
                 <li><a href="{% url 'public_opportunities' %}" id="tour-trials" data-i18n="nav.trials">Trials &amp; Tournaments</a></li>
+                {% if user.is_authenticated %}
+                <li><a href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% elif user.role == 'scout' %}{% url 'scout_dashboard' %}{% else %}{% url 'player_dashboard' %}{% endif %}" class="cta" id="tour-login">&#128100; My dashboard</a></li>
+                <li><a href="{% url 'logout' %}" id="tour-signup">Log out</a></li>
+                {% else %}
                 <li><a href="{% url 'login' %}" id="tour-login" data-i18n="nav.login">Login</a></li>
                 <li><a href="{% url 'register' %}" class="cta" id="tour-signup" data-i18n="nav.signup">Sign Up</a></li>
+                {% endif %}
             </ul>
             <div class="nav-tools">
                 <button type="button" class="lang-toggle" id="lang-toggle" aria-label="Switch language (shortcut: L)" title="Switch language (press L)">

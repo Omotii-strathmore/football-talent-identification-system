@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
-{% load football %}
+{% load football static %}
 
 {% block title %}My Interests{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
 <style>
     .player-photo {
         width: 72px;
@@ -44,21 +45,25 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h2 class="mb-0">My Interests</h2>
-        <div class="d-flex gap-2">
-            <a href="{% url 'scout_player_directory' %}" class="btn btn-outline-primary">Browse Players</a>
-            <a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    <section class="ts-hero-g">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <div>
+                <div class="eyebrow">Scout</div>
+                <h2 class="mb-1" style="font-size:clamp(1.5rem,3vw,2.1rem)">&#10084;&#65039; My Interests</h2>
+                <p class="ts-sub mb-0">Players you are following. Watch their videos, give feedback, and keep private notes on what stood out.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                <span class="ts-chip gold">{{ entries|length }} player{{ entries|length|pluralize }}</span>
+                <a href="{% url 'scout_player_directory' %}" class="btn btn-gold">&#128269; Browse players</a>
+            </div>
         </div>
-    </div>
-
-    <p class="text-muted">Players you've marked as interested. Keep private notes here to track what stood out about each one.</p>
+    </section>
 
     {% if entries %}
         <div class="row g-3">
             {% for entry in entries %}
                 <div class="col-lg-6">
-                    <div class="card h-100">
+                    <div class="card h-100 ts-pcard {{ entry.profile.category }}">
                         <div class="card-body">
                             <div class="d-flex align-items-start justify-content-between gap-3 mb-3">
                                 <div class="d-flex align-items-start gap-3">
@@ -85,14 +90,14 @@
 
                             <div class="mt-2">
                                 <button
-                                    class="btn btn-outline-primary btn-sm"
+                                    class="btn btn-success btn-sm"
                                     type="button"
                                     data-bs-toggle="collapse"
                                     data-bs-target="#interest-videos-{{ entry.id }}"
                                     aria-expanded="false"
                                     aria-controls="interest-videos-{{ entry.id }}"
                                 >
-                                    View videos
+                                    &#127909; Videos &amp; feedback ({{ entry.profile.videos.all|length }})
                                 </button>
                             </div>
 
@@ -109,7 +114,7 @@
                                                 <a href="{{ video.video_file.url }}" target="_blank" class="small">Open video in new tab</a>
                                             </div>
 
-                                            <h6 class="mt-2">Scout Feedback (optional)</h6>
+                                            <p class="ts-sub-head">&#128172; Your feedback on this video <span class="text-muted fw-normal">(optional)</span></p>
                                             <form method="post" action="{% url 'scout_shortlist' %}" class="mt-2 mb-3">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="video_id" value="{{ video.id }}">
@@ -122,7 +127,7 @@
                                                 <button type="submit" class="btn btn-outline-primary btn-sm mt-2">Save feedback</button>
                                             </form>
                                             {% if video.current_scout_feedback %}
-                                                <div class="border rounded p-2 mt-2 small">
+                                                <div class="ts-feedback mt-2">
                                                     <div class="mb-1">
                                                         {% if video.current_scout_feedback.is_seen %}
                                                             <span class="badge bg-success">Seen by player</span>
@@ -174,11 +179,11 @@
                                 {% endif %}
                             </div>
 
-                            <div class="notes-card mt-3">
+                            <div class="ts-notes mt-3">
                                 <form method="post">
                                     {% csrf_token %}
                                     <input type="hidden" name="entry_id" value="{{ entry.id }}">
-                                    <label class="form-label small fw-bold mb-1">Your notes about this player</label>
+                                    <label class="form-label fw-bold mb-1" style="color:#7a5600">&#128221; Private notes (only you see these)</label>
                                     <textarea name="notes" rows="3" class="form-control" placeholder="e.g. Strong left foot, good positioning, follow up after next trial...">{{ entry.notes }}</textarea>
                                     <button type="submit" class="btn btn-primary btn-sm mt-2">Save notes</button>
                                 </form>
@@ -189,7 +194,7 @@
             {% endfor %}
         </div>
     {% else %}
-        <div class="alert alert-info">You haven't marked any players as interested yet. Browse the <a href="{% url 'scout_player_directory' %}">player directory</a> and tap "Mark as interested" on a profile.</div>
+        <div class="ts-empty"><div class="big">&#10084;&#65039;</div><h3 class="fw-bold mt-2">No players in your Interests yet</h3><p class="text-muted mb-3">Browse players and tap &ldquo;Mark as interested&rdquo; on anyone who catches your eye.</p><a href="{% url 'scout_player_directory' %}" class="btn btn-success rounded-pill px-4 fw-bold">Browse players</a></div>
     {% endif %}
 </div>
 

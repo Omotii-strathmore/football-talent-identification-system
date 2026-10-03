@@ -172,3 +172,40 @@ class PhotoPositionTests(TestCase):
         page = self.client.get(reverse('player_dashboard')).content.decode()
         self.assertIn('object-position: 100% 23%', page)
         self.assertIn('data-photo-ring', page)
+
+
+@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+class ScoutRepliesTests(TestCase):
+    def test_player_replies_leave_the_dashboard_once_the_scout_opens_interests(self):
+        from datetime import timedelta as td
+        player = make_player('mercy2@gmail.com', 'Mercy Atieno', 'starlets')
+        scout = User.objects.create_user('grace2@gmail.com', 'Talanta#2026', full_name='Coach Grace', role='scout')
+        Scout.objects.create(user=scout, organization='Thika Queens Academy', specialization='general', verified=True,
+                             verification_status='approved', scouts_for='starlets',
+                             verification_document=SimpleUploadedFile('d.pdf', b'%PDF-1.4', content_type='application/pdf'))
+        ScoutPlayerShortlist.objects.create(scout=scout, profile=player.player_profile)
+        video = add_video(player.player_profile, 'Sharpshooter')
+        feedback = ScoutVideoFeedback.objects.create(scout=scout, video=video, comment='Nice finish',
+                                                     player_reply='Thank you coach', player_reply_at=timezone.now())
+        self.client.force_login(scout)
+        self.assertContains(self.client.get(reverse('scout_dashboard')), 'Thank you coach')
+        self.client.get(reverse('scout_shortlist'))
+        self.assertNotContains(self.client.get(reverse('scout_dashboard')), 'Thank you coach')
+        feedback.player_reply += '\nI will keep working'
+        feedback.player_reply_at = timezone.now() + td(seconds=5)
+        feedback.save()
+        self.assertContains(self.client.get(reverse('scout_dashboard')), 'I will keep working')
+
+
+class NavigationTests(TestCase):
+    def test_name_goes_to_own_dashboard_and_landing_knows_you_are_signed_in(self):
+        player = make_player('nav@gmail.com', 'Nav Player', 'stars')
+        self.client.force_login(player)
+        page = self.client.get(reverse('player_profile')).content.decode()
+        self.assertIn(f'title="My dashboard" href="{reverse("player_dashboard")}"', page)
+        self.assertNotIn('>View Players<', page)
+        landing = self.client.get(reverse('home')).content.decode()
+        self.assertIn('My dashboard', landing)
+        self.assertIn(reverse('logout'), landing)
+        self.client.logout()
+        self.assertNotIn('My dashboard', self.client.get(reverse('home')).content.decode())

@@ -69,3 +69,51 @@
 
 /* Tech mode (administrators) keeps its own look */
 html.admin-tech .ts-head { color: #eef6ff; }
+
+/* Scout pages: player cards, filters, buttons */
+.ts-pcard { position: relative; overflow: hidden; border: 1px solid rgba(148,163,184,.2) !important; border-radius: 20px !important;
+    box-shadow: 0 10px 26px rgba(15,23,42,.06); transition: transform .15s ease, box-shadow .15s ease; }
+.ts-pcard:hover { transform: translateY(-2px); box-shadow: 0 16px 34px rgba(15,23,42,.1); }
+.ts-pcard::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: linear-gradient(90deg, #0b4d2c, #16a34a); }
+.ts-pcard.starlets::before { background: linear-gradient(90deg, #c9971e, #f6c453); }
+.ts-pcard.stars::before { background: linear-gradient(90deg, #111827, #4b5563); }
+.ts-pcard .card-title { font-weight: 800; font-size: 1.15rem; color: #0f172a; }
+.ts-pcard .player-photo, .ts-pcard .player-photo-fallback { width: 76px; height: 76px; border: 3px solid #fff !important; box-shadow: 0 0 0 3px #f6c453, 0 6px 14px rgba(0,0,0,.15); }
+.ts-pcard .player-photo-fallback { background: #fff8e1 !important; color: #0b4d2c !important; font-size: 1.6rem; }
+.ts-pcard .btn { border-radius: 999px; font-weight: 700; }
+.ts-filters { background: #fff; border-radius: 20px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 10px 26px rgba(15,23,42,.06); padding: 18px; margin-bottom: 22px; }
+.ts-filters .form-select, .ts-filters .form-control { border-radius: 12px; }
+.ts-filters .btn { border-radius: 999px; font-weight: 700; }
+.btn-gold { background: #f6c453; color: #07170d; font-weight: 800; border: 0; border-radius: 999px; padding: 9px 20px; }
+.btn-gold:hover { background: #ffd56b; color: #07170d; }
+.btn-ghost-light { color: #fff; border: 1px solid rgba(255,255,255,.45); border-radius: 999px; padding: 9px 18px; font-weight: 700; }
+.btn-ghost-light:hover { background: rgba(255,255,255,.12); color: #fff; }
+.ts-sub-head { font-weight: 800; font-size: .95rem; color: #0b4d2c; margin: 12px 0 8px; }
+.ts-notes { background: #fffaf0; border: 1px solid #f2d78a; border-radius: 14px; padding: 12px 14px; }
+.ts-feedback { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0b4d2c; border-radius: 12px; padding: 10px 12px; font-size: .9rem; }
+.ts-empty { text-align: center; background: #fff; border-radius: 22px; padding: 40px 20px; border: 1px dashed #cbd5e1; }
+.ts-empty .big { font-size: 2.6rem; }
+
+/* Manage opportunities */
+.ts-opp { background: #fff; border-radius: 20px; border: 1px solid rgba(148,163,184,.2); box-shadow: 0 10px 26px rgba(15,23,42,.06); margin-bottom: 22px; overflow: hidden; }
+.ts-opp__head { padding: 18px 20px; border-bottom: 1px solid #eef2f6; display: flex; justify-content: space-between; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
+.ts-opp__head h3 { font-weight: 800; font-size: 1.2rem; margin: 0 0 8px; color: #0f172a; }
+.ts-opp.closed .ts-opp__head { background: #f8fafc; }
+.ts-pill { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 999px; font-size: .8rem; font-weight: 700; background: #f1f5f9; color: #334155; }
+.ts-pill.green { background: #dcfce7; color: #166534; }
+.ts-pill.grey { background: #e2e8f0; color: #475569; }
+.ts-pill.gold { background: #fff3cd; color: #7a5600; }
+.ts-pill.red { background: #fee2e2; color: #991b1b; }
+.ts-cap { height: 8px; border-radius: 999px; background: #e2e8f0; overflow: hidden; margin-top: 8px; max-width: 260px; }
+.ts-cap span { display: block; height: 100%; background: linear-gradient(90deg, #0b4d2c, #34d399); }
+.ts-app { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) auto; gap: 14px; align-items: center; padding: 14px 20px; border-top: 1px solid #f1f5f9; }
+.ts-app:first-child { border-top: 0; }
+.ts-app .who strong { display: block; color: #0f172a; }
+.ts-app .who small { color: #64748b; word-break: break-all; }
+.ts-app .why { font-size: .9rem; color: #334155; }
+.ts-app .acts { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+.ts-app .acts .btn { border-radius: 999px; font-weight: 700; }
+@media (max-width: 767.98px) {
+    .ts-app { grid-template-columns: 1fr; gap: 8px; }
+    .ts-app .acts { justify-content: flex-start; }
+}

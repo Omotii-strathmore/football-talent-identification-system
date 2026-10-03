@@ -64,6 +64,7 @@ def dashboard(request):
         .filter(scout=request.user, video__profile__shortlisted_by__scout=request.user)
         .exclude(player_reply='')
         .filter(Q(scout_reply_at__isnull=True) | Q(player_reply_at__gt=F('scout_reply_at')))
+        .filter(Q(scout_seen_reply_at__isnull=True) | Q(player_reply_at__gt=F('scout_seen_reply_at')))
         .order_by('-updated_at')[:5]
     )
 
@@ -396,6 +397,8 @@ def scout_shortlist(request):
     for entry in entries:
         for video in entry.profile.videos.all():
             video.current_scout_feedback = feedback_map.get(video.id)
+    # Opening My Interests counts as seeing the players' replies: they leave the dashboard list.
+    ScoutVideoFeedback.objects.filter(scout=request.user).exclude(player_reply='').update(scout_seen_reply_at=timezone.now())
 
     return render(
         request,

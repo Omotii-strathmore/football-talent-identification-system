@@ -143,6 +143,8 @@ class ScoutVideoFeedback(models.Model):
     )
     scout_reply = models.TextField(blank=True, default='')
     scout_reply_at = models.DateTimeField(blank=True, null=True)
+    # When the scout last opened My Interests after the player replied (hides it from the dashboard).
+    scout_seen_reply_at = models.DateTimeField(blank=True, null=True)
     is_seen = models.BooleanField(default=False)
     seen_at = models.DateTimeField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

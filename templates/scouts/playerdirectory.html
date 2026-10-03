@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
-{% load football %}
+{% load football static %}
 
 {% block title %}Player Directory{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
 <style>
     .player-photo {
         width: 72px;
@@ -44,13 +45,19 @@
     .scout-hello-note { font-size: .8rem; opacity: .8; margin-top: 4px; }
 </style>
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h2 class="mb-0">Player Profiles and Videos</h2>
-        <div class="d-flex gap-2">
-            <a href="{% url 'scout_shortlist' %}" class="btn btn-outline-danger">❤ My Interests</a>
-            <a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    <section class="ts-hero-g">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <div>
+                <div class="eyebrow">Discover talent</div>
+                <h2 class="mb-1" style="font-size:clamp(1.5rem,3vw,2.1rem)">&#128269; Player Profiles &amp; Videos</h2>
+                <p class="ts-sub mb-0">Filter by position, county and age. Watch their videos and mark the players you want to follow.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                <span class="ts-chip gold">{{ profiles|length }} player{{ profiles|length|pluralize }}</span>
+                <a href="{% url 'scout_shortlist' %}" class="btn btn-gold">&#10084;&#65039; My Interests</a>
+            </div>
         </div>
-    </div>
+    </section>
 
     {% if recommended_position and not is_general_scout %}
         <div class="alert alert-info py-2">
@@ -59,8 +66,8 @@
         </div>
     {% endif %}
 
-    <div class="card mb-4">
-        <div class="card-body">
+    <div class="ts-filters">
+        <div>
             {% if scout_category %}
             <div class="scout-hello {% if scout_category == 'starlets' %}is-starlets{% else %}is-stars{% endif %}">
                 {% if scout_category == 'starlets' %}
@@ -143,7 +150,7 @@
         <div class="row g-3">
             {% for profile in profiles %}
                 <div class="col-lg-6">
-                    <div class="card h-100">
+                    <div class="card h-100 ts-pcard {{ profile.category }}">
                         <div class="card-body">
                             <div class="d-flex align-items-start gap-3 mb-3">
                                 {% if profile.profile_photo %}
@@ -258,7 +265,7 @@
             {% endfor %}
         </div>
     {% else %}
-        <div class="alert alert-info">No player profiles available yet.</div>
+        <div class="ts-empty"><div class="big">&#9917;</div><h3 class="fw-bold mt-2">No players match these filters</h3><p class="text-muted mb-0">Try another position, county or age range, or reset the filters.</p></div>
     {% endif %}
 </div>
 {% endblock %}

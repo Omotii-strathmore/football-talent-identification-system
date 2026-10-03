@@ -1,107 +1,98 @@
 {% extends 'base.html' %}
+{% load static football %}
 
 {% block title %}Manage Posted Opportunities{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Manage Posted Opportunities</h2>
-        <a href="{% url 'scout_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
-    </div>
+    <section class="ts-hero-g">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <div>
+                <div class="eyebrow">Your trials</div>
+                <h2 class="mb-1" style="font-size:clamp(1.5rem,3vw,2.1rem)">&#128221; Manage Opportunities</h2>
+                <p class="ts-sub mb-0">Review applicants, shortlist the players you want to see, and keep your trials up to date.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                <a href="{% url 'post_opportunity' %}" class="btn btn-gold">&#128226; Post a new trial</a>
+            </div>
+        </div>
+    </section>
 
     {% if opportunities %}
         {% for opportunity in opportunities %}
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
-                        <div>
-                            <h5 class="mb-1">{{ opportunity.title }}</h5>
-                            <p class="text-muted mb-0">{{ opportunity.organization }} | {{ opportunity.location }} | Deadline: {{ opportunity.deadline }}</p>
-                            <p class="text-muted mb-0">
-                                Applications: {{ opportunity.applications.count }}
-                                {% if opportunity.max_applications %}
-                                    / {{ opportunity.max_applications }}
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="d-flex align-items-center gap-2">
+            {% with apps=opportunity.applications.all %}
+            <article class="ts-opp{% if not opportunity.is_active %} closed{% endif %}">
+                <div class="ts-opp__head">
+                    <div>
+                        <h3>{{ opportunity.title }}</h3>
+                        <div class="d-flex flex-wrap gap-2">
                             {% if not opportunity.is_active %}
-                                {% if opportunity.deadline < today %}
-                                    <span class="badge bg-secondary">Expired</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Closed Early</span>
-                                {% endif %}
+                                {% if opportunity.deadline < today %}<span class="ts-pill grey">Expired</span>{% else %}<span class="ts-pill grey">Closed early</span>{% endif %}
                             {% else %}
-                                <span class="badge bg-success">Active</span>
+                                <span class="ts-pill green">&#9679; Open</span>
                             {% endif %}
-
-                            <a href="{% url 'edit_posted_opportunity' opportunity.id %}" class="btn btn-sm btn-outline-primary">Edit Opportunity</a>
-
-                            <form method="post" action="{% url 'delete_posted_opportunity' opportunity.id %}" onsubmit="return confirm('Delete this posted opportunity? This will also remove its applications.');">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete Opportunity</button>
-                            </form>
+                            {% if opportunity.category %}<span class="ts-pill gold">{{ opportunity.category|category_badge }}</span>{% endif %}
+                            <span class="ts-pill">&#127979; {{ opportunity.organization }}</span>
+                            <span class="ts-pill">&#128205; {{ opportunity.location }}</span>
+                            <span class="ts-pill">&#128197; Apply by {{ opportunity.deadline|date:'j M Y' }}</span>
+                            <span class="ts-pill">&#128101; {{ apps|length }}{% if opportunity.max_applications %} / {{ opportunity.max_applications }}{% endif %} applicant{{ apps|length|pluralize }}</span>
                         </div>
+                        {% if opportunity.max_applications %}
+                            <div class="ts-cap" title="Places filled"><span style="width: {% widthratio apps|length opportunity.max_applications 100 %}%"></span></div>
+                        {% endif %}
                     </div>
-
-                    {% if opportunity.applications.all %}
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Player</th>
-                                        <th>Email</th>
-                                        <th>Motivation</th>
-                                        <th>Status</th>
-                                        <th>Applied On</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for application in opportunity.applications.all %}
-                                        <tr>
-                                            <td>{{ application.player.full_name }}</td>
-                                            <td>{{ application.player.email }}</td>
-                                            <td>{{ application.motivation|default:'-' }}</td>
-                                            <td>
-                                                {% if application.status == 'shortlisted' %}
-                                                    <span class="badge bg-success">Shortlisted</span>
-                                                {% elif application.status == 'rejected' %}
-                                                    <span class="badge bg-danger">Rejected</span>
-                                                {% else %}
-                                                    <span class="badge bg-warning text-dark">Pending</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ application.applied_at }}</td>
-                                            <td>
-                                                <div class="d-flex flex-wrap gap-2">
-                                                    <form method="post" action="{% url 'update_application_status' application.id 'shortlisted' %}">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-sm btn-success">Approve</button>
-                                                    </form>
-                                                    <form method="post" action="{% url 'update_application_status' application.id 'rejected' %}">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Reject</button>
-                                                    </form>
-                                                    <form method="post" action="{% url 'update_application_status' application.id 'pending' %}">
-                                                        {% csrf_token %}
-                                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Reset</button>
-                                                    </form>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                    {% else %}
-                        <div class="alert alert-info mb-0">No player applications for this opportunity yet.</div>
-                    {% endif %}
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{% url 'edit_posted_opportunity' opportunity.id %}" class="btn btn-sm btn-outline-success rounded-pill fw-bold">&#9999;&#65039; Edit</a>
+                        <form method="post" action="{% url 'delete_posted_opportunity' opportunity.id %}" onsubmit="return confirm('Delete this posted opportunity? This will also remove its applications.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill fw-bold">Delete</button>
+                        </form>
+                    </div>
                 </div>
-            </div>
+
+                {% if apps %}
+                    <div>
+                        {% for application in apps %}
+                            <div class="ts-app">
+                                <div class="who">
+                                    <strong>{{ application.player.full_name }}</strong>
+                                    <small>{{ application.player.email }} &middot; applied {{ application.applied_at|date:'j M Y' }}</small>
+                                    <div class="mt-1">
+                                        {% if application.status == 'shortlisted' %}<span class="ts-pill green">&#11088; Shortlisted</span>
+                                        {% elif application.status == 'rejected' %}<span class="ts-pill gold">Not selected</span>
+                                        {% else %}<span class="ts-pill">&#9203; Waiting for you</span>{% endif %}
+                                    </div>
+                                </div>
+                                <div class="why">{% if application.motivation %}&ldquo;{{ application.motivation }}&rdquo;{% else %}<span class="text-muted">No message from the player.</span>{% endif %}</div>
+                                <div class="acts">
+                                    <form method="post" action="{% url 'update_application_status' application.id 'shortlisted' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-success">&#11088; Shortlist</button>
+                                    </form>
+                                    <form method="post" action="{% url 'update_application_status' application.id 'rejected' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Not selected</button>
+                                    </form>
+                                    <form method="post" action="{% url 'update_application_status' application.id 'pending' %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-light" title="Back to waiting">&#8634; Reset</button>
+                                    </form>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="text-muted px-4 py-3 mb-0">No applications yet. Share the trial with academies and players you know. &#9917;</p>
+                {% endif %}
+            </article>
+            {% endwith %}
         {% endfor %}
     {% else %}
-        <div class="alert alert-info">You have not posted opportunities yet. <a href="{% url 'post_opportunity' %}">Post one now</a>.</div>
+        <div class="ts-empty"><div class="big">&#128226;</div><h3 class="fw-bold mt-2">You have not posted a trial yet</h3><p class="text-muted mb-3">Post your first trial and talented players can apply in minutes.</p><a href="{% url 'post_opportunity' %}" class="btn btn-success rounded-pill px-4 fw-bold">Post a trial</a></div>
     {% endif %}
 </div>
 {% endblock %}
