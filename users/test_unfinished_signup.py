@@ -44,3 +44,15 @@ class UnfinishedSignupTests(TestCase):
         self._register('kevin@example.com')
         self.assertEqual(User.objects.filter(email__iexact='kevin@example.com').count(), 1)
         self.assertTrue(User.objects.filter(pk=user.pk).exists())
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class WelcomeBlessingTests(TestCase):
+    def test_welcome_email_carries_the_verse_and_blessing(self):
+        from django.core import mail
+        from users.emails import send_welcome_email
+        user = User.objects.create_user('neema@example.com', PASSWORD, full_name='Neema Atieno', role='scout')
+        send_welcome_email(user)
+        message = mail.outbox[-1]
+        self.assertIn('As iron sharpens iron', message.body)
+        self.assertIn('Mungu akubariki', message.alternatives[0][0])

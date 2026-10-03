@@ -16,7 +16,7 @@
 
 	.app-status-badge.pending { background: #fef3c7; color: #92400e; }
 	.app-status-badge.shortlisted { background: #dcfce7; color: #166534; }
-	.app-status-badge.rejected { background: #fee2e2; color: #b91c1c; }
+	.app-status-badge.rejected { background: #fff3cd; color: #8a6500; }
 
 	.app-summary {
 		display: flex;
@@ -70,10 +70,17 @@
 			</div>
 			<div class="app-summary-chip">
 				<div class="value">{{ status_counts.rejected }}</div>
-				<div class="label">Rejected</div>
+				<div class="label">Not selected this time</div>
 			</div>
 		</div>
 
+		{% if status_counts.rejected %}
+		<div class="alert alert-light border mb-3" style="border-left:4px solid #f6c453 !important;">
+			<strong>&#128170;&#127998; &ldquo;Not selected this time&rdquo; is not &ldquo;not good enough&rdquo;.</strong>
+			Every great player has heard &ldquo;not yet&rdquo;. Keep training, upload a fresh clip that shows your best, and apply again: your moment is coming.
+			<div class="small mt-1" style="color:#8a6500;"><em>&ldquo;As iron sharpens iron, so one person sharpens another.&rdquo;</em> Proverbs 27:17</div>
+		</div>
+		{% endif %}
 		<div class="table-responsive">
 			<table class="table table-hover align-middle bg-white rounded-3 overflow-hidden">
 				<thead class="table-light">
@@ -89,7 +96,7 @@
 						<tr>
 							<td>{{ application.opportunity.title }}</td>
 							<td>{{ application.opportunity.organization }}</td>
-							<td><span class="app-status-badge {{ application.status }}">{{ application.get_status_display }}</span></td>
+							<td><span class="app-status-badge {{ application.status }}">{% if application.status == 'rejected' %}Not selected this time{% else %}{{ application.get_status_display }}{% endif %}</span></td>
 							<td>{{ application.applied_at|date:'M d, Y H:i' }}</td>
 						</tr>
 					{% endfor %}
@@ -97,7 +104,7 @@
 			</table>
 		</div>
 	{% else %}
-		<div class="alert alert-info">You have not applied for any opportunities yet. <a href="{% url 'view_opportunities' %}">Browse open opportunities</a>.</div>
+		<div class="alert alert-info">No applications yet, and that is fine: every journey starts with one step. <a href="{% url 'view_opportunities' %}">Browse open trials</a> and take yours today. &#9917;</div>
 	{% endif %}
 </div>
 {% endblock %}

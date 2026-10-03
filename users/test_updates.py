@@ -147,4 +147,6 @@ class UpdatesViewerAndAboutTests(TestCase):
         self.assertContains(page, 'ambitious, driven BBIT students')
         self.assertContains(page, 'Hadithi yetu')
         self.assertContains(page, 'kucheza kwa vumbi')
+        self.assertContains(page, 'As iron sharpens iron')
+        self.assertContains(page, 'Mithali 27:17')
         self.assertContains(page, 'Stars &amp; Starlets')

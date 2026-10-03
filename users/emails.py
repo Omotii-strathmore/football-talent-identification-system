@@ -63,7 +63,9 @@ def send_welcome_email(user):
         + ('Thank you for helping young Kenyan players get the chance they deserve.\n\n' if is_scout else
            'Every great player started somewhere, and today you took your first step. Keep training, keep believing.\n\n')
         + 'Your next steps:\n' + '\n'.join(f'- {s}' for s in next_steps)
-        + f'\n\nSign in: {settings.SITE_URL}/login/\n\nNionekane nikicheza kwa TV!\nTalanta Soka'
+        + f'\n\nSign in: {settings.SITE_URL}/login/\n\n'
+        '"As iron sharpens iron, so one person sharpens another." (Proverbs 27:17)\n'
+        'Mungu akubariki in every match.\n\nNionekane nikicheza kwa TV!\nTalanta Soka'
     )
     try:
         send_branded_email(

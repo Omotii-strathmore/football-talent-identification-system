@@ -65,8 +65,8 @@
                 <span class="guardian-banner-icon" aria-hidden="true">{% if profile.guardian_declined_at %}&#9888;&#65039;{% else %}&#9203;{% endif %}</span>
                 <div class="flex-grow-1">
                     {% if profile.guardian_declined_at %}
-                        <h5 class="fw-bold mb-1">Your parent or guardian did not approve your account</h5>
-                        <p class="mb-2">Scouts cannot see your profile and you cannot apply for trials. Talk to them, and if they change their mind, send the request again.</p>
+                        <h5 class="fw-bold mb-1">Your parent or guardian has not approved yet, and that is okay</h5>
+                        <p class="mb-2">Parents care about keeping you safe. Talk with them, show them our <a href="/privacy/">Privacy Policy</a>, and explain your dream. Until they approve, scouts cannot see your profile, but you can keep building it. When they are ready, send the request again below.</p>
                     {% elif guardian_email_masked %}
                         <h5 class="fw-bold mb-1">Waiting for your parent or guardian to approve</h5>
                         <p class="mb-2">We emailed <strong>{{ guardian_email_masked }}</strong>. Until they approve, scouts cannot see your profile and you cannot apply for trials. Ask them to check their inbox (and spam folder).</p>
