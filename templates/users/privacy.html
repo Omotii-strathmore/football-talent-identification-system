@@ -2,7 +2,14 @@
 
 {% block title %}Privacy Policy | Talanta Soka{% endblock %}
 
-{% block extra_head %}{% include 'includes/legal_theme_head.html' %}{% endblock %}
+{% block extra_head %}{% include 'includes/legal_theme_head.html' %}
+<style>
+    .legal .story-link { font-size: 1.08rem; padding: 12px 16px; border-left: 4px solid #f6c453; border-radius: 10px; background: rgba(246, 196, 83, .08); }
+    .legal .story-link a { white-space: nowrap; color: #f6c453 !important; }
+    html[data-theme="light"] .legal .story-link { background: #fff8e1; }
+    html[data-theme="light"] .legal .story-link a { color: #006b3f !important; }
+</style>
+{% endblock %}
 
 {% block content %}
 
@@ -16,13 +23,10 @@
 <p><span class="legal-updated">&#128197; Last updated: 2 October 2026</span></p>
 
 <div class="legal">
-    <p>Talanta Soka connects football players with verified scouts through structured football opportunities. This policy explains what personal information we collect, why, who can see it, and the choices you have. It is written to meet the Kenya Data Protection Act, 2019.</p>
+    <p class="story-link">Talanta Soka connects football players with verified scouts through structured football opportunities. <a href="{% url 'about' %}"><strong>Read our story &rarr;</strong></a></p>
+    <p>This policy explains what personal information we collect, why, who can see it, and the choices you have. It is written to meet the Kenya Data Protection Act, 2019. For any privacy question or request, contact us at <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>.</p>
 
-    <h2>1. Who we are</h2>
-    <p>Talanta Soka was born as an academic project at Strathmore University, from one simple belief: <strong>your talent deserves to be seen.</strong> Across Kenya, from estate pitches to village fields, there are players with magic in their feet who never get noticed, just because no scout was there that day. That is the dream we are chasing with you: to see you on the big stage, and to hear you say <em>"Nionekane nikicheza kwa TV!"</em> We are here to put your skills in front of the right people, open doors to real trials and opportunities, and walk with you every step of the way. Your dream is our mission, and we want the very best for you. <a href="{% url 'about' %}">Read our story &rarr;</a></p>
-    <p>For any privacy question or request, contact us at <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>.</p>
-
-    <h2>2. Information we collect</h2>
+    <h2>1. Information we collect</h2>
     <ul>
         <li><strong>Account details:</strong> full name, email address, password (stored only in encrypted, hashed form), and whether you are a player or scout.</li>
         <li><strong>Player profiles:</strong> whether you play with the Stars (men&rsquo;s football) or the Starlets (women&rsquo;s football), used only to match you with the right scouts and trials; date of birth and age, playing position, county, height, weight, clubs, achievements, bio, profile photo, and the videos you upload.</li>
@@ -32,7 +36,7 @@
         <li><strong>Technical data:</strong> login sessions and verification codes needed to keep your account secure.</li>
     </ul>
 
-    <h2>3. Why we use it</h2>
+    <h2>2. Why we use it</h2>
     <ul>
         <li>To create and secure your account, including sending verification and password-reset codes by email.</li>
         <li>To show player profiles and videos to verified scouts, so players can be discovered.</li>
@@ -43,10 +47,10 @@
     </ul>
     <p>We rely on your consent to process this information. You can withdraw it at any time by asking us to delete your account.</p>
 
-    <h2>4. Players under 18</h2>
+    <h2>3. Players under 18</h2>
     <p>Players can join from age 12. A player under 18 must confirm that a parent or guardian has read this policy and the Terms of Use, and give us the parent or guardian's name and email address. We then email the parent or guardian a link to approve or decline the account. <strong>Until they approve, the player's profile and videos are hidden from all scouts and the player cannot apply for trials.</strong> We record when consent and approval were given. A parent or guardian can withdraw approval at any time using the same link, and can contact us to see, correct, or delete a child's information. We use the parent or guardian's email only for this approval.</p>
 
-    <h2>5. Who can see your information</h2>
+    <h2>4. Who can see your information</h2>
     <ul>
         <li><strong>Verified scouts</strong> can see player profiles and videos. Your email or phone number is only shown to scouts if you choose to share it.</li>
         <li><strong>Administrators</strong> can see account details and scout verification documents, to manage and protect the platform.</li>
@@ -55,7 +59,7 @@
     </ul>
     <p>We do not sell your personal information or share it for advertising.</p>
 
-    <h2>6. Service providers and where data is stored</h2>
+    <h2>5. Service providers and where data is stored</h2>
     <p>We use these providers to run the platform. They process data only on our behalf:</p>
     <ul>
         <li><strong>Render</strong>: hosts the website (Frankfurt, Germany).</li>
@@ -66,7 +70,7 @@
     </ul>
     <p>This means your information is stored outside Kenya, in the European Union, which has data protection laws at least as strong as Kenya's. Files are kept in private storage and are only viewable through short-lived links shown to logged-in users.</p>
 
-    <h2>7. Cookies and what we save on your device</h2>
+    <h2>6. Cookies and what we save on your device</h2>
     <p>Cookies are small notes a website saves in your browser so it remembers you as you move between pages. Talanta Soka uses <strong>only the cookies it needs to work</strong>. We do not use advertising, tracking or analytics cookies, and no other company places cookies through our site.</p>
     <ul>
         <li><strong>sessionid</strong>: keeps you logged in. It is removed when you log out and otherwise expires after two weeks. Page scripts cannot read it.</li>
@@ -76,10 +80,10 @@
     <p>We also remember a few choices <strong>only on your own device</strong> (not sent to us): light or dark mode, English or Swahili, whether you have seen the welcome tour or the latest &ldquo;What&rsquo;s new&rdquo; update, and when to ask &ldquo;How is Talanta Soka?&rdquo;. Clearing your browser data removes them.</p>
     <p>Our landing page loads its lettering from Google Fonts, so Google receives your device&rsquo;s internet address when that page opens; it does not set cookies. If we ever add analytics or advertising, we will ask for your permission first and update this policy.</p>
 
-    <h2>8. How long we keep it</h2>
+    <h2>7. How long we keep it</h2>
     <p>We keep your information while your account is active. When an account is deleted, we delete its profile, uploaded photos, videos, and documents. Verification codes expire after 15 minutes.</p>
 
-    <h2>9. Your rights</h2>
+    <h2>8. Your rights</h2>
     <p>Under the Kenya Data Protection Act, 2019, you have the right to:</p>
     <ul>
         <li>be informed about how your data is used;</li>
@@ -92,10 +96,10 @@
     <p><strong>If you are not satisfied, feel unheard, or have been mistreated or abused in any way, kindly talk to us.</strong> We will listen, take it seriously, and do our best to make it right. Contact us at <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>.</p>
     <p>If you are still not satisfied after talking to us, you can also complain to the Office of the Data Protection Commissioner (ODPC) of Kenya.</p>
 
-    <h2>10. Security</h2>
+    <h2>9. Security</h2>
     <p>Passwords are hashed, the site only runs over encrypted HTTPS connections, accounts are verified by email, and uploaded files are stored privately. After several wrong passwords or codes, further attempts are paused for 15 minutes, and we email you if your password or login email changes. No system is completely secure, so please use a strong password and keep it to yourself.</p>
 
-    <h2>11. Changes to this policy</h2>
+    <h2>10. Changes to this policy</h2>
     <p>If we make important changes, we will update the date at the top of this page and let registered users know.</p>
 </div>
 {% include 'includes/legal_theme_toggle.html' %}
