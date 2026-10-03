@@ -124,6 +124,13 @@
                     </select>
                 </div>
 
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="fair_play" value="1" id="fair_play" {% if fair_play_only %}checked{% endif %}>
+                        <label class="form-check-label" for="fair_play">&#129309; Only players with a Fair Play badge</label>
+                    </div>
+                </div>
+
                 <div class="col-md-2 d-flex gap-2">
                     <button type="submit" class="btn btn-primary btn-sm">Apply Filter</button>
                     <a href="{% url 'scout_player_directory' %}" class="btn btn-outline-secondary btn-sm">Reset</a>
@@ -149,6 +156,7 @@
                                     <h5 class="card-title mb-1">{{ profile.full_name }}</h5>
                                     <p class="text-muted mb-1">{% if profile.category %}<span class="badge text-bg-warning me-1">{{ profile.category|category_badge }}</span>{% endif %}Position: {{ profile.position }}</p>
                                     <p class="text-muted mb-0">Age: {{ profile.age }} | Location: {{ profile.location }}</p>
+                                    {% if profile.earned_badges %}<div class="mt-2">{% include 'includes/badges.html' with badges=profile.earned_badges small=True %}</div>{% endif %}
                                 </div>
                             </div>
 
@@ -190,7 +198,37 @@
                                         <button type="submit" class="btn btn-outline-danger btn-sm">♡ Mark as interested</button>
                                     {% endif %}
                                 </form>
+                                {% if profile.can_fair_play %}
+                                    <button class="btn btn-sm {% if profile.my_fair_play %}btn-success{% else %}btn-outline-success{% endif %}" type="button"
+                                            data-bs-toggle="collapse" data-bs-target="#fairplay-{{ profile.id }}" aria-expanded="false" aria-controls="fairplay-{{ profile.id }}">
+                                        &#129309; {% if profile.my_fair_play %}Fair Play given{% else %}Award Fair Play{% endif %}
+                                    </button>
+                                {% endif %}
                             </div>
+
+                            {% if profile.can_fair_play %}
+                            <div class="collapse mt-3" id="fairplay-{{ profile.id }}">
+                                <form method="post" action="{% url 'scout_award_fair_play' %}" class="p-3 rounded-3" style="background:#f1faf4;border:1px solid #cfe9d8">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="profile_id" value="{{ profile.id }}">
+                                    <input type="hidden" name="redirect_to" value="{{ request.get_full_path }}">
+                                    <p class="fw-semibold mb-2">What did you see in {{ profile.full_name }}?</p>
+                                    <div class="d-flex flex-wrap gap-3 mb-2">
+                                        {% for key, label in fair_play_qualities %}
+                                            <label class="form-check-label d-flex align-items-center gap-1">
+                                                <input class="form-check-input" type="checkbox" name="qualities" value="{{ key }}"
+                                                       {% if profile.my_fair_play and key in profile.my_fair_play.qualities %}checked{% endif %}> {{ label }}
+                                            </label>
+                                        {% endfor %}
+                                    </div>
+                                    <p class="text-muted small mb-2">Give it only for character you have seen yourself. The player is told, and it shows on their profile.</p>
+                                    <div class="d-flex gap-2">
+                                        <button type="submit" class="btn btn-success btn-sm">{% if profile.my_fair_play %}Update badge{% else %}Give Fair Play badge{% endif %}</button>
+                                        {% if profile.my_fair_play %}<button type="submit" name="action" value="withdraw" class="btn btn-outline-secondary btn-sm">Withdraw</button>{% endif %}
+                                    </div>
+                                </form>
+                            </div>
+                            {% endif %}
 
                             <div class="collapse mt-3" id="videos-{{ profile.id }}">
                                 <h6 class="mb-2">Uploaded Videos</h6>

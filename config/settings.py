@@ -259,6 +259,9 @@ if BREVO_API_KEY:
     EMAIL_BACKEND = 'config.email_backends.BrevoEmailBackend'
     DEFAULT_FROM_EMAIL = BREVO_SENDER_EMAIL
 
+# Players who join on or before this date get the Pioneer badge (the first season).
+PIONEER_UNTIL = os.environ.get('PIONEER_UNTIL', '2026-12-31')
+
 # Safety lock: on Render (the live site) refuse to start with unsafe settings, rather than run quietly unsafe.
 # Laptops are not affected. Render sets RENDER=true for every service.
 if os.environ.get('RENDER'):

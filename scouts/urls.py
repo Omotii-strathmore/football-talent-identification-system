@@ -10,6 +10,7 @@ urlpatterns = [
     ),
     path('players/', views.player_directory, name='scout_player_directory'),
     path('players/shortlist/toggle/', views.scout_toggle_shortlist, name='scout_toggle_shortlist'),
+    path('players/fair-play/', views.scout_award_fair_play, name='scout_award_fair_play'),
     path('players/interests/', views.scout_shortlist, name='scout_shortlist'),
     path('player-recommendations/', views.player_recommendations, name='scout_player_recommendations'),
     path('details/edit/', views.edit_details, name='scout_edit_details'),

@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import F, Q
+from django.db.models import Count, F, Q
 from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.utils import timezone
@@ -9,7 +9,8 @@ from opportunities.models import Application, Opportunity
 from players.models import PlayerProfile, PlayerVideo
 from scouts.forms import ScoutEditDetailsForm, ScoutResubmitForm
 from players.guardian import visible_to_scouts_q
-from scouts.models import Scout, ScoutPlayerShortlist, ScoutVideoFeedback
+from players.badges import can_award_fair_play, player_badges, scout_badges
+from scouts.models import FairPlayAward, Scout, ScoutPlayerShortlist, ScoutVideoFeedback
 
 
 def _scout_category(request):
@@ -79,6 +80,7 @@ def dashboard(request):
             'recent_applications': recent_applications,
             'shortlist_count': shortlist_count,
             'recent_replies': recent_replies,
+            'my_badges': scout_badges(request.user),
         }
     )
 
@@ -110,9 +112,17 @@ def player_directory(request):
     # Players under 18 stay hidden until a parent or guardian approves.
     profiles = (
         PlayerProfile.objects.select_related('user')
-        .prefetch_related('videos')
+        .prefetch_related('videos', 'fair_play_awards')
+        .annotate(
+            application_total=Count('user__opportunity_applications', distinct=True),
+            reply_total=Count('videos__video_feedback_entries', distinct=True,
+                              filter=~Q(videos__video_feedback_entries__player_reply='')),
+        )
         .filter(_players_q(request))
     )
+    fair_play_only = request.GET.get('fair_play') == '1'
+    if fair_play_only:
+        profiles = profiles.filter(fair_play_awards__isnull=False).distinct()
 
     # Scouts of one category only ever see that category (already applied by _players_q).
     # Scouts of both can narrow the list with the Stars / Starlets buttons.
@@ -186,8 +196,21 @@ def player_directory(request):
             profile_id__in=profile_ids,
         ).values_list('profile_id', flat=True)
     )
+    my_awards = {
+        award.profile_id: award
+        for award in FairPlayAward.objects.filter(scout=request.user, profile_id__in=profile_ids)
+    }
     for profile in profiles:
         profile.is_shortlisted = profile.id in shortlisted_ids
+        awards = list(profile.fair_play_awards.all())
+        profile.earned_badges = [
+            badge for badge in player_badges(profile, video_count=len(profile.videos.all()),
+                                             application_count=profile.application_total, awards=awards,
+                                             reply_count=profile.reply_total)
+            if badge['earned']
+        ]
+        profile.my_fair_play = my_awards.get(profile.id)
+        profile.can_fair_play = profile.is_shortlisted or profile.id in my_awards or can_award_fair_play(request.user, profile)
 
     return render(
         request,
@@ -206,6 +229,8 @@ def player_directory(request):
             'selected_age_range': selected_age_range,
             'recommended_position': recommended_position,
             'is_general_scout': is_general_scout,
+            'fair_play_only': fair_play_only,
+            'fair_play_qualities': FairPlayAward.QUALITY_CHOICES,
         }
     )
 
@@ -241,6 +266,44 @@ def scout_toggle_shortlist(request):
         messages.success(request, f'Added {profile.full_name} to your interests.')
 
     return redirect(_safe_redirect_target(request, 'scout_player_directory'))
+
+
+@login_required
+def scout_award_fair_play(request):
+    """Give, change or withdraw a Fair Play badge. Only for players this scout has actually dealt with."""
+    if request.user.role != 'scout':
+        messages.error(request, 'Only scouts can give Fair Play badges.')
+        return redirect('player_dashboard')
+    blocked = _unverified_scout_redirect(request)
+    if blocked:
+        return blocked
+    if request.method != 'POST':
+        return redirect('scout_player_directory')
+
+    profile = get_object_or_404(PlayerProfile.objects.filter(_players_q(request)), id=request.POST.get('profile_id'))
+    target = _safe_redirect_target(request, 'scout_player_directory')
+    existing = FairPlayAward.objects.filter(scout=request.user, profile=profile).first()
+    first_name = (profile.full_name or 'this player').split()[0]
+
+    if request.POST.get('action') == 'withdraw':
+        if existing:
+            existing.delete()
+            messages.info(request, f'Your Fair Play badge for {first_name} was withdrawn.')
+        return redirect(target)
+
+    if not existing and not can_award_fair_play(request.user, profile):
+        messages.error(request, 'Add this player to your Interests (or give them feedback) before giving a Fair Play badge.')
+        return redirect(target)
+
+    allowed = dict(FairPlayAward.QUALITY_CHOICES)
+    chosen = [key for key in request.POST.getlist('qualities') if key in allowed]
+    if not chosen:
+        messages.error(request, 'Choose at least one quality you saw, for example Respect or Teamwork.')
+        return redirect(target)
+
+    FairPlayAward.objects.update_or_create(scout=request.user, profile=profile, defaults={'qualities': ','.join(chosen)})
+    messages.success(request, f'\U0001F91D Thank you! {first_name} now has your Fair Play badge.')
+    return redirect(target)
 
 
 @login_required

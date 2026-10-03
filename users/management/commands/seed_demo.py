@@ -153,6 +153,13 @@ class Command(BaseCommand):
             'bio': f'Starlet from {county}, playing as a {position.lower()}.',
         })
 
+        # Badges for the demo: Grace has Achieng in her Interests and gave her a Fair Play badge.
+        from scouts.models import FairPlayAward, ScoutPlayerShortlist
+        grace = User.objects.get(email='grace@demo.ke')
+        achieng = PlayerProfile.objects.get(user__email='achieng@demo.ke')
+        ScoutPlayerShortlist.objects.get_or_create(scout=grace, profile=achieng)
+        FairPlayAward.objects.get_or_create(scout=grace, profile=achieng, defaults={'qualities': 'respect,teamwork'})
+
         title, teaser, points = DEMO_UPDATE
         SiteUpdate.objects.get_or_create(title=title, defaults={'teaser': teaser, 'points': points, 'created_by': admin})
 

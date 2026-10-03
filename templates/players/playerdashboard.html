@@ -86,6 +86,23 @@
         </div>
     {% endif %}
 
+    {% for award in new_fair_play %}
+        <div class="alert alert-success d-flex align-items-center gap-2 mb-3" role="status">
+            <span style="font-size:1.4rem" aria-hidden="true">&#129309;</span>
+            <div><strong>Well done!</strong> {{ award.scout.full_name }} gave you a <strong>Fair Play</strong> badge for {{ award.quality_labels|join:", " }}. Keep being that player. &#128170;&#127998;</div>
+        </div>
+    {% endfor %}
+
+    {% if my_badges %}
+        <div class="card mb-4" id="my-badges">
+            <div class="card-body">
+                <h5 class="fw-bold mb-1">&#127941; My badges</h5>
+                <p class="text-muted small mb-3">Badges show scouts your effort and character. Faded ones are still waiting for you: here is how to earn them.</p>
+                {% include 'includes/badges.html' with badges=my_badges show_locked=True %}
+            </div>
+        </div>
+    {% endif %}
+
     <div class="dash-stack">
     <div class="row g-3 mb-4">
         <div class="col-6 col-md-6 col-lg-3">

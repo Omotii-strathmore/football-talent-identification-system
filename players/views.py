@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django import forms
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -9,7 +11,8 @@ from opportunities.models import Application
 from players.forms import PlayerProfileForm, PlayerVideoForm
 from players.guardian import can_resend, mask_email, profile_from_token, send_guardian_email
 from players.models import PlayerProfile, PlayerVideo
-from scouts.models import ScoutVideoFeedback
+from players.badges import player_badges
+from scouts.models import FairPlayAward, ScoutVideoFeedback
 
 @login_required
 def dashboard(request):
@@ -44,6 +47,12 @@ def dashboard(request):
             'applications_count': applications_count,
             'videos_count': videos_count,
             'videos': videos,
+            'my_badges': player_badges(profile, video_count=videos_count, application_count=applications_count) if profile else [],
+            'new_fair_play': (
+                FairPlayAward.objects.select_related('scout').filter(
+                    profile=profile, created_at__gte=timezone.now() - timedelta(days=14))
+                if profile else []
+            ),
             'guardian_pending': bool(profile and profile.needs_guardian_approval),
             'guardian_email_masked': mask_email(profile.guardian_email) if profile and profile.guardian_email else '',
         }

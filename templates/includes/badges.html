@@ -1,0 +1,27 @@
+{% comment %}
+Badge strip. Needs `badges` (from players/badges.py). With `show_locked`, badges not earned yet are shown
+faded with how to earn them (for a person's own dashboard); otherwise only earned badges appear.
+{% endcomment %}
+<div class="ts-badges{% if small %} ts-badges--small{% endif %}">
+    {% for badge in badges %}
+        {% if badge.earned %}
+            <span class="ts-badge ts-badge--{{ badge.key }}" title="{{ badge.hint }}"><span aria-hidden="true">{{ badge.emoji }}</span> {{ badge.name }}{% if badge.detail %} <span class="ts-badge__detail">&middot; {{ badge.detail }}</span>{% endif %}</span>
+        {% elif show_locked %}
+            <span class="ts-badge is-locked" title="Not earned yet"><span aria-hidden="true">{{ badge.emoji }}</span> {{ badge.name }} <span class="ts-badge__hint">&middot; {{ badge.hint }}</span></span>
+        {% endif %}
+    {% endfor %}
+</div>
+<style>
+    .ts-badges{display:flex;flex-wrap:wrap;gap:8px}
+    .ts-badge{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:999px;font-size:.88rem;font-weight:600;
+        background:#fff8e1;color:#5a4300;border:1px solid #f2d78a}
+    .ts-badge--fair_play{background:#e6f6ec;color:#00552f;border-color:#9fd8b4}
+    .ts-badge--pioneer{background:#eef7e9;color:#2f5d1a;border-color:#bcdca8}
+    .ts-badge--helpful{background:#e8f1fd;color:#123f7a;border-color:#a9c7f0}
+    .ts-badge__detail{font-weight:500;opacity:.85}
+    .ts-badge.is-locked{background:transparent;color:#6b7680;border:1px dashed #c4cbd2;font-weight:500}
+    .ts-badge.is-locked > span:first-child{filter:grayscale(1);opacity:.6}
+    .ts-badge__hint{font-weight:400}
+    .ts-badges--small .ts-badge{padding:3px 9px;font-size:.78rem}
+    html.admin-tech .ts-badge{background:#13213b;color:#d8e6f8;border-color:#2a4a75}
+</style>
