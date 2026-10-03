@@ -1,0 +1,138 @@
+{% comment %}
+"What's new" viewer. Opens with the U key or any element with [data-open-updates].
+First time: shows the newest recent update. After that: "You're all caught up" with a button to read
+the earlier updates one by one (Older / Newer).
+{% endcomment %}
+<div class="tsv" id="tsv" role="dialog" aria-modal="true" aria-labelledby="tsv-title" translate="no" hidden
+     data-feed-url="{% url 'updates_feed' %}">
+    <div class="tsv__panel">
+        <button type="button" class="tsv__x" data-tsv-close aria-label="Close">&times;</button>
+        <div class="tsv__head">
+            <span class="tsv__badge">&#127381; What&rsquo;s new</span>
+            <span class="tsv__meta" id="tsv-meta"></span>
+            <h2 id="tsv-title">Updates</h2>
+            <p id="tsv-teaser"></p>
+        </div>
+        <div class="tsv__body" id="tsv-body"></div>
+        <div class="tsv__foot">
+            <button type="button" class="tsv__nav" id="tsv-older">&larr; Older</button>
+            <span class="tsv__count" id="tsv-count"></span>
+            <button type="button" class="tsv__nav" id="tsv-newer">Newer &rarr;</button>
+            <button type="button" class="tsv__ok" data-tsv-close>Close</button>
+        </div>
+        <p class="tsv__tip">Tip: press <kbd>U</kbd> anytime to see updates.</p>
+    </div>
+</div>
+<style>
+    .tsv{position:fixed;inset:0;z-index:2050;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(4,12,8,.72);backdrop-filter:blur(3px)}
+    .tsv[hidden]{display:none!important}
+    .tsv__panel{position:relative;width:min(820px,100%);max-height:min(82vh,760px);display:flex;flex-direction:column;background:#fffdf7;color:#13231a;border-radius:20px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.45);font-family:inherit}
+    .tsv__x{position:absolute;top:12px;right:14px;width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:28px;line-height:1;cursor:pointer}
+    .tsv__head{padding:26px 30px 22px;color:#fff;background:linear-gradient(135deg,#07170d 0%,#0b4d2c 60%,#006b3f 100%);border-bottom:4px solid #f6c453}
+    .tsv__badge{display:inline-block;background:#f6c453;color:#07170d;font-weight:800;font-size:13px;padding:5px 12px;border-radius:999px}
+    .tsv__meta{margin-left:10px;font-size:13px;color:#cfe9d8}
+    .tsv__head h2{margin:12px 52px 6px 0;font-size:clamp(20px,3vw,28px);font-weight:800;line-height:1.2;color:#fff}
+    .tsv__head p{margin:0;font-size:15px;color:#e3f3e9}
+    .tsv__body{flex:1;overflow-y:auto;padding:20px 30px}
+    .tsv__body ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+    .tsv__body li{position:relative;padding:12px 14px 12px 46px;background:#f1faf4;border:1px solid #d5ecdd;border-radius:12px;font-size:15px;line-height:1.5}
+    .tsv__body li::before{content:"\2714";position:absolute;left:12px;top:11px;width:22px;height:22px;border-radius:50%;background:#006b3f;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center}
+    .tsv__empty{text-align:center;padding:18px 8px}
+    .tsv__empty .big{font-size:2.4rem}
+    .tsv__empty p{margin:8px 0 14px;color:#3f4f46}
+    .tsv__read{border:0;border-radius:999px;padding:11px 22px;font-weight:800;background:#006b3f;color:#fff;cursor:pointer}
+    .tsv__foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:14px 30px;border-top:1px solid #e3ebe5;background:#fff}
+    .tsv__nav{border:1px solid #cfd8d2;background:#fff;color:#13231a;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer;min-height:40px}
+    .tsv__nav:disabled{opacity:.35;cursor:default}
+    .tsv__count{font-size:13px;color:#5b6b62}
+    .tsv__ok{margin-left:auto;border:0;border-radius:999px;padding:10px 22px;font-weight:800;background:#006b3f;color:#fff;cursor:pointer;min-height:40px}
+    .tsv__tip{margin:0;padding:0 30px 12px;font-size:12px;color:#7a877f;background:#fff}
+    .tsv__tip kbd{border:1px solid #cfd8d2;border-bottom-width:2px;border-radius:5px;padding:0 6px;font-size:11px;color:#13231a;background:#f6f8f7}
+    @media (max-width:600px){.tsv__head,.tsv__body,.tsv__foot{padding-left:18px;padding-right:18px}.tsv__tip{display:none}}
+</style>
+<script>
+(function () {
+    var box = document.getElementById('tsv');
+    if (!box) return;
+    var READ_KEY = 'talantaSokaUpdateRead';
+    var feed = null, index = 0, lastFocus = null, seenUrl = '';
+    var el = function (id) { return document.getElementById(id); };
+
+    function csrf() { var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; }
+    function esc(t) { var d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+    function getRead() { try { return localStorage.getItem(READ_KEY); } catch (e) { return null; } }
+    function setRead(id) { try { localStorage.setItem(READ_KEY, String(id)); } catch (e) {} }
+
+    function show(i) {
+        index = i;
+        var u = feed[i];
+        el('tsv-meta').textContent = u.date;
+        el('tsv-title').textContent = u.title;
+        el('tsv-teaser').textContent = u.teaser;
+        el('tsv-body').innerHTML = '<ul>' + u.points.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>';
+        el('tsv-count').textContent = 'Update ' + (i + 1) + ' of ' + feed.length;
+        el('tsv-older').hidden = el('tsv-newer').hidden = el('tsv-count').hidden = false;
+        el('tsv-older').disabled = i >= feed.length - 1;
+        el('tsv-newer').disabled = i <= 0;
+        if (i === 0) setRead(u.id);
+        // Reading it here counts as seeing it, so the automatic pop-up will not appear as well.
+        try { localStorage.setItem('talantaSokaUpdateSeen', String(u.id)); } catch (e) {}
+        if (seenUrl) fetch(seenUrl.replace('/0/', '/' + u.id + '/'), { method: 'POST', headers: { 'X-CSRFToken': csrf() }, credentials: 'same-origin' }).catch(function () {});
+    }
+    function showCaughtUp() {
+        el('tsv-meta').textContent = '';
+        el('tsv-title').textContent = feed.length ? 'You’re all caught up 👍' : 'No updates yet';
+        el('tsv-teaser').textContent = feed.length ? 'No new updates right now.' : 'When Talanta Soka adds something new, you will see it here.';
+        el('tsv-body').innerHTML = feed.length
+            ? '<div class="tsv__empty"><div class="big">⚽</div><p>Want to look back at what changed?</p><button type="button" class="tsv__read" id="tsv-read">Read earlier updates</button></div>'
+            : '<div class="tsv__empty"><div class="big">⚽</div></div>';
+        el('tsv-older').hidden = el('tsv-newer').hidden = el('tsv-count').hidden = true;
+        var read = el('tsv-read');
+        if (read) read.addEventListener('click', function () { show(0); });
+    }
+    function openBox() {
+        if (!box.hidden) return;
+        var auto = document.getElementById('ts-update');
+        if (window.TalantaUpdateOpen && auto) { auto.querySelector('[data-close]').click(); }
+        lastFocus = document.activeElement;
+        box.hidden = false;
+        document.body.style.overflow = 'hidden';
+        var start = function () {
+            var newest = feed[0];
+            if (newest && newest.recent && String(newest.id) !== getRead()) { show(0); } else { showCaughtUp(); }
+            box.querySelector('.tsv__ok').focus();
+        };
+        if (feed) { start(); return; }
+        el('tsv-title').textContent = 'Loading...';
+        fetch(box.dataset.feedUrl, { credentials: 'same-origin' }).then(function (r) { return r.json(); }).then(function (data) {
+            feed = data.updates || []; seenUrl = data.seen_url || ''; start();
+        }).catch(function () { feed = []; showCaughtUp(); });
+    }
+    function closeBox() {
+        box.hidden = true;
+        document.body.style.overflow = '';
+        if (lastFocus && lastFocus.focus) lastFocus.focus();
+    }
+    el('tsv-older').addEventListener('click', function () { if (index < feed.length - 1) show(index + 1); });
+    el('tsv-newer').addEventListener('click', function () { if (index > 0) show(index - 1); });
+    box.querySelectorAll('[data-tsv-close]').forEach(function (b) { b.addEventListener('click', closeBox); });
+    box.addEventListener('click', function (e) { if (e.target === box) closeBox(); });
+    document.addEventListener('keydown', function (e) {
+        if (!box.hidden) {
+            if (e.key === 'Escape') closeBox();
+            else if (e.key === 'ArrowLeft' && !el('tsv-older').hidden) el('tsv-older').click();
+            else if (e.key === 'ArrowRight' && !el('tsv-newer').hidden) el('tsv-newer').click();
+            return;
+        }
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        var t = e.target, tag = (t && t.tagName) || '';
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+        if (e.key === 'u' || e.key === 'U') { e.preventDefault(); openBox(); }
+    });
+    document.addEventListener('click', function (e) {
+        var trigger = e.target.closest('[data-open-updates]');
+        if (trigger) { e.preventDefault(); openBox(); }
+    });
+    window.TalantaUpdatesViewer = { open: openBox };
+})();
+</script>

@@ -1,0 +1,198 @@
+{% extends 'auth_base.html' %}
+
+{% block title %}About Us | Talanta Soka{% endblock %}
+
+{% block extra_head %}{% include 'includes/legal_theme_head.html' %}
+<style>
+    .about-hero { text-align: center; margin: 4px 0 26px; }
+    .about-hero .motto { display: inline-block; margin-top: 10px; font-style: italic; font-weight: 700; color: #f6c453; font-size: 1.1rem; }
+    .about-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 12px 0 22px; }
+    .about-card { border: 1px solid var(--line, rgba(255,255,255,.12)); border-radius: 16px; padding: 16px 18px; background: rgba(255,255,255,.03); }
+    .about-card h3 { font-size: 1.05rem; font-weight: 800; margin: 0 0 8px; }
+    .about-card ol { margin: 0; padding-left: 20px; }
+    .about-card li { margin-bottom: 4px; }
+    .about-ss { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 12px 0 22px; }
+    .about-ss .about-card { text-align: center; }
+    .about-ss .icon { font-size: 2rem; line-height: 1; }
+    .about-promises { list-style: none; padding: 0; margin: 10px 0 22px; display: grid; gap: 8px; }
+    .about-promises li { padding: 10px 14px; border-radius: 12px; border: 1px solid var(--line, rgba(255,255,255,.12)); }
+    .about-cta { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 18px 0 6px; }
+    .lang-switch { border: 1px solid var(--line, rgba(255,255,255,.2)); background: transparent; color: inherit; border-radius: 999px; padding: 4px 12px; font-weight: 700; font-size: .8rem; }
+    html[data-theme="light"] .about-card, html[data-theme="light"] .about-promises li { background: #fff; border-color: #dfe7e1; }
+    html[data-theme="light"] .about-hero .motto { color: #b8860b; }
+    .story p { font-size: 1.04rem; line-height: 1.75; }
+    .story .story-open { font-size: 1.35rem; font-weight: 800; margin-bottom: 6px; color: #f6c453; }
+    .story-quote { margin: 18px 0; padding: 14px 18px; border-left: 4px solid #f6c453; border-radius: 10px;
+        font-size: 1.35rem; font-weight: 800; font-style: italic; color: #f6c453; background: rgba(246, 196, 83, .08); }
+    html[data-theme="light"] .story .story-open { color: #006b3f; }
+    html[data-theme="light"] .story-quote { color: #8a6500; background: #fff8e1; }
+    @media (max-width: 640px) { .about-grid, .about-ss { grid-template-columns: 1fr; } .story-quote { font-size: 1.15rem; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="legal-toolbar">
+    <a href="{% url 'home' %}" class="btn btn-outline-light btn-sm">Home</a>
+    <a href="{% url 'privacy' %}" class="btn btn-outline-light btn-sm">Privacy Policy</a>
+    <button type="button" class="lang-switch" id="about-lang" title="Switch language (press L)">EN / SW</button>
+    <button type="button" class="legal-theme-toggle" id="legal-theme-toggle" aria-label="Switch light/dark mode" title="Switch light/dark mode (press T)">&#127769;</button>
+</div>
+
+<div class="legal">
+<!-- ===================== English ===================== -->
+<div data-lang="en">
+    <div class="about-hero">
+        <p class="eyebrow">About us</p>
+        <h1 class="title">Your talent deserves to be seen.</h1>
+        <span class="motto">&ldquo;Nionekane nikicheza kwa TV!&rdquo;</span>
+    </div>
+
+    <h2>Our story</h2>
+    <div class="story">
+        <p class="story-open">It starts with a child.</p>
+        <p>Shoes worn thin, knees covered in dust, walking home late in the evening after hours of <em>kucheza kwa vumbi</em> &#128517; on the estate pitch. Supper goes cold while their eyes stay glued to the TV: Messi gliding past three defenders, Ronaldo rising high for a header. And quietly, a dream is born: <strong>one day, that could be me.</strong></p>
+        <blockquote class="story-quote">&ldquo;Nionekane nikicheza kwa TV!&rdquo;</blockquote>
+        <p>Across Kenya, from estate pitches to village fields, thousands of children carry that same dream. Many have magic in their feet. But too often nobody who matters is watching: no scout was there that day, and the talent fades away unseen.</p>
+        <p><strong>Talanta Soka was born to change that.</strong> It started as an academic project at Strathmore University, built by a team of <strong>ambitious, driven BBIT students</strong> who grew up loving the game and believe one simple thing: <strong>your talent deserves to be seen.</strong></p>
+        <p>We are here to put your skills in front of the right people, open doors to real trials and opportunities, and walk with you every step of the way. Your dream is our mission, and we want the very best for you.</p>
+    </div>
+
+    <h2>Why we exist</h2>
+    <p>Too many gifted players never get a fair chance, and scouts struggle to find them. Talanta Soka brings both together in one safe place: players show their game, verified scouts discover them, and real trials and tournaments are open to everyone. No connections needed, just your game.</p>
+
+    <h2>How it works</h2>
+    <div class="about-grid">
+        <div class="about-card">
+            <h3>&#9917; For players</h3>
+            <ol>
+                <li>Sign up free as a Star or a Starlet.</li>
+                <li>Build your profile and upload your best videos.</li>
+                <li>Apply to trials and get feedback from scouts.</li>
+            </ol>
+        </div>
+        <div class="about-card">
+            <h3>&#128301; For scouts</h3>
+            <ol>
+                <li>Sign up and send a document to be verified.</li>
+                <li>Discover players by position, age and county.</li>
+                <li>Post trials and tournaments in minutes.</li>
+            </ol>
+        </div>
+    </div>
+
+    <h2>Stars &amp; Starlets</h2>
+    <p>Football is for everyone. Named after Kenya&rsquo;s own Harambee Stars and Harambee Starlets:</p>
+    <div class="about-ss">
+        <div class="about-card"><div class="icon">&#11088;</div><h3>Stars</h3><p class="mb-0">Men&rsquo;s football</p></div>
+        <div class="about-card"><div class="icon">&#127775;</div><h3>Starlets</h3><p class="mb-0">Women&rsquo;s football. Equal talent, equal stage.</p></div>
+    </div>
+
+    <h2>Our promises to you</h2>
+    <ul class="about-promises">
+        <li>&#9989; <strong>Only verified scouts</strong> can see players. Our team checks every scout&rsquo;s documents first.</li>
+        <li>&#128106; <strong>Players under 18</strong> stay hidden until a parent or guardian approves.</li>
+        <li>&#128683; <strong>Scouts never ask for money</strong> to scout, to attend a trial, or to join a club.</li>
+        <li>&#128274; <strong>Your data stays private</strong>, and you decide what to share. <a href="{% url 'privacy' %}">Read our Privacy Policy</a>.</li>
+        <li>&#128681; <strong>Something wrong?</strong> <a href="{{ report_concern_url|default:support_compose_url }}" target="_blank" rel="noopener">Report a concern</a> anytime. We read every report.</li>
+    </ul>
+
+    <h2>Get in touch</h2>
+    <p>Questions, ideas or partnership? Write to us at <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>.</p>
+    <div class="about-cta">
+        <a href="{% url 'register' %}?role=player" class="btn btn-warning fw-bold">Join as a player</a>
+        <a href="{% url 'register' %}?role=scout" class="btn btn-outline-light fw-bold">Join as a scout</a>
+    </div>
+</div>
+
+<!-- ===================== Kiswahili ===================== -->
+<div data-lang="sw" hidden>
+    <div class="about-hero">
+        <p class="eyebrow">Kuhusu sisi</p>
+        <h1 class="title">Talanta yako inastahili kuonekana.</h1>
+        <span class="motto">&ldquo;Nionekane nikicheza kwa TV!&rdquo;</span>
+    </div>
+
+    <h2>Hadithi yetu</h2>
+    <div class="story">
+        <p class="story-open">Inaanza na mtoto.</p>
+        <p>Viatu vimechakaa, magoti yamejaa vumbi, anarudi nyumbani jioni sana baada ya masaa ya <em>kucheza kwa vumbi</em> &#128517; kwenye uwanja wa mtaa. Chakula kinapoa huku macho yake yamekodolewa kwenye TV: Messi akiwapita mabeki watatu, Ronaldo akiruka juu kupiga kichwa. Na kimya kimya, ndoto inazaliwa: <strong>siku moja, hiyo inaweza kuwa mimi.</strong></p>
+        <blockquote class="story-quote">&ldquo;Nionekane nikicheza kwa TV!&rdquo;</blockquote>
+        <p>Kote Kenya, kutoka viwanja vya mtaa hadi vya vijijini, maelfu ya watoto wanabeba ndoto hiyo hiyo. Wengi wana vipaji vya ajabu miguuni. Lakini mara nyingi hakuna mtu muhimu anayeangalia: hakuna scout aliyekuwepo siku hiyo, na talanta inapotea bila kuonekana.</p>
+        <p><strong>Talanta Soka ilizaliwa kubadilisha hilo.</strong> Ilianza kama mradi wa masomo katika Chuo Kikuu cha Strathmore, ikijengwa na timu ya <strong>wanafunzi wa BBIT wenye ndoto kubwa na bidii</strong> waliokua wakipenda mpira, na wanaoamini jambo moja: <strong>talanta yako inastahili kuonekana.</strong></p>
+        <p>Tuko hapa kuweka ujuzi wako mbele ya watu sahihi, kufungua milango ya trials na fursa halisi, na kutembea nawe kila hatua. Ndoto yako ndiyo dhamira yetu, na tunakutakia kilicho bora zaidi.</p>
+    </div>
+
+    <h2>Kwa nini tupo</h2>
+    <p>Wachezaji wengi wenye vipaji hawapati nafasi ya haki, na ma-scout wanapata shida kuwapata. Talanta Soka inawaleta pamoja mahali salama: wachezaji wanaonyesha game yao, ma-scout walio-verified wanawagundua, na trials na mashindano ya kweli yako wazi kwa wote. Huhitaji connection, ni game yako tu.</p>
+
+    <h2>Inavyofanya kazi</h2>
+    <div class="about-grid">
+        <div class="about-card">
+            <h3>&#9917; Kwa wachezaji</h3>
+            <ol>
+                <li>Jisajili bure kama Star au Starlet.</li>
+                <li>Tengeneza profile na upakie video zako bora.</li>
+                <li>Omba trials na upate maoni kutoka kwa ma-scout.</li>
+            </ol>
+        </div>
+        <div class="about-card">
+            <h3>&#128301; Kwa ma-scout</h3>
+            <ol>
+                <li>Jisajili na utume hati ya uthibitisho.</li>
+                <li>Gundua wachezaji kwa nafasi, umri na kaunti.</li>
+                <li>Weka trials na mashindano kwa dakika chache.</li>
+            </ol>
+        </div>
+    </div>
+
+    <h2>Stars na Starlets</h2>
+    <p>Mpira ni wa kila mtu. Tumechukua majina kutoka Harambee Stars na Harambee Starlets:</p>
+    <div class="about-ss">
+        <div class="about-card"><div class="icon">&#11088;</div><h3>Stars</h3><p class="mb-0">Mpira wa wanaume</p></div>
+        <div class="about-card"><div class="icon">&#127775;</div><h3>Starlets</h3><p class="mb-0">Mpira wa wanawake. Talanta sawa, jukwaa sawa.</p></div>
+    </div>
+
+    <h2>Ahadi zetu kwako</h2>
+    <ul class="about-promises">
+        <li>&#9989; <strong>Ma-scout walio-verified pekee</strong> ndio wanaona wachezaji. Timu yetu inakagua hati za kila scout kwanza.</li>
+        <li>&#128106; <strong>Wachezaji walio chini ya miaka 18</strong> hufichwa hadi mzazi au mlezi akubali.</li>
+        <li>&#128683; <strong>Ma-scout hawaombi pesa</strong> ili kukuangalia, kuhudhuria trial, au kujiunga na klabu.</li>
+        <li>&#128274; <strong>Taarifa zako ni za siri</strong>, na wewe ndiye unaamua unachoshiriki. <a href="{% url 'privacy' %}">Soma Sera ya Faragha</a>.</li>
+        <li>&#128681; <strong>Kuna tatizo?</strong> <a href="{{ report_concern_url|default:support_compose_url }}" target="_blank" rel="noopener">Ripoti</a> wakati wowote. Tunasoma kila ripoti.</li>
+    </ul>
+
+    <h2>Wasiliana nasi</h2>
+    <p>Maswali, mawazo au ushirikiano? Tuandikie kupitia <a href="{{ support_compose_url }}" target="_blank" rel="noopener">{{ support_email }}</a>.</p>
+    <div class="about-cta">
+        <a href="{% url 'register' %}?role=player" class="btn btn-warning fw-bold">Jiunge kama mchezaji</a>
+        <a href="{% url 'register' %}?role=scout" class="btn btn-outline-light fw-bold">Jiunge kama scout</a>
+    </div>
+</div>
+</div>
+
+<script>
+(function () {
+    var KEY = 'talantaSokaLang';
+    function apply(lang) {
+        document.querySelectorAll('[data-lang]').forEach(function (b) { b.hidden = b.getAttribute('data-lang') !== lang; });
+        document.documentElement.lang = lang === 'sw' ? 'sw' : 'en';
+    }
+    var lang = 'en';
+    try { lang = localStorage.getItem(KEY) || 'en'; } catch (e) {}
+    apply(lang);
+    function toggle() {
+        lang = lang === 'sw' ? 'en' : 'sw';
+        try { localStorage.setItem(KEY, lang); } catch (e) {}
+        apply(lang);
+    }
+    document.getElementById('about-lang').addEventListener('click', toggle);
+    document.addEventListener('keydown', function (e) {
+        var tag = (e.target && e.target.tagName) || '';
+        if (e.ctrlKey || e.metaKey || e.altKey || tag === 'INPUT' || tag === 'TEXTAREA') return;
+        if (e.key === 'l' || e.key === 'L') toggle();
+    });
+})();
+</script>
+{% include 'includes/legal_theme_toggle.html' %}
+{% include 'includes/updates_viewer.html' %}
+{% endblock %}

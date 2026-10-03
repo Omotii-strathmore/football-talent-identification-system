@@ -439,6 +439,9 @@
             text-underline-offset:3px;
         }
 
+        .footer-about { margin-top:18px; }
+        .footer-col--right { text-align:right; align-items:flex-end; }
+        @media (max-width:700px) { .footer-col--right { text-align:left; align-items:flex-start; margin-top:14px; } .footer-about { margin-top:14px; } }
         .footer-col {
             display:flex;
             flex-direction:column;
@@ -458,6 +461,7 @@
         }
 
         .nav-right { display:flex; align-items:center; gap:14px; }
+        .links .sub { display:none; }
         .nav-tools { display:flex; align-items:center; gap:10px; }
         .menu-toggle { display:none; }
 
@@ -483,6 +487,11 @@
             .links.is-open { display:flex; animation:menuDrop .18s ease-out; }
             .links a { display:block; font-size:.95rem; padding:14px 16px; border-radius:10px; background:var(--surface-2); border-color:var(--border); }
             .links .cta { text-align:center; background:var(--gold); color:var(--ink-on-accent); font-weight:800; }
+            .links .desktop-only { display:none; }
+            .links a.is-current { box-shadow: inset 0 -3px 0 var(--gold); color:var(--ink); }
+            .links a.is-current::after { content:" \25BE"; color:var(--gold); }
+            .links .sub:not([hidden]) { display:grid; gap:6px; list-style:none; margin:6px 0 2px 14px; padding-left:12px; border-left:2px solid var(--gold); }
+            .links .sub a { font-size:.88rem; padding:11px 14px; text-transform:none; letter-spacing:.3px; }
             .links .cta:hover { background:var(--gold); color:var(--ink-on-accent); }
         }
         @keyframes menuDrop { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
@@ -618,6 +627,20 @@
             cursor:default;
         }
 
+        /* Light theme: a softer spotlight and a bright tour card that matches the page. */
+        :root[data-theme="light"] .tour-dim { background:rgba(23,22,15,.28); }
+        :root[data-theme="light"] .tour-highlight { box-shadow:0 0 0 3px var(--green), 0 0 0 6000px rgba(23,22,15,.32); }
+        :root[data-theme="light"] .tour-tooltip { background:#FFFFFF; border-color:#E3DECC; border-top:4px solid var(--green); box-shadow:0 18px 40px rgba(23,22,15,.18); }
+        :root[data-theme="light"] .tour-step-label { color:var(--green); }
+        :root[data-theme="light"] .tour-nav-btn { border-color:#D9D3BF; }
+        :root[data-theme="light"] .tour-nav-btn.tour-next-btn { background:var(--green); border-color:var(--green); color:#FFFFFF; }
+        :root[data-theme="light"] .tour-skip-btn:hover { color:var(--green); }
+        :root[data-theme="light"] .tour-replay-btn { background:var(--green); color:#FFFFFF; box-shadow:0 8px 20px rgba(0,107,63,.3); }
+        :root[data-theme="light"] .tour-replay-btn:hover { background:#008A50; }
+
+        /* Dark theme: a gold top edge so the card stands out from the dark page. */
+        :root:not([data-theme="light"]) .tour-tooltip { border-top:4px solid var(--gold); }
+
         .tour-replay-btn {
             position:fixed;
             bottom:22px;
@@ -650,7 +673,7 @@
         }
     </style>
 </head>
-<body>
+<body id="top">
     <div id="home-toast" class="home-toast" aria-live="polite"></div>
     {% if messages %}
         <script>
@@ -661,7 +684,13 @@
         <div class="logo notranslate" translate="no">Talanta <span>Soka</span></div>
         <div class="nav-right">
             <ul class="links" id="site-links">
-                <li><a href="{% url 'home' %}" data-i18n="nav.home">Home</a></li>
+                <li class="has-sub">
+                    <a href="{% url 'home' %}" class="is-current" id="nav-home" aria-current="page" data-i18n="nav.home">Home</a>
+                    <ul class="sub" id="home-sub" hidden>
+                        <li><a href="#top" data-i18n="nav.top">&#127968; Back to top</a></li>
+                        <li><a href="#" data-open-updates data-i18n="nav.updates">&#127381; Updates</a></li>
+                    </ul>
+                </li>
                 <li><a href="{% url 'public_opportunities' %}" id="tour-trials" data-i18n="nav.trials">Trials &amp; Tournaments</a></li>
                 <li><a href="{% url 'login' %}" id="tour-login" data-i18n="nav.login">Login</a></li>
                 <li><a href="{% url 'register' %}" class="cta" id="tour-signup" data-i18n="nav.signup">Sign Up</a></li>
@@ -769,14 +798,17 @@
             <p data-i18n="footer.line1">Talanta Soka | Football Talent Identification and Exposure System</p>
             <p data-i18n="footer.line2">Connecting grassroots players and verified scouts across Kenya.</p>
             <p>
+                <a href="#" class="footer-link" data-open-updates data-i18n="footer.updates">Updates (press U)</a>
+                <span aria-hidden="true">&middot;</span>
                 <a href="{% url 'privacy' %}" class="footer-link" data-i18n="footer.privacy">Privacy Policy</a>
                 &middot;
                 <a href="{% url 'terms' %}" class="footer-link" data-i18n="footer.terms">Terms of Use</a>
             </p>
         </div>
-        <div class="footer-col" style="text-align:right;">
+        <div class="footer-col footer-col--right">
             <p data-i18n="footer.contact">Contact us</p>
             <p><span data-i18n="footer.emailLabel">Email:</span> <a href="{{ support_compose_url }}" target="_blank" rel="noopener" class="footer-link">{{ support_email }}</a></p>
+            <p class="footer-about"><a href="{% url 'about' %}" class="footer-link" data-i18n="footer.about">About us</a></p>
         </div>
     </footer>
     <script>
@@ -802,6 +834,12 @@
                 en: {
                     'nav.home': 'Home',
                     'nav.trials': 'Trials &amp; Tournaments',
+                    'nav.top': '&#127968; Back to top',
+                    'nav.updates': '&#127381; Updates',
+                    'nav.about': '&#128154; About us',
+                    'nav.aboutShort': 'About',
+                    'footer.about': 'About us',
+                    'footer.updates': 'Updates (press U)',
                     'nav.login': 'Login',
                     'nav.signup': 'Sign Up',
                     'hero.eyebrow': 'Kenya Football Talent Exposure Platform',
@@ -842,6 +880,12 @@
                 sw: {
                     'nav.home': 'Nyumbani',
                     'nav.trials': 'Fursa za Soka',
+                    'nav.top': '&#127968; Rudi juu',
+                    'nav.updates': '&#127381; Mambo mapya',
+                    'nav.about': '&#128154; Kuhusu sisi',
+                    'nav.aboutShort': 'Kuhusu',
+                    'footer.about': 'Kuhusu sisi',
+                    'footer.updates': 'Mambo mapya (bonyeza U)',
                     'nav.login': 'Ingia',
                     'nav.signup': 'Jiunge Sasa!',
                     'hero.eyebrow': 'Sehemu ya Vipaji vya Mpira Kenya',
@@ -1108,6 +1152,11 @@
                 positionForTarget(step.target);
             }
 
+            // Re-place the spotlight once the lettering has loaded or the window changes size.
+            function refreshSpot() { if (active) positionForTarget(steps[currentStep].target); }
+            window.addEventListener('resize', refreshSpot);
+            if (document.fonts && document.fonts.ready) { document.fonts.ready.then(refreshSpot); }
+
             function startTour() {
                 active = true;
                 currentStep = 0;
@@ -1231,8 +1280,18 @@
                 menuBtn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
             }
             window.TalantaMenu = { open: function () { setOpen(true); }, close: function () { setOpen(false); } };
+            const homeLink = document.getElementById('nav-home');
+            const homeSub = document.getElementById('home-sub');
+            if (homeLink && homeSub) {
+                homeLink.addEventListener('click', function (e) {
+                    if (window.innerWidth > 700) return;
+                    e.preventDefault();
+                    homeSub.hidden = !homeSub.hidden;
+                    homeLink.setAttribute('aria-expanded', homeSub.hidden ? 'false' : 'true');
+                });
+            }
             menuBtn.addEventListener('click', function () { setOpen(!links.classList.contains('is-open')); });
-            links.addEventListener('click', function (e) { if (e.target.closest('a')) setOpen(false); });
+            links.addEventListener('click', function (e) { var a = e.target.closest('a'); if (a && a.id !== 'nav-home') setOpen(false); });
             document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
             document.addEventListener('click', function (e) {
                 if (links.classList.contains('is-open') && !links.contains(e.target) && !menuBtn.contains(e.target) && !e.target.closest('.tour-tooltip')) setOpen(false);
@@ -1240,5 +1299,6 @@
             window.addEventListener('resize', function () { if (window.innerWidth > 700) setOpen(false); });
         })();
     </script>
+{% include 'includes/updates_viewer.html' %}
 </body>
 </html>

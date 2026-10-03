@@ -22,9 +22,9 @@ With `defer`, it waits until the page calls TalantaUpdateModal.open(), and shows
         <div class="ts-update__foot">
             {% if user.is_authenticated %}
                 <button type="button" class="ts-update__link" id="ts-update-email">&#128233; Email me this update</button>
-                <span class="ts-update__note" id="ts-update-note" aria-live="polite"></span>
+                <span class="ts-update__note" id="ts-update-note" aria-live="polite">Closed it too soon? Press <strong>U</strong> anytime.</span>
             {% else %}
-                <span class="ts-update__note">Talanta Soka &middot; <em>&ldquo;Nionekane nikicheza kwa TV!&rdquo;</em></span>
+                <span class="ts-update__note">Talanta Soka &middot; <em>&ldquo;Nionekane nikicheza kwa TV!&rdquo;</em> &middot; Press <strong>U</strong> anytime to see updates again</span>
             {% endif %}
             <button type="button" class="ts-update__ok" data-close>Got it &#9917;</button>
         </div>
@@ -78,7 +78,8 @@ With `defer`, it waits until the page calls TalantaUpdateModal.open(), and shows
         try { return localStorage.getItem(SEEN_KEY) === box.dataset.updateId; } catch (e) { return false; }
     }
     function open() {
-        if (!document.body.contains(box) || window.TalantaUpdateOpen) return;
+        var viewer = document.getElementById('tsv');
+        if (!document.body.contains(box) || window.TalantaUpdateOpen || (viewer && !viewer.hidden)) return;
         lastFocus = document.activeElement;
         box.hidden = false;
         window.TalantaUpdateOpen = true;
