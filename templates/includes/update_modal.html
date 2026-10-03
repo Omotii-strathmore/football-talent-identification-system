@@ -2,19 +2,22 @@
 "What's new" pop-up. Needs `site_update`. Opens by itself and marks the update as seen when closed.
 With `defer`, it waits until the page calls TalantaUpdateModal.open(), and shows only once per browser.
 {% endcomment %}
-<div class="ts-update" id="ts-update" role="dialog" aria-modal="true" aria-labelledby="ts-update-title" translate="no"
+<div class="ts-update{% if site_update.is_encouragement %} ts-update--warm{% endif %}" id="ts-update" role="dialog" aria-modal="true" aria-labelledby="ts-update-title" translate="no"
      data-update-id="{{ site_update.pk }}"{% if defer %} data-defer="1" hidden{% endif %}
      data-seen-url="{% if user.is_authenticated %}{% url 'update_seen' site_update.pk %}{% endif %}"
      data-email-url="{% if user.is_authenticated %}{% url 'update_email_me' site_update.pk %}{% endif %}">
     <div class="ts-update__panel">
         <button type="button" class="ts-update__x" data-close aria-label="Close">&times;</button>
         <div class="ts-update__head">
-            <span class="ts-update__badge">&#127381; What&rsquo;s new</span>
+            <span class="ts-update__badge">{{ site_update.badge }}</span>
             <span class="ts-update__date">{{ site_update.created_at|date:"j F Y" }}</span>
             <h2 id="ts-update-title">{{ site_update.title }}</h2>
             <p>{{ site_update.teaser }}</p>
         </div>
         <div class="ts-update__body">
+            {% if site_update.verse %}
+            <blockquote class="ts-verse"><p>&ldquo;{{ site_update.verse }}&rdquo;</p>{% if site_update.verse_ref %}<cite>{{ site_update.verse_ref }}</cite>{% endif %}</blockquote>
+            {% endif %}
             <ul>
                 {% for point in site_update.point_list %}<li>{{ point }}</li>{% endfor %}
             </ul>
@@ -63,6 +66,17 @@ With `defer`, it waits until the page calls TalantaUpdateModal.open(), and shows
     .ts-update__ok{margin-left:auto;border:0;border-radius:999px;padding:12px 28px;font-weight:800;font-size:16px;
         background:#006b3f;color:#fff;cursor:pointer}
     .ts-update__ok:hover,.ts-update__ok:focus-visible{background:#00552f;outline:3px solid #f6c453}
+    .ts-verse{margin:0 0 18px;padding:18px 20px;text-align:center;background:#fffaf0;border:1px solid #f2d78a;border-radius:14px}
+    .ts-verse p{margin:0 0 6px;font-size:clamp(18px,2.4vw,22px);font-style:italic;font-weight:600;color:#1f3b2d;line-height:1.4}
+    .ts-verse cite{font-style:normal;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8a6500}
+    .ts-update--warm .ts-update__head{background:linear-gradient(135deg,#3b2a05 0%,#8a6500 55%,#c9971e 100%);border-bottom-color:#fff3cd}
+    .ts-update--warm .ts-update__badge{background:#fff3cd;color:#5a3f00}
+    .ts-update--warm .ts-update__date,.ts-update--warm .ts-update__head p{color:#fff3d6}
+    .ts-update--warm .ts-update__body li{background:#fffaf0;border-color:#f2e2b3}
+    .ts-update--warm .ts-update__body li::before{content:"\2605";background:#b8860b}
+    .ts-update--warm .ts-update__ok{background:#8a6500}
+    .ts-update--warm .ts-update__ok:hover,.ts-update--warm .ts-update__ok:focus-visible{background:#6f5100}
+    .ts-update--warm .ts-update__link{color:#8a6500}
     @media (max-width:600px){.ts-update__panel{height:85vh}.ts-update__head,.ts-update__body,.ts-update__foot{padding-left:18px;padding-right:18px}}
     @media (prefers-reduced-motion:reduce){.ts-update,.ts-update__panel{transition:none}}
 </style>

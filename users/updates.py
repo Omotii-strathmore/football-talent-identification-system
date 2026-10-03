@@ -60,11 +60,16 @@ def send_update_email(update, user):
         + f'\nSee what\'s new: {update_link(update)}\n\n'
         f'Do not want update emails? Unsubscribe: {unsubscribe_url}\n\nTalanta Soka'
     )
+    if update.verse:
+        text = text.replace(f'{update.title}\n\n', f'{update.title}\n\n"{update.verse}" {update.verse_ref}\n\n', 1)
+    subject = (f'\U0001F64F A Word of Encouragement | {update.title}' if update.is_encouragement
+               else f'\U0001F195 What\'s New on Talanta Soka | {update.title}')
     send_branded_email(
-        f'\U0001F195 What\'s New on Talanta Soka | {update.title}', text, 'update.html',
+        subject, text, 'update.html',
         {'first_name': first_name, 'update': update, 'points': points, 'link': update_link(update),
          'unsubscribe_url': unsubscribe_url},
-        [user.email], from_email=f'{settings.EMAIL_FROM_NAME} <{settings.DEFAULT_FROM_EMAIL}>', banner='player',
+        [user.email], from_email=f'{settings.EMAIL_FROM_NAME} <{settings.DEFAULT_FROM_EMAIL}>',
+        banner='team' if update.is_encouragement else 'player',
     )
     receipt, _ = UpdateReceipt.objects.get_or_create(update=update, user=user)
     receipt.emailed_at = timezone.now()

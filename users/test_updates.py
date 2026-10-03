@@ -150,3 +150,29 @@ class UpdatesViewerAndAboutTests(TestCase):
         self.assertContains(page, 'As iron sharpens iron')
         self.assertContains(page, 'Mithali 27:17')
         self.assertContains(page, 'Stars &amp; Starlets')
+
+
+
+@override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
+class EncouragementUpdateTests(TestCase):
+    """A "word of encouragement" update has its own warm look, subject and verse."""
+
+    def test_encouragement_update_has_its_own_subject_verse_and_look(self):
+        from django.core import mail
+        from users import updates
+        from users.models import SiteUpdate, User
+        User.objects.create_user('amani@example.com', 'Talanta#2026', full_name='Amani Otieno', role='player')
+        update = SiteUpdate.objects.create(
+            kind='encouragement', title='As iron sharpens iron', teaser='A word for every player.',
+            points='Keep going\nThank a teammate', verse='As iron sharpens iron, so one person sharpens another.',
+            verse_ref='Proverbs 27:17')
+        updates.queue_recipients(update)
+        updates.send_pending(update)
+        message = mail.outbox[-1]
+        self.assertTrue(message.subject.startswith('🙏 A Word of Encouragement'))
+        self.assertIn('Proverbs 27:17', message.body)
+        html = message.alternatives[0][0]
+        self.assertIn('A word of encouragement', html)
+        self.assertIn('Read the full message', html)
+        feed = self.client.get(reverse('updates_feed')).json()['updates'][0]
+        self.assertEqual((feed['kind'], feed['verse_ref']), ('encouragement', 'Proverbs 27:17'))

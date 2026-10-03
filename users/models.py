@@ -152,6 +152,13 @@ class SiteUpdate(models.Model):
     title = models.CharField(max_length=120)
     teaser = models.CharField(max_length=220, help_text='One or two sentences shown in the email.')
     points = models.TextField(help_text='One point per line.')
+    KIND_CHOICES = [
+        ('news', "What's new (new features)"),
+        ('encouragement', 'A word of encouragement (warm gold look, with a verse)'),
+    ]
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES, default='news')
+    verse = models.CharField(max_length=220, blank=True, help_text='Optional. Shown at the top, for example a Bible verse.')
+    verse_ref = models.CharField(max_length=60, blank=True, help_text='Where the verse is from, for example Proverbs 27:17.')
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='+')
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -160,6 +167,14 @@ class SiteUpdate(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def is_encouragement(self):
+        return self.kind == 'encouragement'
+
+    @property
+    def badge(self):
+        return '\U0001F64F A word of encouragement' if self.is_encouragement else "\U0001F195 What's new"
 
     @property
     def point_list(self):

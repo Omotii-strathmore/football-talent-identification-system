@@ -1360,6 +1360,10 @@ def updates_feed_view(request):
             'title': u.title,
             'teaser': u.teaser,
             'points': u.point_list,
+            'kind': u.kind,
+            'badge': u.badge,
+            'verse': u.verse,
+            'verse_ref': u.verse_ref,
             'date': f"{timezone.localtime(u.created_at).day} {timezone.localtime(u.created_at).strftime('%B %Y')}",
             'recent': u.created_at >= recent_after,
         }

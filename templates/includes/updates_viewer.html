@@ -8,7 +8,7 @@ the earlier updates one by one (Older / Newer).
     <div class="tsv__panel">
         <button type="button" class="tsv__x" data-tsv-close aria-label="Close">&times;</button>
         <div class="tsv__head">
-            <span class="tsv__badge">&#127381; What&rsquo;s new</span>
+            <span class="tsv__badge" id="tsv-badge">&#127381; What&rsquo;s new</span>
             <span class="tsv__meta" id="tsv-meta"></span>
             <h2 id="tsv-title">Updates</h2>
             <p id="tsv-teaser"></p>
@@ -48,6 +48,15 @@ the earlier updates one by one (Older / Newer).
     .tsv__ok{margin-left:auto;border:0;border-radius:999px;padding:10px 22px;font-weight:800;background:#006b3f;color:#fff;cursor:pointer;min-height:40px}
     .tsv__tip{margin:0;padding:0 30px 12px;font-size:12px;color:#7a877f;background:#fff}
     .tsv__tip kbd{border:1px solid #cfd8d2;border-bottom-width:2px;border-radius:5px;padding:0 6px;font-size:11px;color:#13231a;background:#f6f8f7}
+    .tsv__verse{margin:0 0 16px;padding:16px 18px;text-align:center;background:#fffaf0;border:1px solid #f2d78a;border-radius:14px}
+    .tsv__verse p{margin:0 0 6px;font-size:clamp(17px,2.3vw,21px);font-style:italic;font-weight:600;color:#1f3b2d;line-height:1.4}
+    .tsv__verse cite{font-style:normal;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#8a6500}
+    .tsv--warm .tsv__head{background:linear-gradient(135deg,#3b2a05 0%,#8a6500 55%,#c9971e 100%);border-bottom-color:#fff3cd}
+    .tsv--warm .tsv__badge{background:#fff3cd;color:#5a3f00}
+    .tsv--warm .tsv__meta,.tsv--warm .tsv__head p{color:#fff3d6}
+    .tsv--warm .tsv__body li{background:#fffaf0;border-color:#f2e2b3}
+    .tsv--warm .tsv__body li::before{content:"\2605";background:#b8860b}
+    .tsv--warm .tsv__ok{background:#8a6500}
     @media (max-width:600px){.tsv__head,.tsv__body,.tsv__foot{padding-left:18px;padding-right:18px}.tsv__tip{display:none}}
 </style>
 <script>
@@ -71,7 +80,11 @@ the earlier updates one by one (Older / Newer).
         el('tsv-meta').textContent = u.date;
         el('tsv-title').textContent = u.title;
         el('tsv-teaser').textContent = u.teaser;
-        el('tsv-body').innerHTML = '<ul>' + u.points.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>';
+        var warm = u.kind === 'encouragement';
+        box.classList.toggle('tsv--warm', warm);
+        el('tsv-badge').textContent = u.badge || 'What\u2019s new';
+        var verse = u.verse ? '<blockquote class="tsv__verse"><p>\u201c' + esc(u.verse) + '\u201d</p>' + (u.verse_ref ? '<cite>' + esc(u.verse_ref) + '</cite>' : '') + '</blockquote>' : '';
+        el('tsv-body').innerHTML = verse + '<ul>' + u.points.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>';
         el('tsv-count').textContent = 'Update ' + (i + 1) + ' of ' + feed.length;
         el('tsv-older').hidden = el('tsv-newer').hidden = el('tsv-count').hidden = false;
         el('tsv-older').disabled = i >= feed.length - 1;
@@ -84,6 +97,8 @@ the earlier updates one by one (Older / Newer).
         if (seenUrl) fetch(seenUrl.replace('/0/', '/' + u.id + '/'), { method: 'POST', headers: { 'X-CSRFToken': csrf() }, credentials: 'same-origin' }).catch(function () {});
     }
     function showCaughtUp() {
+        box.classList.remove('tsv--warm');
+        el('tsv-badge').textContent = '\uD83C\uDD95 What\u2019s new';
         el('tsv-meta').textContent = '';
         el('tsv-title').textContent = feed.length ? 'You’re up to date 👍' : 'No updates yet';
         el('tsv-teaser').textContent = feed.length ? 'No recent updates right now.' : 'When Talanta Soka adds something new, you will see it here.';

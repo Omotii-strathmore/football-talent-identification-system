@@ -253,8 +253,11 @@ class OTPVerifyForm(forms.Form):
 class SiteUpdateForm(forms.ModelForm):
 	class Meta:
 		model = SiteUpdate
-		fields = ['title', 'teaser', 'points']
+		fields = ['kind', 'title', 'teaser', 'points', 'verse', 'verse_ref']
 		labels = {
+			'kind': 'Type of update',
+			'verse': 'Verse or quote (optional)',
+			'verse_ref': 'Verse reference (optional)',
 			'title': 'Title',
 			'teaser': 'Short intro (shown in the email)',
 			'points': 'What is new (one point per line)',
@@ -263,4 +266,14 @@ class SiteUpdateForm(forms.ModelForm):
 			'title': forms.TextInput(attrs={'placeholder': 'e.g. A smoother sign-up and safer accounts for young players', 'class': 'form-control'}),
 			'teaser': forms.TextInput(attrs={'placeholder': 'One or two sentences that make people want to read more', 'class': 'form-control'}),
 			'points': forms.Textarea(attrs={'rows': 6, 'class': 'form-control', 'placeholder': 'Parents now approve players under 18 by email\nA new eye button shows or hides your password\nLight mode on the trials page'}),
+			'kind': forms.Select(attrs={'class': 'form-select'}),
+			'verse': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. As iron sharpens iron, so one person sharpens another.'}),
+			'verse_ref': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. Proverbs 27:17'}),
 		}
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.fields['kind'].required = False
+
+	def clean_kind(self):
+		return self.cleaned_data.get('kind') or 'news'
