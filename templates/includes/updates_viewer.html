@@ -1,6 +1,6 @@
 {% comment %}
 "What's new" viewer. Opens with the U key or any element with [data-open-updates].
-First time: shows the newest recent update. After that: "You're all caught up" with a button to read
+First time: shows the newest recent update. After that: "You're up to date" with a button to read
 the earlier updates one by one (Older / Newer).
 {% endcomment %}
 <div class="tsv" id="tsv" role="dialog" aria-modal="true" aria-labelledby="tsv-title" translate="no" hidden
@@ -85,8 +85,8 @@ the earlier updates one by one (Older / Newer).
     }
     function showCaughtUp() {
         el('tsv-meta').textContent = '';
-        el('tsv-title').textContent = feed.length ? 'You’re all caught up 👍' : 'No updates yet';
-        el('tsv-teaser').textContent = feed.length ? 'No new updates right now.' : 'When Talanta Soka adds something new, you will see it here.';
+        el('tsv-title').textContent = feed.length ? 'You’re up to date 👍' : 'No updates yet';
+        el('tsv-teaser').textContent = feed.length ? 'No recent updates right now.' : 'When Talanta Soka adds something new, you will see it here.';
         el('tsv-body').innerHTML = feed.length
             ? '<div class="tsv__empty"><div class="big">⚽</div><p>Want to look back at what changed?</p><button type="button" class="tsv__read" id="tsv-read">Read earlier updates</button></div>'
             : '<div class="tsv__empty"><div class="big">⚽</div></div>';
