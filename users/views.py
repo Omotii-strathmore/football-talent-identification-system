@@ -73,6 +73,10 @@ def home(request):
     return render(request, 'users/home.html', {'show_update': show_update, 'latest_update': latest_update})
 
 
+def about_view(request):
+    return render(request, 'users/about.html')
+
+
 def privacy_view(request):
     return render(request, 'users/privacy.html', {'support_email': settings.SUPPORT_EMAIL})
 
@@ -1341,3 +1345,23 @@ def ai_assist_view(request):
         return JsonResponse({'ok': False, 'message': str(exc)}, status=400)
     cache.set(key, used + 1, 3600)
     return JsonResponse({'ok': True, **draft})
+
+
+def updates_feed_view(request):
+    """All "What's new" updates, newest first, for the U shortcut and the Updates menu link."""
+    recent_after = timezone.now() - timedelta(days=60)
+    items = [
+        {
+            'id': u.pk,
+            'title': u.title,
+            'teaser': u.teaser,
+            'points': u.point_list,
+            'date': f"{timezone.localtime(u.created_at).day} {timezone.localtime(u.created_at).strftime('%B %Y')}",
+            'recent': u.created_at >= recent_after,
+        }
+        for u in SiteUpdate.objects.all()[:30]
+    ]
+    return JsonResponse({
+        'updates': items,
+        'seen_url': reverse('update_seen', args=[0]) if request.user.is_authenticated else '',
+    })

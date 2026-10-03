@@ -124,3 +124,26 @@ class WaitingPopUpTests(TestCase):
         self.assertIn('data-defer="1" hidden', page)
         self.assertIn('.ts-update[hidden]{display:none!important}', page)
         self.assertIn('.ts-update:not(.is-open){pointer-events:none}', page)
+
+
+class UpdatesViewerAndAboutTests(TestCase):
+    def test_feed_lists_updates_newest_first(self):
+        SiteUpdate.objects.create(title='First', teaser='a', points='One')
+        SiteUpdate.objects.create(title='Second', teaser='b', points='Two\nThree')
+        data = self.client.get(reverse('updates_feed')).json()
+        self.assertEqual([u['title'] for u in data['updates']], ['Second', 'First'])
+        self.assertEqual(data['updates'][0]['points'], ['Two', 'Three'])
+        self.assertTrue(data['updates'][0]['recent'])
+
+    def test_landing_page_has_viewer_home_menu_and_about(self):
+        page = self.client.get(reverse('home'))
+        self.assertContains(page, 'id="tsv"')
+        self.assertContains(page, 'id="home-sub"')
+        self.assertContains(page, 'data-open-updates')
+        self.assertContains(page, reverse('about'))
+
+    def test_about_page_in_english_and_swahili(self):
+        page = self.client.get(reverse('about'))
+        self.assertContains(page, 'ambitious, driven BBIT students')
+        self.assertContains(page, 'Kuhusu sisi')
+        self.assertContains(page, 'Stars &amp; Starlets')

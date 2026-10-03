@@ -158,6 +158,13 @@
                     {% endif %}
                 </li>
 
+                <li class="nav-item d-lg-none">
+                    <a class="nav-link" href="#" data-open-updates>&#127381; Updates</a>
+                </li>
+                <li class="nav-item d-lg-none">
+                    <a class="nav-link" href="{% url 'about' %}">&#128154; About us</a>
+                </li>
+
                 {% if user.is_authenticated and user.role == 'scout' and not user.is_staff %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'scout_edit_details' %}">Edit Details</a>
@@ -220,6 +227,7 @@
 {% endblock %}
 
 {% if pending_site_update %}{% include 'includes/update_modal.html' with site_update=pending_site_update %}{% endif %}
+{% include 'includes/updates_viewer.html' %}
 {% if ask_site_feedback %}{% include 'includes/feedback_prompt.html' %}{% endif %}
 
 </body>
