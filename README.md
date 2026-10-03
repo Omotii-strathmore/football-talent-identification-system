@@ -44,12 +44,13 @@ Fills a separate practice database with Stars, Starlets, scouts and trials (it r
 
 ```powershell
 $env:DATABASE_URL = "sqlite:///practice.sqlite3"; $env:R2_BUCKET_NAME = "off"
+$env:DJANGO_EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"   # emails are printed here, not sent
 python manage.py migrate
 python manage.py seed_demo
 python manage.py runserver
 ```
 
-Log in with `admin@demo.ke`, `achieng@demo.ke` (Starlet), `brian@demo.ke` (Star), `grace@demo.ke` (Starlets scout), `peter@demo.ke` (Stars scout) or `amina@demo.ke` (scouts both). The password for all of them is `Demo#2026`.
+Log in with `admin@demo.ke`, `achieng@demo.ke` (Starlet), `brian@demo.ke` (Star), `grace@demo.ke` (Starlets scout), `peter@demo.ke` (Stars scout) or `amina@demo.ke` (scouts both). For the demo there is also `lucy@demo.ke`, a Starlets scout waiting for the admin (with a sample letter), and `wanjiku@demo.ke`, a player aged 15 waiting for her parent. The password for all of them is `Demo#2026`.
 
 ### Run the tests
 
