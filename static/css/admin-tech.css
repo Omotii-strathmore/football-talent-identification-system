@@ -1,0 +1,117 @@
+/* "Tech mode" for administrator pages: a dark control-room look with neon accents.
+   Everything is scoped to html.admin-tech, which is only ever set for staff accounts
+   (on by default, switched off with the button in the top bar). */
+
+html.admin-tech {
+    --t-bg: #060a13;
+    --t-panel: rgba(13, 21, 38, .82);
+    --t-panel-2: rgba(18, 30, 54, .9);
+    --t-line: rgba(56, 189, 248, .22);
+    --t-line-strong: rgba(56, 189, 248, .5);
+    --t-text: #d8e6f8;
+    --t-muted: #8ea4c2;
+    --t-cyan: #38bdf8;
+    --t-green: #34d399;
+    --t-gold: #f6c453;
+    --t-mono: 'JetBrains Mono', 'Cascadia Code', Consolas, monospace;
+    color-scheme: dark;
+}
+
+html.admin-tech body {
+    color: var(--t-text);
+    background:
+        radial-gradient(circle at 12% 0%, rgba(56, 189, 248, .14), transparent 38%),
+        radial-gradient(circle at 92% 100%, rgba(52, 211, 153, .12), transparent 42%),
+        linear-gradient(rgba(56, 189, 248, .045) 1px, transparent 1px) 0 0 / 32px 32px,
+        linear-gradient(90deg, rgba(56, 189, 248, .045) 1px, transparent 1px) 0 0 / 32px 32px,
+        var(--t-bg) !important;
+}
+
+/* Top bar */
+html.admin-tech .navbar { background: rgba(4, 7, 14, .92) !important; border-bottom: 1px solid var(--t-line); backdrop-filter: blur(8px); }
+html.admin-tech .navbar-brand { background: linear-gradient(90deg, var(--t-cyan), var(--t-green)); -webkit-background-clip: text; background-clip: text; color: transparent !important; letter-spacing: .5px; }
+html.admin-tech .navbar-brand::after { content: " // admin"; font-family: var(--t-mono); font-size: .75rem; font-weight: 600; -webkit-text-fill-color: var(--t-muted); }
+
+/* Headline panel */
+html.admin-tech .dashboard-hero {
+    background: linear-gradient(135deg, rgba(10, 18, 34, .95), rgba(14, 33, 62, .95)) !important;
+    border: 1px solid var(--t-line-strong) !important;
+    box-shadow: 0 0 0 1px rgba(56, 189, 248, .08), 0 18px 40px rgba(0, 0, 0, .45), inset 0 0 40px rgba(56, 189, 248, .06);
+    color: var(--t-text) !important;
+}
+html.admin-tech .dashboard-hero::before {
+    content: "> admin@talanta-soka:~$ status --all";
+    display: block; font-family: var(--t-mono); font-size: .78rem; color: var(--t-green); margin-bottom: 8px; opacity: .9;
+}
+html.admin-tech .dashboard-hero h2, html.admin-tech h1, html.admin-tech h2, html.admin-tech h3,
+html.admin-tech h4, html.admin-tech h5, html.admin-tech .section-title { color: #eef6ff !important; }
+
+/* Cards and panels */
+html.admin-tech .card, html.admin-tech .stat-card, html.admin-tech .panel-soft, html.admin-tech .um-card,
+html.admin-tech .list-group-item, html.admin-tech .modal-content {
+    background: var(--t-panel) !important;
+    border: 1px solid var(--t-line) !important;
+    color: var(--t-text) !important;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .35);
+}
+html.admin-tech .stat-card { position: relative; overflow: hidden; }
+html.admin-tech .stat-card::before { content: ""; position: absolute; left: 0; top: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--t-cyan), var(--t-green)); opacity: .8; }
+html.admin-tech .stat-card:hover { border-color: var(--t-line-strong) !important; box-shadow: 0 0 22px rgba(56, 189, 248, .18); }
+html.admin-tech .stat-value { font-family: var(--t-mono); color: var(--t-green) !important; text-shadow: 0 0 14px rgba(52, 211, 153, .35); }
+html.admin-tech .text-muted, html.admin-tech .form-text, html.admin-tech small.text-muted { color: var(--t-muted) !important; }
+html.admin-tech a { color: var(--t-cyan); }
+html.admin-tech a.text-decoration-none { color: inherit; }
+html.admin-tech hr { border-color: var(--t-line); }
+
+/* Stars & Starlets strip and user-management cards */
+html.admin-tech .ss-admin { background: var(--t-panel-2) !important; border-color: var(--t-line-strong) !important; }
+html.admin-tech .ss-num { color: var(--t-gold) !important; font-family: var(--t-mono); }
+html.admin-tech .ss-lbl, html.admin-tech .um-email, html.admin-tech .um-facts, html.admin-tech .um-you { color: var(--t-muted) !important; }
+html.admin-tech .um-card.is-off { background: rgba(13, 21, 38, .55) !important; }
+html.admin-tech .um-controls { border-top-color: var(--t-line) !important; }
+html.admin-tech .um-filter { background: var(--t-panel) !important; border-color: var(--t-line) !important; color: var(--t-text) !important; }
+html.admin-tech .um-filter.is-on { background: linear-gradient(90deg, #0369a1, #047857) !important; border-color: transparent !important; color: #fff !important; }
+html.admin-tech .um-chip { filter: saturate(1.1); }
+
+/* Tables */
+html.admin-tech .table {
+    --bs-table-bg: transparent; --bs-table-color: var(--t-text); --bs-table-striped-bg: rgba(56, 189, 248, .05);
+    --bs-table-striped-color: var(--t-text); --bs-table-hover-bg: rgba(56, 189, 248, .08); --bs-table-hover-color: #fff;
+    --bs-table-border-color: var(--t-line); color: var(--t-text);
+}
+html.admin-tech .table thead th { font-family: var(--t-mono); font-size: .78rem; text-transform: uppercase; letter-spacing: .6px; color: var(--t-cyan) !important; border-bottom-color: var(--t-line-strong) !important; }
+
+/* Forms */
+html.admin-tech .form-control, html.admin-tech .form-select {
+    background-color: #0a1222 !important; color: #eef6ff !important; border-color: #1f3b60 !important;
+}
+html.admin-tech .form-control::placeholder { color: #61789a; }
+html.admin-tech .form-control:focus, html.admin-tech .form-select:focus { border-color: var(--t-cyan) !important; box-shadow: 0 0 0 .2rem rgba(56, 189, 248, .2) !important; }
+html.admin-tech .form-check-input { background-color: #0a1222; border-color: #2a4a75; }
+html.admin-tech .form-check-input:checked { background-color: var(--t-green) !important; border-color: var(--t-green) !important; }
+html.admin-tech .form-label, html.admin-tech label { color: var(--t-text); }
+html.admin-tech details summary { color: var(--t-cyan); }
+
+/* Buttons */
+html.admin-tech .btn-primary { background: linear-gradient(90deg, #0284c7, #0ea5e9); border: 0; }
+html.admin-tech .btn-success { background: linear-gradient(90deg, #059669, #10b981); border: 0; }
+html.admin-tech .btn-outline-dark, html.admin-tech .btn-outline-secondary { color: var(--t-text); border-color: #3a5378; }
+html.admin-tech .btn-outline-dark:hover, html.admin-tech .btn-outline-secondary:hover { background: rgba(56, 189, 248, .12); color: #fff; border-color: var(--t-cyan); }
+html.admin-tech .btn-outline-primary { color: var(--t-cyan); border-color: var(--t-cyan); }
+html.admin-tech .btn-outline-primary:hover { background: rgba(56, 189, 248, .15); color: #fff; }
+html.admin-tech .btn-light { background: #13213b; color: var(--t-text); border-color: #2a4a75; }
+
+/* Messages and badges */
+html.admin-tech .alert { background: var(--t-panel-2); color: var(--t-text); border-color: var(--t-line); }
+html.admin-tech .badge.bg-light, html.admin-tech .badge.text-bg-light { background: #1d2f4f !important; color: var(--t-text) !important; }
+
+/* The switch in the top bar */
+.admin-theme-switch { font-family: 'JetBrains Mono', Consolas, monospace; font-size: .75rem; border-radius: 999px; padding: 4px 12px; margin-right: 10px;
+    border: 1px solid rgba(148, 163, 184, .45); background: transparent; color: #cbd5e1; }
+html.admin-tech .admin-theme-switch { border-color: var(--t-green); color: var(--t-green); box-shadow: 0 0 10px rgba(52, 211, 153, .25); }
+
+/* Readability fixes: link colour must not override buttons and tags */
+html.admin-tech a.btn-primary, html.admin-tech a.btn-success, html.admin-tech .btn-primary, html.admin-tech .btn-success { color: #fff !important; }
+html.admin-tech a.btn-outline-dark, html.admin-tech a.btn-outline-secondary { color: var(--t-text); }
+html.admin-tech .um-filter .num { background: rgba(56, 189, 248, .18) !important; color: #eef6ff !important; }
+html.admin-tech a.um-chip.amber { color: #9a5b00 !important; }
