@@ -32,8 +32,14 @@
 		background: linear-gradient(135deg, #0b4d2c, #006b3f); }
 	.trial__top.stars { background: linear-gradient(135deg, #111827, #374151); }
 	.trial__top.starlets { background: linear-gradient(135deg, #8a6500, #c9971e); }
-	.trial__top img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-	.trial__top.has-img::before { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.72)); }
+	/* Posters: shown whole, in their real colours, over a soft blurred copy of themselves. */
+	.trial__top.has-img { height: 240px; padding: 0; background: #0f172a; overflow: hidden; }
+	.trial__top.has-img .poster-bg { position: absolute; inset: -20px; width: calc(100% + 40px); height: calc(100% + 40px); object-fit: cover; filter: blur(18px) brightness(.85); }
+	.trial__top.has-img .poster { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; z-index: 1; }
+	.poster-open { position: absolute; z-index: 2; right: 12px; bottom: 12px; background: rgba(255,255,255,.92); color: #0f172a; border-radius: 999px;
+		padding: 5px 12px; font-size: .78rem; font-weight: 800; text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,.2); }
+	.poster-open:hover { background: #fff; color: #0b4d2c; }
+	.trial__title { font-weight: 800; font-size: 1.2rem; line-height: 1.25; color: #0f172a; margin: 0 0 12px; }
 	.trial__top .ball { position: absolute; right: 16px; top: 10px; font-size: 3.4rem; opacity: .18; }
 	.trial__top h3 { position: relative; z-index: 2; margin: 0; font-weight: 800; font-size: 1.25rem; line-height: 1.25; text-shadow: 0 2px 8px rgba(0,0,0,.3); }
 	.trial__badges { position: absolute; z-index: 2; left: 16px; top: 14px; display: flex; gap: 6px; flex-wrap: wrap; }
@@ -60,8 +66,7 @@
 	.trial__report { font-size: .78rem; margin: 12px 0 0; }
 	.trial__report a { color: #94a3b8; text-decoration: none; }
 	.trial__report a:hover { color: #dc2626; }
-	.trial.past { opacity: .85; }
-	.trial.past .trial__top { filter: grayscale(.7); }
+	.trial.past .trial__body { opacity: .85; }
 
 	.ts-empty { text-align: center; background: #fff; border-radius: 22px; padding: 42px 20px; border: 1px dashed #cbd5e1; }
 	.ts-empty .big { font-size: 3rem; }
@@ -69,6 +74,7 @@
 	@media (max-width: 767.98px) {
 		.ts-hero { padding: 24px 20px; }
 		.trial__top { height: 130px; }
+		.trial__top.has-img { height: 220px; }
 	}
 </style>
 {% endblock %}
@@ -108,7 +114,7 @@
 				<div class="col-md-6 col-xl-4">
 					<article class="trial">
 						<div class="trial__top {{ opportunity.category }}{% if opportunity.poster_image %} has-img{% endif %}">
-							{% if opportunity.poster_image %}<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster">{% else %}<span class="ball" aria-hidden="true">&#9917;</span>{% endif %}
+							{% if opportunity.poster_image %}<img class="poster-bg" src="{{ opportunity.poster_image.url }}" alt="" aria-hidden="true"><img class="poster" src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster"><a class="poster-open" href="{{ opportunity.poster_image.url }}" target="_blank" rel="noopener">&#128269; View full poster</a>{% else %}<span class="ball" aria-hidden="true">&#9917;</span>{% endif %}
 							<div class="trial__badges">
 								<span class="chip cat">{{ opportunity.category|category_badge }}</span>
 								{% if opportunity.days_left <= 2 %}
@@ -119,9 +125,10 @@
 									<span class="chip normal">{{ opportunity.days_left }} days left</span>
 								{% endif %}
 							</div>
-							<h3>{{ opportunity.title }}</h3>
+							{% if not opportunity.poster_image %}<h3>{{ opportunity.title }}</h3>{% endif %}
 						</div>
 						<div class="trial__body">
+							{% if opportunity.poster_image %}<h3 class="trial__title">{{ opportunity.title }}</h3>{% endif %}
 							<div class="trial__facts">
 								<div class="fact">&#127979; Organised by<strong>{{ opportunity.organization }}</strong></div>
 								<div class="fact">&#128205; Where<strong>{{ opportunity.location }}</strong></div>
@@ -167,14 +174,15 @@
 				<div class="col-md-6 col-xl-4">
 					<article class="trial past">
 						<div class="trial__top {{ opportunity.category }}{% if opportunity.poster_image %} has-img{% endif %}">
-							{% if opportunity.poster_image %}<img src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster">{% else %}<span class="ball" aria-hidden="true">&#9917;</span>{% endif %}
+							{% if opportunity.poster_image %}<img class="poster-bg" src="{{ opportunity.poster_image.url }}" alt="" aria-hidden="true"><img class="poster" src="{{ opportunity.poster_image.url }}" alt="{{ opportunity.title }} poster"><a class="poster-open" href="{{ opportunity.poster_image.url }}" target="_blank" rel="noopener">&#128269; View full poster</a>{% else %}<span class="ball" aria-hidden="true">&#9917;</span>{% endif %}
 							<div class="trial__badges">
 								<span class="chip cat">{{ opportunity.category|category_badge }}</span>
 								<span class="chip expired">Closed</span>
 							</div>
-							<h3>{{ opportunity.title }}</h3>
+							{% if not opportunity.poster_image %}<h3>{{ opportunity.title }}</h3>{% endif %}
 						</div>
 						<div class="trial__body">
+							{% if opportunity.poster_image %}<h3 class="trial__title">{{ opportunity.title }}</h3>{% endif %}
 							<div class="trial__facts">
 								<div class="fact">&#127979; Organised by<strong>{{ opportunity.organization }}</strong></div>
 								<div class="fact">&#128205; Where<strong>{{ opportunity.location }}</strong></div>
