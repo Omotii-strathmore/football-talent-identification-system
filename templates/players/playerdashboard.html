@@ -18,39 +18,37 @@
     .guardian-banner.is-declined { background: #fff1f2; border-color: #fca5a5; color: #7f1d1d; }
     .guardian-banner-icon { font-size: 1.8rem; line-height: 1; }
 
-    /* Hero */
+    /* Hero: the original layout on the dark-green football background */
     .p-hero { position: relative; overflow: hidden; border-radius: 24px; padding: 28px 30px; margin-bottom: 22px; color: #fff;
         background: radial-gradient(circle at 88% 0%, rgba(246,196,83,.35), transparent 42%), linear-gradient(135deg, #07170d 0%, #0b4d2c 55%, #006b3f 100%);
         box-shadow: 0 18px 40px rgba(0, 60, 30, .18); }
-    .p-hero::after { content: "\26BD"; position: absolute; right: 150px; bottom: -30px; font-size: 8rem; opacity: .07; transform: rotate(-15deg); }
-    .p-hero__row { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 20px; }
-    .p-hero .eyebrow { color: #f6c453; font-weight: 800; letter-spacing: 2px; font-size: .76rem; text-transform: uppercase; }
-    .p-hero h1 { font-weight: 800; font-size: clamp(1.6rem, 3.2vw, 2.3rem); margin: 4px 0 12px; }
-    .p-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-    .p-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 999px; font-size: .86rem; font-weight: 700;
-        background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); color: #fff; }
-    .p-chip.gold { background: #f6c453; color: #3b2a05; border-color: #f6c453; }
-    .p-avatar { width: 108px; height: 108px; border-radius: 50%; object-fit: cover; border: 4px solid #f6c453; box-shadow: 0 10px 26px rgba(0,0,0,.35); flex-shrink: 0; }
-    .p-avatar-fallback { width: 108px; height: 108px; border-radius: 50%; display: grid; place-items: center; font-size: 2.6rem; font-weight: 800; flex-shrink: 0;
-        background: #fff8e1; color: #0b4d2c; border: 4px solid #f6c453; }
-    .p-strength { position: relative; z-index: 1; margin-top: 18px; max-width: 560px; }
+    .p-hero::after { content: "\26BD"; position: absolute; right: 190px; bottom: -34px; font-size: 8rem; opacity: .08; transform: rotate(-15deg); }
+    .p-hero__row { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+    .p-hero h2 { font-weight: 800; font-size: clamp(1.5rem, 3vw, 2.1rem); margin: 0 0 6px; color: #fff; }
+    .p-hero .p-sub { color: #d7ecdf; margin: 0; font-size: 1.02rem; }
+    .p-strength { margin-top: 18px; max-width: 560px; }
     .p-strength__top { display: flex; justify-content: space-between; font-size: .86rem; color: #d7ecdf; margin-bottom: 6px; }
     .p-strength__bar { height: 10px; border-radius: 999px; background: rgba(255,255,255,.18); overflow: hidden; }
     .p-strength__bar span { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f6c453, #ffe08a); }
-    .p-strength__tip { font-size: .86rem; color: #fff; margin-top: 8px; }
+    .p-strength__tip { font-size: .86rem; color: #fff; margin: 8px 0 0; }
     .p-strength__tip a { color: #f6c453; font-weight: 700; }
 
-    /* Stats */
-    .p-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 22px; }
-    .p-stat { background: #fff; border-radius: 18px; padding: 16px 18px; border: 1px solid rgba(148,163,184,.18);
-        box-shadow: 0 8px 22px rgba(15,23,42,.05); border-top: 4px solid var(--c); text-decoration: none; color: inherit; transition: transform .15s ease; }
-    .p-stat:hover { transform: translateY(-2px); color: inherit; }
-    .p-stat .icon { font-size: 1.3rem; }
-    .p-stat .value { font-size: 1.9rem; font-weight: 800; color: #0f172a; line-height: 1.1; margin-top: 4px; }
-    .p-stat .label { font-size: .84rem; color: #64748b; }
+    /* Profile photo: larger, with a white and gold double ring, and a camera button to change it */
+    .p-photo { position: relative; flex-shrink: 0; width: 132px; height: 132px; border-radius: 50%; padding: 5px;
+        background: conic-gradient(from 210deg, #f6c453, #ffe9a8, #f6c453, #c9971e, #f6c453); box-shadow: 0 14px 30px rgba(0,0,0,.4); }
+    .p-photo img, .p-photo .p-initial { width: 100%; height: 100%; border-radius: 50%; border: 4px solid #fff; object-fit: cover; object-position: center 30%; display: block; }
+    .p-photo .p-initial { display: grid; place-items: center; background: #fff8e1; color: #0b4d2c; font-size: 3rem; font-weight: 800; }
+    .p-photo__edit { position: absolute; right: 2px; bottom: 6px; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center;
+        background: #0b4d2c; color: #fff; border: 3px solid #fff; text-decoration: none; font-size: 1rem; box-shadow: 0 4px 10px rgba(0,0,0,.3); }
+    .p-photo__edit:hover { background: #f6c453; color: #07170d; }
 
-    /* Quick actions */
-    .p-actions { background: #fff; border-radius: 20px; padding: 20px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 10px 26px rgba(15,23,42,.06); margin-bottom: 22px; }
+    /* Stat cards: one tidy row of six on laptops */
+    .p-stats .stat-card { border-top: 4px solid var(--c, #0b4d2c); }
+    .p-stats .stat-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
+    .p-stats .stat-value { font-size: 1.6rem; }
+
+    /* Quick actions: tiles with an icon and a short explanation */
+    .p-actions { background: #fff; border-radius: 20px; padding: 20px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 10px 26px rgba(15,23,42,.06); }
     .p-actions h4 { font-weight: 800; font-size: 1.15rem; margin: 0 0 14px; }
     .p-tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
     .p-tile { display: flex; gap: 12px; align-items: center; padding: 16px; border-radius: 16px; text-decoration: none; border: 1px solid var(--b); background: var(--bg);
@@ -60,27 +58,23 @@
     .p-tile strong { display: block; color: #0f172a; font-size: 1rem; }
     .p-tile small { color: #475569; font-size: .8rem; }
     .p-tile.green { --b: #b7e4c7; --bg: #f0fdf4; --ic: #006b3f; }
-    .p-tile.green .ic { color: #fff; }
     .p-tile.gold { --b: #f2d78a; --bg: #fffaf0; --ic: #f6c453; }
     .p-tile.blue { --b: #bfdbfe; --bg: #eff6ff; --ic: #dbeafe; }
     .p-tile.slate { --b: #e2e8f0; --bg: #f8fafc; --ic: #e2e8f0; }
-
-    /* Badges and feedback */
-    .p-card { background: #fff; border-radius: 20px; padding: 20px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 10px 26px rgba(15,23,42,.06); margin-bottom: 22px; }
-    .p-card h4 { font-weight: 800; font-size: 1.15rem; margin: 0 0 4px; }
-    .fb-item { border-top: 1px solid #eef2f6; padding: 14px 0; }
-    .fb-item:first-of-type { border-top: 0; }
-    .fb-quote { background: #f8fafc; border-left: 4px solid #0b4d2c; border-radius: 10px; padding: 10px 14px; margin: 8px 0; }
-
     @media (max-width: 991.98px) { .p-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+    /* My badges */
+    .p-card { background: #fff; border-radius: 20px; padding: 20px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 10px 26px rgba(15,23,42,.06); margin-top: 22px; }
+    .p-card h4 { font-weight: 800; font-size: 1.15rem; margin: 0 0 4px; }
+
     @media (max-width: 767.98px) {
         .p-hero { padding: 22px 18px; }
-        .p-hero__row { flex-direction: column-reverse; align-items: flex-start; }
-        .p-avatar, .p-avatar-fallback { width: 76px; height: 76px; font-size: 1.9rem; }
-        .p-stats { grid-template-columns: repeat(2, 1fr); }
-        .p-tile { padding: 12px; }
+        .p-hero__row { flex-direction: column-reverse; align-items: flex-start; gap: 14px; }
+        .p-photo { width: 96px; height: 96px; padding: 4px; }
+        .p-photo .p-initial { font-size: 2.2rem; }
+        .p-photo__edit { width: 32px; height: 32px; font-size: .85rem; }
+        .p-tile { padding: 12px; gap: 8px; flex-direction: column; align-items: flex-start; }
         .p-tile small { display: none; }
-        .p-tile { gap: 8px; flex-direction: column; align-items: flex-start; }
         .p-tile .ic { width: 38px; height: 38px; font-size: 1.15rem; border-radius: 12px; }
         .p-tile strong { font-size: .9rem; }
     }
@@ -111,36 +105,33 @@
     <section class="p-hero">
         <div class="p-hero__row">
             <div>
-                <div class="eyebrow">Player dashboard</div>
-                <h1>Karibu, {{ first_name }} &#128075;</h1>
+                <h2>Welcome to Player Dashboard, {{ first_name }}</h2>
                 {% if profile %}
-                <div class="p-chips">
-                    {% if profile.category %}<span class="p-chip gold">{{ profile.category|category_person }}</span>{% endif %}
-                    <span class="p-chip">&#9917; {{ profile.position }}{% if profile.secondary_position %} / {{ profile.secondary_position }}{% endif %}</span>
-                    <span class="p-chip">&#128205; {{ profile.location }}</span>
-                    {% if profile.age %}<span class="p-chip">&#127874; {{ profile.age }} years</span>{% endif %}
-                    {% if profile.height_cm %}<span class="p-chip">&#128207; {{ profile.height_cm }} cm</span>{% endif %}
-                    {% if profile.weight_kg %}<span class="p-chip">&#9878;&#65039; {{ profile.weight_kg }} kg</span>{% endif %}
+                    <p class="p-sub">{{ profile.full_name }} | {% if profile.category %}{{ profile.category|category_person }} | {% endif %}{{ profile.position }}{% if profile.secondary_position %} / {{ profile.secondary_position }}{% endif %} | {{ profile.location }}</p>
+                {% else %}
+                    <p class="p-sub">Welcome player.</p>
+                {% endif %}
+                {% if strength %}
+                <div class="p-strength">
+                    <div class="p-strength__top"><span>Profile strength</span><strong>{{ strength.percent }}%</strong></div>
+                    <div class="p-strength__bar" role="progressbar" aria-valuenow="{{ strength.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ strength.percent }}%"></span></div>
+                    {% if strength.next %}
+                        <p class="p-strength__tip">Next step: {{ strength.next }}. <a href="{% url 'player_profile' %}?edit=true">Do it now &rarr;</a></p>
+                    {% else %}
+                        <p class="p-strength__tip">&#127942; Your profile is complete. Scouts can see your full story.</p>
+                    {% endif %}
                 </div>
                 {% endif %}
             </div>
-            {% if profile and profile.profile_photo %}
-                <img src="{{ profile.profile_photo.url }}" alt="{{ first_name }}" class="p-avatar">
-            {% else %}
-                <div class="p-avatar-fallback" aria-hidden="true">{{ first_name|slice:':1'|upper }}</div>
-            {% endif %}
+            <div class="p-photo">
+                {% if profile and profile.profile_photo %}
+                    <img src="{{ profile.profile_photo.url }}" alt="{{ first_name }}">
+                {% else %}
+                    <div class="p-initial" aria-hidden="true">{{ first_name|slice:':1'|upper }}</div>
+                {% endif %}
+                <a class="p-photo__edit" href="{% url 'player_profile' %}?edit=true" title="{% if profile.profile_photo %}Change your photo{% else %}Add a profile photo{% endif %}" aria-label="{% if profile.profile_photo %}Change your photo{% else %}Add a profile photo{% endif %}">&#128247;</a>
+            </div>
         </div>
-        {% if strength %}
-        <div class="p-strength">
-            <div class="p-strength__top"><span>Profile strength</span><strong>{{ strength.percent }}%</strong></div>
-            <div class="p-strength__bar" role="progressbar" aria-valuenow="{{ strength.percent }}" aria-valuemin="0" aria-valuemax="100"><span style="width: {{ strength.percent }}%"></span></div>
-            {% if strength.next %}
-                <p class="p-strength__tip mb-0">Next step: {{ strength.next }}. <a href="{% url 'player_profile' %}?edit=true">Do it now &rarr;</a></p>
-            {% else %}
-                <p class="p-strength__tip mb-0">&#127942; Your profile is complete. Scouts can see your full story.</p>
-            {% endif %}
-        </div>
-        {% endif %}
     </section>
 
     {% if guardian_pending %}
@@ -178,59 +169,34 @@
     {% endfor %}
 
     <div class="dash-stack">
-        <div class="p-stats">
-            <a class="p-stat" style="--c:#0b4d2c" href="{% url 'my_applications' %}"><div class="icon">&#128203;</div><div class="value">{{ applications_count }}</div><div class="label">Applications</div></a>
-            <a class="p-stat" style="--c:#16a34a" href="{% url 'upload_video' %}"><div class="icon">&#127909;</div><div class="value">{{ videos_count }}</div><div class="label">Videos</div></a>
-            <a class="p-stat" style="--c:#f6c453" href="#my-badges"><div class="icon">&#127941;</div><div class="value">{{ badges_earned }}</div><div class="label">Badges earned</div></a>
-            <a class="p-stat" style="--c:#3b82f6" href="#scout-feedback"><div class="icon">&#128172;</div><div class="value">{{ feedback_entries|length }}</div><div class="label">Scout feedback{% if unread_feedback_count %} &middot; <strong class="text-warning">{{ unread_feedback_count }} new</strong>{% endif %}</div></a>
-        </div>
+    <div class="row g-3 mb-4 p-stats">
+        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#0b4d2c"><div class="card-body"><span class="stat-icon">&#128203;</span><div class="stat-value">{{ applications_count }}</div><p class="text-muted mb-0">Applications</p></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#16a34a"><div class="card-body"><span class="stat-icon">&#127909;</span><div class="stat-value">{{ videos_count }}</div><p class="text-muted mb-0">Uploaded Videos</p></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#f6c453"><div class="card-body"><span class="stat-icon">&#9917;</span><div class="stat-value">{{ profile.position|default:'-' }}</div><p class="text-muted mb-0">Primary Position</p></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#f6c453"><div class="card-body"><span class="stat-icon">&#128260;</span><div class="stat-value">{{ profile.secondary_position|default:'-' }}</div><p class="text-muted mb-0">Secondary Position</p></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#3b82f6"><div class="card-body"><span class="stat-icon">&#128207;</span><div class="stat-value">{{ profile.height_cm|default:'-' }}</div><p class="text-muted mb-0">Height (cm)</p></div></div></div>
+        <div class="col-6 col-md-4 col-xl-2"><div class="card stat-card h-100 text-center" style="--c:#3b82f6"><div class="card-body"><span class="stat-icon">&#9878;&#65039;</span><div class="stat-value">{{ profile.weight_kg|default:'-' }}</div><p class="text-muted mb-0">Weight (kg)</p></div></div></div>
+    </div>
 
-        <div class="dash-actions p-actions">
-            <h4>Quick actions</h4>
-            <div class="p-tiles">
-                <a href="{% url 'player_profile' %}" id="tour-my-profile" class="p-tile slate"><span class="ic">&#128100;</span><span><strong>My Profile</strong><small>Your story, positions and clubs</small></span></a>
-                <a href="{% url 'upload_video' %}" id="tour-upload-video" class="p-tile green"><span class="ic">&#127909;</span><span><strong>Upload Video ({{ videos_count }})</strong><small>Show scouts your best moments</small></span></a>
-                <a href="{% url 'view_opportunities' %}" id="tour-view-opportunities" class="p-tile gold"><span class="ic">&#127942;</span><span><strong>View Opportunities</strong><small>Open trials and tournaments</small></span></a>
-                <a href="{% url 'my_applications' %}" id="tour-my-applications" class="p-tile blue"><span class="ic">&#128203;</span><span><strong>My Applications ({{ applications_count }})</strong><small>Track every application</small></span></a>
-            </div>
+    <div class="dash-actions p-actions">
+        <h4>Quick Actions</h4>
+        <div class="p-tiles">
+            <a href="{% url 'player_profile' %}" id="tour-my-profile" class="p-tile slate"><span class="ic">&#128100;</span><span><strong>My Profile</strong><small>Your story, positions and clubs</small></span></a>
+            <a href="{% url 'upload_video' %}" id="tour-upload-video" class="p-tile green"><span class="ic">&#127909;</span><span><strong>Upload Video ({{ videos_count }})</strong><small>Show scouts your best moments</small></span></a>
+            <a href="{% url 'view_opportunities' %}" id="tour-view-opportunities" class="p-tile gold"><span class="ic">&#127942;</span><span><strong>View Opportunities</strong><small>Open trials and tournaments</small></span></a>
+            <a href="{% url 'my_applications' %}" id="tour-my-applications" class="p-tile blue"><span class="ic">&#128203;</span><span><strong>My Applications ({{ applications_count }})</strong><small>Track every application</small></span></a>
         </div>
+    </div>
     </div>
 
     {% if my_badges %}
         <section class="p-card" id="my-badges">
             <h4>&#127941; My badges <span class="text-muted fw-normal fs-6">&middot; {{ badges_earned }} of {{ my_badges|length }}</span></h4>
-            <p class="text-muted small mb-3">Badges show scouts your effort and character. Faded ones are still waiting for you: here is how to earn them.</p>
-            {% include 'includes/badges.html' with badges=my_badges show_locked=True %}
+            <p class="text-muted small mb-3">Badges show scouts your effort and character. Unlock them all!</p>
+            {% include 'includes/badges_game.html' with badges=my_badges %}
         </section>
     {% endif %}
 
-    <section class="p-card" id="scout-feedback">
-        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
-            <h4 class="mb-0">&#128172; Scout feedback</h4>
-            {% if unread_feedback_count %}<span class="badge bg-warning text-dark">{{ unread_feedback_count }} unread</span>{% endif %}
-        </div>
-        {% for feedback in feedback_entries %}
-            <div class="fb-item">
-                <div class="d-flex justify-content-between align-items-start gap-2">
-                    <div>
-                        <strong>{{ feedback.scout.full_name }}</strong>
-                        <span class="text-muted">&middot; {{ feedback.scout.scout_profile.organization|default:'Scout' }}</span>
-                        <div class="small text-muted">On your video &ldquo;{{ feedback.video.title }}&rdquo;</div>
-                    </div>
-                    <div class="text-end">
-                        <small class="text-muted d-block">{{ feedback.updated_at|date:'j M Y' }}</small>
-                        {% if feedback.is_seen %}<span class="badge bg-success">Seen</span>{% else %}<span class="badge bg-warning text-dark">New</span>{% endif %}
-                    </div>
-                </div>
-                <div class="fb-quote">{{ feedback.comment|linebreaksbr }}</div>
-                {% if feedback.player_reply %}<div class="small mb-1"><strong>Your reply:</strong> {{ feedback.player_reply|linebreaksbr }}</div>{% endif %}
-                {% if feedback.scout_reply %}<div class="small text-muted mb-1"><strong>Scout's response:</strong> {{ feedback.scout_reply|linebreaksbr }}</div>{% endif %}
-                <a href="{% url 'upload_video' %}" class="btn btn-outline-success btn-sm rounded-pill mt-1">{% if feedback.player_reply %}Reply again{% else %}Reply to this feedback{% endif %}</a>
-            </div>
-        {% empty %}
-            <p class="text-muted mb-0">No scout feedback yet. Keep uploading short, clear videos: scouts leave feedback on the clips that catch their eye. &#127909;</p>
-        {% endfor %}
-    </section>
 </div>
 {% endblock %}
 

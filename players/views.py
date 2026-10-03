@@ -67,8 +67,6 @@ def dashboard(request):
             'videos': videos,
             'my_badges': my_badges,
             'badges_earned': sum(1 for badge in my_badges if badge['earned']),
-            'feedback_entries': feedback_entries,
-            'unread_feedback_count': unread_feedback_count,
             'strength': _profile_strength(profile, videos_count) if profile else None,
             'new_fair_play': (
                 FairPlayAward.objects.select_related('scout').filter(

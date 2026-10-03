@@ -122,14 +122,15 @@ class BadgeTests(TestCase):
 
 @override_settings(MEDIA_ROOT=tempfile.mkdtemp(), EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class PlayerDashboardTests(TestCase):
-    def test_one_player_is_a_star_and_sees_scout_feedback(self):
+    def test_one_player_is_a_star_and_feedback_stays_with_the_video(self):
         player = make_player('jack@gmail.com', 'Jack Sese', 'stars')
         scout = User.objects.create_user('peter@gmail.com', 'Talanta#2026', full_name='Coach Peter', role='scout')
         video = add_video(player.player_profile, 'Goals vs Kibera')
         ScoutVideoFeedback.objects.create(scout=scout, video=video, comment='Calm finishing, keep it up')
         self.client.force_login(player)
         page = self.client.get(reverse('player_dashboard')).content.decode()
-        self.assertIn('\u2b50 Star</span>', page)
-        self.assertNotIn('\u2b50 Stars</span>', page)
-        self.assertIn('Calm finishing, keep it up', page)
+        self.assertIn('\u2b50 Star |', page)
+        self.assertNotIn('\u2b50 Stars', page)
+        self.assertNotIn('Calm finishing, keep it up', page)
+        self.assertContains(self.client.get(reverse('upload_video')), 'Calm finishing, keep it up')
         self.assertIn('Profile strength', page)

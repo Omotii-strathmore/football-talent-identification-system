@@ -61,10 +61,22 @@ def player_badges(profile, video_count=None, application_count=None, awards=None
                 counts[label] = counts.get(label, 0) + 1
         top = sorted(counts, key=lambda label: -counts[label])[:3]
         detail['fair_play'] = ' · '.join(part for part in [f'×{len(awards)}' if len(awards) > 1 else '', ', '.join(top)] if part)
-    return [
-        {'key': key, 'emoji': emoji, 'name': name, 'hint': hint, 'earned': earned[key], 'detail': detail.get(key, '')}
-        for key, emoji, name, hint in PLAYER_BADGES
-    ]
+    # Progress towards the badges that count something, shown like a game ("1 / 3 videos").
+    progress = {
+        'reel': (min(video_count, 3), 3, 'videos'),
+        'first_step': (min(application_count, 1), 1, 'trial applications'),
+        'listener': (min(reply_count, GOOD_LISTENER_REPLIES), GOOD_LISTENER_REPLIES, 'replies to scouts'),
+        'fair_play': (min(len(awards), 1), 1, 'Fair Play badge from a scout'),
+    }
+    badges = []
+    for key, emoji, name, hint in PLAYER_BADGES:
+        done, goal, unit = progress.get(key, (None, None, ''))
+        badges.append({
+            'key': key, 'emoji': emoji, 'name': name, 'hint': hint, 'earned': earned[key], 'detail': detail.get(key, ''),
+            'progress': done, 'goal': goal, 'unit': unit,
+            'percent': round(done * 100 / goal) if goal else None,
+        })
+    return badges
 
 
 def players_helped(scout_user):

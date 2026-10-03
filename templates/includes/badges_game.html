@@ -1,0 +1,105 @@
+{% comment %}
+Game-style badge cabinet for a player's own dashboard. Needs `badges` (from players/badges.py).
+Earned badges come first, big and bright. Locked ones are grey medals: tapping one shows how to unlock it.
+{% endcomment %}
+<div class="bdg-cabinet" data-badge-cabinet>
+    <div class="bdg-earned">
+        {% for badge in badges %}{% if badge.earned %}
+            <div class="bdg-medal bdg-medal--{{ badge.key }}" title="{{ badge.hint }}">
+                <div class="bdg-medal__disc"><span aria-hidden="true">{{ badge.emoji }}</span></div>
+                <div class="bdg-medal__name">{{ badge.name }}</div>
+                {% if badge.detail %}<div class="bdg-medal__detail">{{ badge.detail }}</div>{% endif %}
+                <div class="bdg-medal__got">&#10003; Unlocked</div>
+            </div>
+        {% endif %}{% empty %}{% endfor %}
+        {% if not badges_earned %}
+            <p class="bdg-none">No badges yet. Tap a grey medal below to see how to unlock your first one. &#9917;</p>
+        {% endif %}
+    </div>
+
+    <div class="bdg-locked-title">Still to unlock <span>&middot; tap a medal</span></div>
+    <div class="bdg-locked" role="list">
+        {% for badge in badges %}{% if not badge.earned %}
+            <button type="button" class="bdg-lock" role="listitem" aria-expanded="false" aria-controls="bdg-info"
+                    data-name="{{ badge.name }}" data-hint="{{ badge.hint }}"
+                    data-progress="{% if badge.goal %}{{ badge.progress }} / {{ badge.goal }} {{ badge.unit }}{% endif %}"
+                    data-percent="{{ badge.percent|default_if_none:'' }}">
+                <span class="bdg-lock__disc"><span aria-hidden="true">{{ badge.emoji }}</span><span class="bdg-lock__pad" aria-hidden="true">&#128274;</span></span>
+                <span class="bdg-lock__name">{{ badge.name }}</span>
+            </button>
+        {% endif %}{% endfor %}
+    </div>
+    <div class="bdg-info" id="bdg-info" hidden aria-live="polite">
+        <div class="bdg-info__title"></div>
+        <div class="bdg-info__how"></div>
+        <div class="bdg-info__bar" hidden><span></span></div>
+        <div class="bdg-info__progress"></div>
+    </div>
+</div>
+<style>
+    .bdg-earned { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 20px; }
+    .bdg-medal { width: 150px; text-align: center; padding: 16px 10px 12px; border-radius: 18px;
+        background: linear-gradient(180deg, #fffaf0, #fff); border: 1px solid #f2d78a; box-shadow: 0 10px 24px rgba(201,151,30,.18);
+        animation: bdg-pop .45s ease both; }
+    .bdg-medal__disc { width: 74px; height: 74px; margin: 0 auto 10px; border-radius: 50%; display: grid; place-items: center; font-size: 2.2rem;
+        background: radial-gradient(circle at 35% 30%, #fff6d6, #f6c453 60%, #c9971e); box-shadow: 0 0 0 4px #fff, 0 0 0 6px #f6c453, 0 8px 18px rgba(201,151,30,.45); }
+    .bdg-medal--fair_play .bdg-medal__disc { background: radial-gradient(circle at 35% 30%, #e7fbe9, #34d399 60%, #047857); box-shadow: 0 0 0 4px #fff, 0 0 0 6px #10b981, 0 8px 18px rgba(4,120,87,.4); }
+    .bdg-medal--pioneer .bdg-medal__disc { background: radial-gradient(circle at 35% 30%, #f1fde8, #86c96b 60%, #3f7d2a); box-shadow: 0 0 0 4px #fff, 0 0 0 6px #6bb04f, 0 8px 18px rgba(63,125,42,.4); }
+    .bdg-medal__name { font-weight: 800; color: #0f172a; font-size: .98rem; line-height: 1.2; }
+    .bdg-medal__detail { font-size: .78rem; color: #475569; margin-top: 3px; }
+    .bdg-medal__got { display: inline-block; margin-top: 8px; font-size: .72rem; font-weight: 800; color: #166534; background: #dcfce7; border-radius: 999px; padding: 2px 10px; }
+    .bdg-none { color: #64748b; margin: 0; }
+
+    .bdg-locked-title { font-weight: 800; color: #334155; font-size: .9rem; margin-bottom: 10px; }
+    .bdg-locked-title span { font-weight: 500; color: #94a3b8; }
+    .bdg-locked { display: flex; flex-wrap: wrap; gap: 12px; }
+    .bdg-lock { width: 104px; border: 0; background: none; padding: 6px 4px; border-radius: 14px; cursor: pointer; text-align: center; }
+    .bdg-lock:hover, .bdg-lock[aria-expanded="true"] { background: #f1f5f9; }
+    .bdg-lock:focus-visible { outline: 3px solid #f6c453; }
+    .bdg-lock__disc { position: relative; width: 56px; height: 56px; margin: 0 auto 6px; border-radius: 50%; display: grid; place-items: center; font-size: 1.6rem;
+        background: #e5e7eb; border: 2px dashed #cbd5e1; }
+    .bdg-lock__disc > span:first-child { filter: grayscale(1); opacity: .45; }
+    .bdg-lock__pad { position: absolute; right: -4px; bottom: -4px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+        font-size: .7rem; background: #64748b; border: 2px solid #fff; }
+    .bdg-lock__name { display: block; font-size: .78rem; font-weight: 700; color: #64748b; line-height: 1.2; }
+
+    .bdg-info { margin-top: 12px; padding: 14px 16px; border-radius: 14px; background: #0b4d2c; color: #fff; position: relative; animation: bdg-pop .25s ease both; }
+    .bdg-info__title { font-weight: 800; margin-bottom: 4px; }
+    .bdg-info__how { color: #d7ecdf; font-size: .92rem; }
+    .bdg-info__bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.2); overflow: hidden; margin-top: 10px; }
+    .bdg-info__bar span { display: block; height: 100%; background: linear-gradient(90deg, #f6c453, #ffe08a); border-radius: 999px; }
+    .bdg-info__progress { font-size: .8rem; color: #f6c453; margin-top: 4px; font-weight: 700; }
+
+    @keyframes bdg-pop { from { transform: scale(.92); opacity: 0; } to { transform: none; opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .bdg-medal, .bdg-info { animation: none; } }
+    @media (max-width: 767.98px) {
+        .bdg-medal { width: calc(50% - 7px); }
+        .bdg-lock { width: calc(33.3% - 8px); }
+    }
+</style>
+<script>
+(function () {
+    document.querySelectorAll('[data-badge-cabinet]').forEach(function (cabinet) {
+        var info = cabinet.querySelector('.bdg-info');
+        var open = null;
+        cabinet.querySelectorAll('.bdg-lock').forEach(function (medal) {
+            medal.addEventListener('click', function () {
+                if (open === medal) {
+                    info.hidden = true; medal.setAttribute('aria-expanded', 'false'); open = null; return;
+                }
+                if (open) open.setAttribute('aria-expanded', 'false');
+                open = medal;
+                medal.setAttribute('aria-expanded', 'true');
+                info.querySelector('.bdg-info__title').textContent = '🔒 ' + medal.dataset.name;
+                info.querySelector('.bdg-info__how').textContent = 'How to unlock: ' + medal.dataset.hint;
+                var bar = info.querySelector('.bdg-info__bar');
+                var percent = medal.dataset.percent;
+                bar.hidden = percent === '';
+                if (percent !== '') bar.querySelector('span').style.width = percent + '%';
+                info.querySelector('.bdg-info__progress').textContent = medal.dataset.progress ? 'Progress: ' + medal.dataset.progress : '';
+                info.hidden = false;
+            });
+        });
+    });
+})();
+</script>
