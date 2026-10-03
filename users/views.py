@@ -558,6 +558,10 @@ def login_view(request):
             if inactive_user and inactive_user.check_password(form.cleaned_data['password']):
                 request.session['pending_user_id'] = inactive_user.id
                 request.session['pending_user_email'] = inactive_user.email
+                if not hasattr(inactive_user, 'player_profile') and not hasattr(inactive_user, 'scout_profile'):
+                    # They stopped after step 1, so no code was ever sent. Finishing step 2 sends it.
+                    messages.info(request, 'Welcome back! Finish step 2 below and we will email your verification code.')
+                    return redirect('complete_profile')
                 messages.info(request, 'Your account is not yet verified. Please enter the code sent to your email.')
                 return redirect('verify_otp')
 

@@ -84,7 +84,24 @@ class RegistrationForm(forms.ModelForm):
 
 		return cleaned_data
 
+	def validate_unique(self):
+		# An unfinished sign-up with this email is replaced on save, so it does not count as taken.
+		from .email_check import unfinished_signup
+		if unfinished_signup(self.cleaned_data.get('email')):
+			exclude = self._get_validation_exclusions()
+			exclude.add('email')
+			try:
+				self.instance.validate_unique(exclude=exclude)
+			except forms.ValidationError as exc:
+				self._update_errors(exc)
+			return
+		super().validate_unique()
+
 	def save(self, commit=True):
+		from .email_check import unfinished_signup
+		stale = unfinished_signup(self.cleaned_data.get('email'))
+		if stale and commit:
+			stale.delete()
 		user = super().save(commit=False)
 		user.set_password(self.cleaned_data['password'])
 		user.terms_accepted_at = timezone.now()

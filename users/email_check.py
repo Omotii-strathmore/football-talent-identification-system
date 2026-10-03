@@ -65,6 +65,17 @@ def domain_accepts_email(domain):
         return True
 
 
+def unfinished_signup(email):
+    """An account that stopped after sign-up step 1: never verified and no player or scout profile.
+
+    No code was ever sent to it, so whoever signs up again with this email simply starts over.
+    """
+    user = User.objects.filter(email__iexact=(email or '').strip(), is_active=False, is_staff=False).first()
+    if user and not hasattr(user, 'player_profile') and not hasattr(user, 'scout_profile'):
+        return user
+    return None
+
+
 def check_email(email, check_dns=None):
     """Return (cleaned_email, problem, suggestion). `problem` is None when the email can be used."""
     if check_dns is None:
@@ -85,7 +96,7 @@ def check_email(email, check_dns=None):
         return email, 'Temporary email addresses cannot be used. Please use an email you will keep, such as Gmail.', None
     if not re.search(r'\.[a-z]{2,}$', domain):
         return email, 'The part after @ looks incomplete, for example gmail.com.', None
-    if User.objects.filter(email__iexact=email).exists():
+    if User.objects.filter(email__iexact=email).exists() and not unfinished_signup(email):
         return email, 'This email already has a Talanta Soka account. Log in, or reset your password if you forgot it.', None
     if check_dns and not domain_accepts_email(domain):
         return email, f'"{domain}" cannot receive emails, so your verification code would never arrive. Please check the spelling.', None
