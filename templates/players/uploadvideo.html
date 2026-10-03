@@ -1,148 +1,165 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load static %}
 
 {% block title %}Upload Player Videos{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
 <style>
-    .upload-card {
-        border: 1px solid rgba(148, 163, 184, 0.18);
-        border-radius: 18px;
-        background: #fff;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
-    }
+    .up-card { background: #fff; border-radius: 22px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 12px 30px rgba(15,23,42,.06); padding: 22px; }
+    .up-step { display: flex; gap: 14px; padding: 16px 0; border-top: 1px solid #eef2f6; }
+    .up-step:first-of-type { border-top: 0; padding-top: 4px; }
+    .up-num { width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0; display: grid; place-items: center; font-weight: 800;
+        background: #f6c453; color: #3b2a05; box-shadow: 0 4px 10px rgba(201,151,30,.35); }
+    .up-step.done .up-num { background: #16a34a; color: #fff; }
+    .up-body { flex: 1; min-width: 0; }
+    .up-body h3 { font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 4px 0 2px; }
+    .up-body .why { font-size: .85rem; color: #64748b; margin: 0 0 10px; }
 
-    .upload-dropzone {
-        border: 2px dashed rgba(59, 130, 246, 0.35);
-        border-radius: 14px;
-        background: #f8fafc;
-        padding: 22px;
-        text-align: center;
-        transition: border-color .15s ease, background .15s ease;
-        cursor: pointer;
-    }
+    .up-drop { border: 2px dashed #9fd8b4; border-radius: 18px; background: #f0fdf4; padding: 26px 16px; text-align: center; cursor: pointer;
+        transition: border-color .15s ease, background .15s ease; }
+    .up-drop:hover, .up-drop.is-dragover { border-color: #006b3f; background: #e6f7ec; }
+    .up-drop .big { font-size: 2.4rem; line-height: 1; }
+    .up-drop strong { display: block; color: #0b4d2c; font-size: 1.05rem; margin-top: 8px; }
+    .up-drop .hint { font-size: .82rem; color: #475569; margin-top: 4px; }
+    .up-chosen { display: none; gap: 14px; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 12px; }
+    .up-chosen.show { display: flex; }
+    .up-chosen video { width: 160px; max-width: 45%; aspect-ratio: 16 / 9; border-radius: 10px; background: #000; object-fit: cover; }
+    .up-chosen .name { font-weight: 700; color: #0f172a; word-break: break-all; }
+    .up-chosen .size { font-size: .85rem; color: #475569; }
+    .up-chosen .change { border: 0; background: none; color: #0b4d2c; font-weight: 700; padding: 0; font-size: .88rem; }
+    .up-warn { color: #b91c1c; font-size: .86rem; font-weight: 600; margin-top: 6px; }
 
-    .upload-dropzone.is-dragover {
-        border-color: #3b82f6;
-        background: #eff6ff;
-    }
+    .up-types { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .up-type input { position: absolute; opacity: 0; pointer-events: none; }
+    .up-type span { display: block; text-align: center; padding: 14px 8px; border-radius: 14px; border: 2px solid #e2e8f0; background: #fff; cursor: pointer;
+        font-weight: 700; color: #334155; font-size: .9rem; transition: all .15s ease; }
+    .up-type span b { display: block; font-size: 1.6rem; margin-bottom: 4px; font-weight: 400; }
+    .up-type input:checked + span { border-color: #f6c453; background: #fffaf0; color: #3b2a05; box-shadow: 0 6px 16px rgba(201,151,30,.2); }
+    .up-type input:focus-visible + span { outline: 3px solid #0b4d2c; outline-offset: 2px; }
 
-    .upload-dropzone .upload-icon {
-        font-size: 1.8rem;
-        margin-bottom: 6px;
-    }
+    .up-field { border-radius: 12px; }
+    .btn-upload { background: #006b3f; color: #fff; font-weight: 800; border-radius: 999px; padding: 13px 28px; border: 0; width: 100%; font-size: 1.05rem; }
+    .btn-upload:hover { background: #00552f; color: #fff; }
+    .btn-upload:disabled { opacity: .75; }
+    .up-progress { display: none; margin-top: 12px; }
+    .up-progress.show { display: block; }
+    .up-progress .bar { height: 12px; border-radius: 999px; background: #e2e8f0; overflow: hidden; }
+    .up-progress .bar span { display: block; height: 100%; width: 0; border-radius: 999px; background: linear-gradient(90deg, #006b3f, #34d399); transition: width .2s ease; }
+    .up-progress .txt { font-size: .85rem; color: #475569; margin-top: 6px; text-align: center; }
 
-    .upload-filename {
-        font-weight: 600;
-        color: #0f172a;
-        margin-top: 8px;
-        word-break: break-all;
-    }
+    .video-filter-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .video-filter-tab { border: 1px solid rgba(148,163,184,.3); background: #fff; color: #334155; border-radius: 999px; padding: 6px 16px; font-size: .84rem; font-weight: 700; cursor: pointer; }
+    .video-filter-tab.active { background: #0b4d2c; color: #fff; border-color: #0b4d2c; }
+    .video-badge { display: inline-flex; align-items: center; gap: .3rem; padding: .25rem .65rem; border-radius: 999px; font-size: .72rem; font-weight: 800;
+        text-transform: uppercase; letter-spacing: .04em; background: #fff8e1; color: #7a5600; margin-bottom: 8px; }
+    .video-card { border: 1px solid rgba(148,163,184,.2); border-radius: 18px; box-shadow: 0 10px 26px rgba(15,23,42,.06); }
+    .video-wrap { position: relative; border-radius: 12px; overflow: hidden; background: #000; aspect-ratio: 16 / 9; margin-bottom: 10px; }
+    .video-wrap video { width: 100%; height: 100%; object-fit: contain; }
+    .video-desc { font-size: .88rem; color: #475569; margin-bottom: 6px; }
+    .fb-box { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #0b4d2c; border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; font-size: .9rem; }
 
-    .upload-hint {
-        font-size: 0.8rem;
-        color: #64748b;
-    }
-
-    .video-filter-tabs {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-bottom: 16px;
-    }
-
-    .video-filter-tab {
-        border: 1px solid rgba(148, 163, 184, 0.3);
-        background: #fff;
-        color: #334155;
-        border-radius: 999px;
-        padding: 6px 16px;
-        font-size: 0.82rem;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-    .video-filter-tab.active {
-        background: #0f172a;
-        color: #fff;
-        border-color: #0f172a;
-    }
-
-    .video-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        padding: 0.25rem 0.6rem;
-        border-radius: 999px;
-        font-size: 0.72rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        background: #eef2ff;
-        color: #4338ca;
-        margin-bottom: 8px;
-    }
-
-    .video-wrap {
-        position: relative;
-        border-radius: 10px;
-        overflow: hidden;
-        background: #000;
-        aspect-ratio: 16 / 9;
-        margin-bottom: 10px;
-    }
-
-    .video-wrap video {
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-
-    .video-desc {
-        font-size: 0.85rem;
-        color: #475569;
-        margin-bottom: 6px;
+    @media (max-width: 767.98px) {
+        .up-card { padding: 16px; }
+        .up-types { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .up-chosen { flex-direction: column; align-items: stretch; }
+        .up-chosen video { width: 100%; max-width: none; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="mb-0">Upload Performance Videos</h2>
-        <a href="{% url 'player_dashboard' %}" class="btn btn-outline-secondary">Back to Dashboard</a>
-    </div>
+    <section class="ts-hero-g">
+        <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+            <div>
+                <div class="eyebrow">Your highlight reel</div>
+                <h2 class="mb-1" style="font-size:clamp(1.5rem,3vw,2.1rem)">Upload a video &#127909;</h2>
+                <p class="ts-sub mb-0">Short, clear clips catch a scout's eye. Show your best touch, goal, save or tackle.</p>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                <span class="ts-chip gold">&#127909; {{ videos|length }} video{{ videos|length|pluralize }}</span>
+                {% if videos|length < 3 %}<span class="ts-chip">{{ videos|length }} / 3 for the Highlight Reel badge</span>{% else %}<span class="ts-chip ok">&#127941; Highlight Reel unlocked</span>{% endif %}
+            </div>
+        </div>
+    </section>
 
-    <div class="upload-card p-3 p-md-4 mb-4">
+    <div class="up-card mb-4">
         <form method="post" enctype="multipart/form-data" novalidate id="video-upload-form">
             {% csrf_token %}
-            {{ form.non_field_errors }}
+            {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
 
-            <div class="row">
-                <div class="col-md-7">{{ form.title|as_crispy_field }}</div>
-                <div class="col-md-5">{{ form.category|as_crispy_field }}</div>
+            <div class="up-step" id="step-file">
+                <div class="up-num">1</div>
+                <div class="up-body">
+                    <h3>Choose your video</h3>
+                    <p class="why">MP4, MOV or WEBM, up to 75MB. Clips of 1 to 2 minutes upload faster and keep scouts watching.</p>
+                    <div class="up-drop" id="upload-dropzone" role="button" tabindex="0" aria-label="Choose a video file">
+                        <div class="big">&#127909;</div>
+                        <strong class="d-none d-md-block">Drag your video here, or click to choose</strong>
+                        <strong class="d-md-none">Tap to record or choose a video</strong>
+                        <div class="hint">From your phone's gallery, your camera, or your computer</div>
+                    </div>
+                    <div class="up-chosen" id="upload-chosen">
+                        <video id="upload-preview" muted playsinline controls></video>
+                        <div>
+                            <div class="name" id="upload-filename"></div>
+                            <div class="size" id="upload-size"></div>
+                            <button type="button" class="change" id="upload-change">&#8635; Choose a different video</button>
+                        </div>
+                    </div>
+                    <div class="up-warn" id="upload-warn" hidden></div>
+                    {{ form.video_file }}
+                    {% if form.video_file.errors %}<div class="up-warn">{{ form.video_file.errors|striptags }}</div>{% endif %}
+                </div>
             </div>
-            {{ form.description|as_crispy_field }}
 
-            <label class="form-label">Video file</label>
-            <div class="upload-dropzone" id="upload-dropzone">
-                <div class="upload-icon">🎥</div>
-                <div class="d-none d-md-block">Drag and drop your video here, or click to browse</div>
-                <div class="d-md-none"><strong>Tap here</strong> to record a video with your camera or choose one from your phone</div>
-                <div class="upload-hint">MP4, MOV, or WEBM, up to 75MB. Tip: short clips of 1 to 2 minutes upload faster and keep scouts watching.</div>
-                <div class="upload-filename" id="upload-filename"></div>
+            <div class="up-step">
+                <div class="up-num">2</div>
+                <div class="up-body">
+                    <h3>What type of video is it?</h3>
+                    <p class="why">Helps scouts quickly understand what the clip shows.</p>
+                    <div class="up-types" role="radiogroup" aria-label="Video type">
+                        {% for value, label in form.fields.category.choices %}{% if value %}
+                            <label class="up-type">
+                                <input type="radio" name="category" value="{{ value }}" {% if form.category.value == value or not form.category.value and forloop.first %}checked{% endif %}>
+                                <span><b aria-hidden="true">{% if value == 'highlights' %}&#127775;{% elif value == 'match' %}&#9917;{% elif value == 'training' %}&#127939;{% else %}&#10024;{% endif %}</b>{{ label }}</span>
+                            </label>
+                        {% endif %}{% endfor %}
+                    </div>
+                    {% if form.category.errors %}<div class="up-warn">{{ form.category.errors|striptags }}</div>{% endif %}
+                </div>
             </div>
-            {{ form.video_file }}
-            {% if form.video_file.errors %}
-                <div class="text-danger small mt-1">{{ form.video_file.errors }}</div>
-            {% endif %}
 
-            <button type="submit" class="btn btn-primary mt-3">Upload Video</button>
+            <div class="up-step">
+                <div class="up-num">3</div>
+                <div class="up-body">
+                    <h3>Give it a name</h3>
+                    <p class="why">For example "Goal vs Kibera United" or "Left-foot passing drills".</p>
+                    <input type="text" name="title" maxlength="150" class="form-control form-control-lg up-field" id="id_title" value="{{ form.title.value|default:'' }}" placeholder="Video title" required>
+                    {% if form.title.errors %}<div class="up-warn">{{ form.title.errors|striptags }}</div>{% endif %}
+                </div>
+            </div>
+
+            <div class="up-step">
+                <div class="up-num">4</div>
+                <div class="up-body">
+                    <h3>Tell scouts what to watch <span class="text-muted fw-normal" style="font-size:.85rem">(optional)</span></h3>
+                    <p class="why">The match, the opponent, your shirt number, or the moment to look out for.</p>
+                    <textarea name="description" rows="2" class="form-control up-field" id="id_description" placeholder="e.g. I'm number 8 in red. Watch my run at 0:45.">{{ form.description.value|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-upload mt-2" id="upload-submit">Upload video &#9917;</button>
+            <div class="up-progress" id="upload-progress" aria-live="polite">
+                <div class="bar"><span id="upload-bar"></span></div>
+                <div class="txt" id="upload-progress-text">Uploading&hellip; please keep this page open.</div>
+            </div>
         </form>
     </div>
 
     <div class="d-flex justify-content-between align-items-center mb-2">
-        <h4 class="mb-0">My Uploaded Videos</h4>
+        <h4 class="ts-head mb-0"><span class="ic" aria-hidden="true">&#127916;</span>My Uploaded Videos</h4>
         <span class="text-muted small">{{ videos|length }} video{{ videos|length|pluralize }}</span>
     </div>
 
@@ -158,7 +175,7 @@
         <div class="row g-3" id="video-grid">
             {% for video in videos %}
                 <div class="col-md-6" data-category="{{ video.category }}">
-                    <div class="card h-100">
+                    <div class="card video-card h-100">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start gap-2">
                                 <div>
@@ -187,9 +204,9 @@
                             {% with feedbacks=video.video_feedback_entries.all %}
                                 {% if feedbacks %}
                                     <div class="mt-3">
-                                        <h6 class="mb-2">Scout Feedback</h6>
+                                        <h6 class="mb-2 fw-bold" style="color:#0b4d2c">&#128172; Scout feedback</h6>
                                         {% for feedback in feedbacks %}
-                                            <div class="border rounded p-2 mb-2 small">
+                                            <div class="fb-box">
                                                 <div class="d-flex justify-content-between align-items-start gap-2">
                                                     <strong>{{ feedback.scout.full_name }}</strong>
                                                     <span class="text-muted">{{ feedback.updated_at|date:'M d, Y H:i' }}</span>
@@ -246,48 +263,85 @@
         </div>
         <div class="alert alert-light border mt-3" id="video-empty-filter" style="display:none;">No videos uploaded yet under this category.</div>
     {% else %}
-        <div class="alert alert-info">No videos uploaded yet.</div>
+        <div class="up-card text-center"><div style="font-size:2.4rem">&#127909;</div><p class="fw-bold mb-1">No videos yet</p><p class="text-muted mb-0">Your first clip is the start of your highlight reel. Upload it above.</p></div>
     {% endif %}
 </div>
 
 <script>
     (function () {
+        const MAX_MB = 75;
+        const form = document.getElementById('video-upload-form');
         const dropzone = document.getElementById('upload-dropzone');
         const fileInput = document.getElementById('id_video_file');
-        const filenameLabel = document.getElementById('upload-filename');
+        const chosen = document.getElementById('upload-chosen');
+        const preview = document.getElementById('upload-preview');
+        const nameEl = document.getElementById('upload-filename');
+        const sizeEl = document.getElementById('upload-size');
+        const warn = document.getElementById('upload-warn');
+        const submit = document.getElementById('upload-submit');
+        const progress = document.getElementById('upload-progress');
+        const bar = document.getElementById('upload-bar');
+        const progressText = document.getElementById('upload-progress-text');
+        let tooBig = false;
+
+        function showFile(file) {
+            if (!file) { chosen.classList.remove('show'); dropzone.style.display = ''; return; }
+            const mb = file.size / (1024 * 1024);
+            nameEl.textContent = file.name;
+            sizeEl.textContent = mb.toFixed(1) + ' MB';
+            tooBig = mb > MAX_MB;
+            warn.hidden = !tooBig;
+            warn.textContent = tooBig ? 'This video is ' + mb.toFixed(0) + ' MB. Please keep it under ' + MAX_MB + ' MB: trim it to the best 1 to 2 minutes.' : '';
+            try { preview.src = URL.createObjectURL(file); } catch (e) {}
+            chosen.classList.add('show');
+            dropzone.style.display = 'none';
+        }
 
         if (dropzone && fileInput) {
             fileInput.style.display = 'none';
-
-            dropzone.addEventListener('click', function () {
-                fileInput.click();
-            });
-
-            fileInput.addEventListener('change', function () {
-                const file = this.files && this.files[0];
-                filenameLabel.textContent = file ? ('Selected: ' + file.name) : '';
-            });
-
+            fileInput.setAttribute('accept', 'video/*');
+            dropzone.addEventListener('click', function () { fileInput.click(); });
+            dropzone.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+            document.getElementById('upload-change').addEventListener('click', function () { fileInput.click(); });
+            fileInput.addEventListener('change', function () { showFile(this.files && this.files[0]); });
             ['dragover', 'dragenter'].forEach(function (evt) {
-                dropzone.addEventListener(evt, function (e) {
-                    e.preventDefault();
-                    dropzone.classList.add('is-dragover');
-                });
+                dropzone.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.add('is-dragover'); });
             });
-
             ['dragleave', 'drop'].forEach(function (evt) {
-                dropzone.addEventListener(evt, function (e) {
-                    e.preventDefault();
-                    dropzone.classList.remove('is-dragover');
-                });
+                dropzone.addEventListener(evt, function (e) { e.preventDefault(); dropzone.classList.remove('is-dragover'); });
             });
-
             dropzone.addEventListener('drop', function (e) {
                 const files = e.dataTransfer.files;
-                if (files && files.length) {
-                    fileInput.files = files;
-                    filenameLabel.textContent = 'Selected: ' + files[0].name;
-                }
+                if (files && files.length) { fileInput.files = files; showFile(files[0]); }
+            });
+        }
+
+        // Upload with a progress bar, so players on mobile data can see it moving.
+        if (form && window.XMLHttpRequest && window.FormData) {
+            form.addEventListener('submit', function (e) {
+                if (tooBig) { e.preventDefault(); warn.hidden = false; warn.scrollIntoView({ block: 'center' }); return; }
+                if (!fileInput.files || !fileInput.files.length) { return; }   // let the server explain what is missing
+                e.preventDefault();
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', form.action || window.location.href);
+                xhr.upload.addEventListener('progress', function (ev) {
+                    if (!ev.lengthComputable) return;
+                    const pct = Math.round(ev.loaded / ev.total * 100);
+                    bar.style.width = pct + '%';
+                    progressText.textContent = pct < 100 ? 'Uploading\u2026 ' + pct + '% \u00b7 please keep this page open.' : 'Almost done: saving your video\u2026';
+                });
+                xhr.addEventListener('load', function () {
+                    if (xhr.responseURL && xhr.responseURL !== window.location.href) { window.location.href = xhr.responseURL; return; }
+                    document.open(); document.write(xhr.responseText); document.close();
+                });
+                xhr.addEventListener('error', function () {
+                    submit.disabled = false; progress.classList.remove('show');
+                    warn.hidden = false; warn.textContent = 'The upload stopped. Check your connection and try again.';
+                });
+                submit.disabled = true;
+                submit.textContent = 'Uploading\u2026';
+                progress.classList.add('show');
+                xhr.send(new FormData(form));
             });
         }
 

@@ -121,6 +121,7 @@
 </head>
 {% if user.is_authenticated and not user.is_staff %}{% firstof '1' as show_bottombar %}{% endif %}
 <body{% if show_bottombar %} class="has-bottombar"{% endif %}>
+{% include 'includes/practice_ribbon.html' %}
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 

@@ -24,6 +24,9 @@ def site_extras(request):
         'body': 'Please tell us what happened, who was involved (name or trial), and when. We read every report.\n\n',
     })
     context = {'support_email': email, 'support_compose_url': compose_url, 'report_concern_url': report_url}
+    # A label on every page when running on the laptop's practice database (demo accounts), never on the live site.
+    from django.db import connection
+    context['practice_mode'] = str(connection.settings_dict.get('NAME', '')).endswith('practice.sqlite3')
 
     user = getattr(request, 'user', None)
     if user is not None and user.is_authenticated and not user.is_staff:
