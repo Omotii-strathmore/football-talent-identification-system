@@ -247,7 +247,9 @@
     });
 </script>
 
+{% if not user.is_authenticated or not user.is_staff %}
 <p class="site-report text-center small mb-0"><span class="site-report__pill"><a href="{{ report_concern_url }}" target="_blank" rel="noopener" class="text-danger text-decoration-none">&#128681; Report a concern</a> <span class="text-muted">&middot; Felt unsafe or saw something wrong? Tell us.</span></span></p>
+{% endif %}
 {% if show_bottombar %}{% include 'includes/mobile_bottom_bar.html' %}{% endif %}
 <script src="{% static 'js/password-eye.js' %}"></script>
 

@@ -93,7 +93,7 @@ With `defer`, it waits until the page calls TalantaUpdateModal.open(), and shows
     }
     function open() {
         var viewer = document.getElementById('tsv');
-        if (!document.body.contains(box) || window.TalantaUpdateOpen || (viewer && !viewer.hidden)) return;
+        if (!document.body.contains(box) || alreadySeenHere() || window.TalantaUpdateOpen || (viewer && !viewer.hidden)) return;
         lastFocus = document.activeElement;
         box.hidden = false;
         window.TalantaUpdateOpen = true;

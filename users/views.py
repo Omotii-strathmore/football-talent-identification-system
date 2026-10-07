@@ -69,7 +69,13 @@ def home(request):
     # Visitors (including brand-new users) see the latest update once, after the landing page tour.
     latest_update = None
     if show_update is None:
-        latest_update = SiteUpdate.objects.filter(created_at__gte=timezone.now() - timedelta(days=60)).first()
+        update = SiteUpdate.objects.filter(created_at__gte=timezone.now() - timedelta(days=60)).first()
+        if update and (not request.user.is_authenticated):
+            latest_update = update
+        elif update and not request.user.is_staff:
+            receipt, _ = UpdateReceipt.objects.get_or_create(update=update, user=request.user)
+            if receipt.seen_at is None and receipt.emailed_at is None:
+                latest_update = update
     return render(request, 'users/home.html', {'show_update': show_update, 'latest_update': latest_update})
 
 

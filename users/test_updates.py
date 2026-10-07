@@ -46,9 +46,7 @@ class SiteUpdateTests(TestCase):
         self.assertContains(self.client.get(reverse('home')), 'id="ts-update"')
         self.assertNotContains(self.client.get(reverse('home')), 'data-defer="1"')  # opens straight away
         self.client.post(reverse('update_seen', args=[update.pk]))
-        # Afterwards it no longer opens by itself; the landing page only offers it after the tour,
-        # once per browser.
-        self.assertContains(self.client.get(reverse('home')), 'data-defer="1"')
+        self.assertNotContains(self.client.get(reverse('home')), 'id="ts-update"')
 
     def test_email_link_opens_pop_up_on_landing_page(self):
         update = self.publish()
@@ -57,11 +55,14 @@ class SiteUpdateTests(TestCase):
         self.assertContains(response, 'id="ts-update"')
 
     def test_people_who_join_later_are_not_emailed_but_see_it_after_the_tour(self):
-        self.publish()
+        update = self.publish()
         later = User.objects.create_user('later@example.com', 'Talanta#2026', full_name='Later User')
         self.assertFalse(UpdateReceipt.objects.filter(user=later).exists())
         self.client.force_login(later)
         self.assertContains(self.client.get(reverse('home')), 'data-defer="1"')
+        self.assertTrue(UpdateReceipt.objects.filter(user=later, update=update, seen_at__isnull=True).exists())
+        self.client.post(reverse('update_seen', args=[update.pk]))
+        self.assertNotContains(self.client.get(reverse('home')), 'id="ts-update"')
 
     def test_new_visitors_get_the_latest_update_after_the_tour(self):
         self.publish()
@@ -148,7 +149,8 @@ class UpdatesViewerAndAboutTests(TestCase):
         self.assertContains(page, 'Hadithi yetu')
         self.assertContains(page, 'kucheza kwa vumbi')
         self.assertContains(page, 'As iron sharpens iron')
-        self.assertContains(page, 'Mithali 27:17')
+        self.assertNotContains(page, 'Proverbs 27:17')
+        self.assertNotContains(page, 'Mithali 27:17')
         self.assertContains(page, 'Stars &amp; Starlets')
 
 
@@ -156,6 +158,17 @@ class UpdatesViewerAndAboutTests(TestCase):
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend')
 class EncouragementUpdateTests(TestCase):
     """A "word of encouragement" update has its own warm look, subject and verse."""
+
+    def test_encouragement_update_without_reference_keeps_verse_only(self):
+        user = User.objects.create_user('amani@example.com', 'Talanta#2026', full_name='Amani Otieno', role='player')
+        update = SiteUpdate.objects.create(
+            kind='encouragement', title='As iron sharpens iron', teaser='A word for every player.',
+            points='Keep going\nThank a teammate', verse='As iron sharpens iron, so one person sharpens another.')
+        UpdateReceipt.objects.create(update=update, user=user)
+        self.client.force_login(user)
+        response = self.client.get(reverse('home'))
+        self.assertContains(response, 'As iron sharpens iron, so one person sharpens another.')
+        self.assertNotContains(response, 'Proverbs 27:17')
 
     def test_encouragement_update_has_its_own_subject_verse_and_look(self):
         from django.core import mail

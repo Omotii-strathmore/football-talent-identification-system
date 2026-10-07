@@ -39,7 +39,8 @@ def site_extras(request):
         # Show the newest update this person has not seen yet, once, as a pop-up on their pages.
         receipt = (UpdateReceipt.objects.filter(user=user, seen_at__isnull=True)
                    .select_related('update').order_by('-update__created_at').first())
-        if receipt and request.GET.get('update') is None:
+        on_landing_page = bool(match and match.url_name == 'home')
+        if receipt and request.GET.get('update') is None and not (on_landing_page and receipt.emailed_at is None):
             context['pending_site_update'] = receipt.update
         ask = not SiteFeedback.objects.filter(user=user).exists()
         context['ask_site_feedback'] = ask

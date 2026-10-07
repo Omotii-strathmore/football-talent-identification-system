@@ -75,6 +75,13 @@ class AdminUserToggleTests(TestCase):
         self.assertContains(response, 'Amani Otieno')
         self.assertNotContains(response, 'type="password"')
 
+    def test_admin_pages_hide_the_report_concern_footer(self):
+        response = self.client.get(reverse('admin_users'))
+        self.assertNotContains(response, 'Felt unsafe or saw something wrong?')
+        self.client.force_login(self.player)
+        response = self.client.get(reverse('player_dashboard'))
+        self.assertContains(response, 'Felt unsafe or saw something wrong?')
+
 
 class AiDraftTests(TestCase):
     def setUp(self):
