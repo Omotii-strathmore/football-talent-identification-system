@@ -6,6 +6,16 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/site-tour.css' %}">
 <link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
+<style>
+    .ts-hero-g { border: 1px solid rgba(246,196,83,.2); }
+    .ts-hero-g::before { content:""; position:absolute; inset:0; opacity:.12; pointer-events:none;
+        background:repeating-linear-gradient(180deg,transparent 0 42px,rgba(255,255,255,.16) 43px,transparent 44px 84px); }
+    .ts-hero-g > * { position:relative; z-index:1; }
+    .ts-hero-g h2 { font-size:clamp(1.5rem,3vw,2.1rem); }
+    .ts-stats .stat-card { border:1px solid rgba(148,163,184,.2); border-top:4px solid var(--c,#0b4d2c); border-radius:16px; box-shadow:0 8px 22px rgba(15,23,42,.06); }
+    .ts-tile:focus-visible { outline:3px solid #f6c453; outline-offset:3px; }
+    @media (prefers-reduced-motion: reduce) { .ts-tile { transition:none; } .ts-tile:hover { transform:none; } }
+</style>
 {% endblock %}
 
 {% block content %}
@@ -13,8 +23,8 @@
     <section class="ts-hero-g">
         <div class="d-flex justify-content-between align-items-center gap-4 flex-wrap">
             <div class="flex-fill">
-                <div class="eyebrow">Scout dashboard</div>
-                <h2 class="mb-1" style="font-size:clamp(1.5rem,3vw,2.1rem)">Welcome to Scout Dashboard, {{ first_name }}</h2>
+                <div class="eyebrow">SCOUTING JOURNEY</div>
+                <h2 class="mb-1">Welcome back, {{ first_name }}</h2>
                 <p class="ts-sub mb-3">Discover talent, post trials, and help young players grow with honest feedback.</p>
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     {% if scout_profile.verification_status == 'approved' %}

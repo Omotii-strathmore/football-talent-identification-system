@@ -22,8 +22,11 @@
     .p-hero { position: relative; overflow: hidden; border-radius: 24px; padding: 28px 30px; margin-bottom: 22px; color: #fff;
         background: radial-gradient(circle at 88% 0%, rgba(246,196,83,.35), transparent 42%), linear-gradient(135deg, #07170d 0%, #0b4d2c 55%, #006b3f 100%);
         box-shadow: 0 18px 40px rgba(0, 60, 30, .18); }
+    .p-hero::before { content: ""; position: absolute; inset: 0; opacity: .14; pointer-events: none;
+        background: repeating-linear-gradient(180deg, transparent 0 42px, rgba(255,255,255,.16) 43px, transparent 44px 84px); }
     .p-hero::after { content: "\26BD"; position: absolute; right: 190px; bottom: -34px; font-size: 8rem; opacity: .08; transform: rotate(-15deg); }
     .p-hero__row { position: relative; z-index: 1; display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+    .p-hero__eyebrow { color: #f6c453; font-size: .75rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; margin-bottom: 6px; }
     .p-hero h2 { font-weight: 800; font-size: clamp(1.5rem, 3vw, 2.1rem); margin: 0 0 6px; color: #fff; }
     .p-hero .p-sub { color: #d7ecdf; margin: 0; font-size: 1.02rem; }
     .p-strength { margin-top: 18px; max-width: 560px; }
@@ -43,7 +46,7 @@
     .p-photo__edit:hover { background: #f6c453; color: #07170d; }
 
     /* Stat cards: one tidy row of six on laptops */
-    .p-stats .stat-card { border-top: 4px solid var(--c, #0b4d2c); }
+    .p-stats .stat-card { border: 1px solid rgba(148,163,184,.2); border-top: 4px solid var(--c, #0b4d2c); border-radius: 16px; box-shadow: 0 8px 22px rgba(15,23,42,.06); }
     .p-stats .stat-icon { font-size: 1.2rem; display: block; margin-bottom: 2px; }
     .p-stats .stat-value { font-size: 1.6rem; }
 
@@ -54,6 +57,7 @@
     .p-tile { display: flex; gap: 12px; align-items: center; padding: 16px; border-radius: 16px; text-decoration: none; border: 1px solid var(--b); background: var(--bg);
         transition: transform .15s ease, box-shadow .15s ease; }
     .p-tile:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(15,23,42,.1); }
+    .p-tile:focus-visible { outline: 3px solid #f6c453; outline-offset: 3px; }
     .p-tile .ic { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; font-size: 1.4rem; background: var(--ic); flex-shrink: 0; }
     .p-tile strong { display: block; color: #0f172a; font-size: 1rem; }
     .p-tile small { color: #475569; font-size: .8rem; }
@@ -66,6 +70,7 @@
     /* My badges */
     .p-card { background: #fff; border-radius: 20px; padding: 20px; border: 1px solid rgba(148,163,184,.18); box-shadow: 0 10px 26px rgba(15,23,42,.06); margin-top: 22px; }
     .p-card h4 { font-weight: 800; font-size: 1.15rem; margin: 0 0 4px; }
+    @media (prefers-reduced-motion: reduce) { .p-tile { transition: none; } .p-tile:hover { transform: none; } }
 
     @media (max-width: 767.98px) {
         .p-hero { padding: 22px 18px; }
@@ -105,11 +110,12 @@
     <section class="p-hero">
         <div class="p-hero__row">
             <div>
-                <h2>Welcome to Player Dashboard, {{ first_name }}</h2>
+                <p class="p-hero__eyebrow">YOUR PLAYER JOURNEY</p>
+                <h2>Welcome back, {{ first_name }}</h2>
                 {% if profile %}
                     <p class="p-sub">{{ profile.full_name }} | {% if profile.category %}{{ profile.category|category_person }} | {% endif %}{{ profile.position }}{% if profile.secondary_position %} / {{ profile.secondary_position }}{% endif %} | {{ profile.location }}</p>
                 {% else %}
-                    <p class="p-sub">Welcome player.</p>
+                    <p class="p-sub">Build your profile, share your game, and get ready for your next opportunity.</p>
                 {% endif %}
                 {% if strength %}
                 <div class="p-strength">
