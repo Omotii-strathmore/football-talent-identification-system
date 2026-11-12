@@ -23,6 +23,14 @@ Opens by itself once per day; "Later" closes it until tomorrow. The [data-open-f
 
         <div class="tf-body" data-step="yes" hidden>
             <p class="tf-big">&#129395; Well done for showing up!</p>
+            <fieldset class="tf-outcome-field">
+                <legend class="tf-label">How did it feel? <span>(optional)</span></legend>
+                <div class="tf-outcomes">
+                    <label class="tf-outcome"><input type="radio" name="tf-outcome" value="good"><span>It went well</span></label>
+                    <label class="tf-outcome"><input type="radio" name="tf-outcome" value="mixed"><span>It was mixed</span></label>
+                    <label class="tf-outcome"><input type="radio" name="tf-outcome" value="not_as_hoped"><span>Not as I hoped</span></label>
+                </div>
+            </fieldset>
             <label for="tf-yes-note" class="tf-label">How did it go? <span>(optional)</span></label>
             <textarea id="tf-yes-note" rows="3" maxlength="1000" placeholder="e.g. I scored once and the coach asked for my number."></textarea>
             <button type="button" class="tf-submit" data-submit="yes">Submit</button>
@@ -45,6 +53,21 @@ Opens by itself once per day; "Later" closes it until tomorrow. The [data-open-f
         <div class="tf-body tf-done" data-step="done-yes" hidden>
             <p class="tf-big">Let&rsquo;s hope for the best &#128591;&#127998;</p>
             <p>Keep training and keep your phone close: the scouts may call. Whatever happens, you showed up, and that is what champions do.</p>
+            <div class="tf-recommendation" data-outcome="good" hidden>
+                <p><strong>Keep building on that performance.</strong> These short videos can help you prepare for the next opportunity:</p>
+                <a href="https://www.youtube.com/watch?v=FuXv1fImaFM" target="_blank" rel="noopener noreferrer">What scouts really watch when they&rsquo;re evaluating you</a>
+                <a href="https://www.youtube.com/watch?v=jyxM2FZNeiw" target="_blank" rel="noopener noreferrer">Common mistakes players make at trials</a>
+            </div>
+            <div class="tf-recommendation" data-outcome="mixed" hidden>
+                <p><strong>Every trial is something to learn from.</strong> Get a scout&rsquo;s perspective and think about one thing to try next time:</p>
+                <a href="https://www.youtube.com/watch?v=FuXv1fImaFM" target="_blank" rel="noopener noreferrer">What scouts really watch when they&rsquo;re evaluating you</a>
+                <a href="https://www.youtube.com/watch?v=jyxM2FZNeiw" target="_blank" rel="noopener noreferrer">Common mistakes players make at trials</a>
+            </div>
+            <div class="tf-recommendation" data-outcome="not_as_hoped" hidden>
+                <p><strong>A tough trial doesn&rsquo;t define your future.</strong> Even talented players are not always selected. This video offers perspective, and the second can help you prepare for another chance:</p>
+                <a href="https://www.youtube.com/watch?v=6G_EWIBUUMI" target="_blank" rel="noopener noreferrer">Why talented players aren&rsquo;t always picked</a>
+                <a href="https://www.youtube.com/watch?v=jyxM2FZNeiw" target="_blank" rel="noopener noreferrer">Common mistakes players make at trials</a>
+            </div>
             <button type="button" class="tf-submit" data-tf-close>Close</button>
         </div>
         <div class="tf-body tf-done" data-step="done-no" hidden>
@@ -79,6 +102,13 @@ Opens by itself once per day; "Later" closes it until tomorrow. The [data-open-f
     .tf-big { font-size: 1.3rem; font-weight: 800; color: #0b4d2c; margin: 0 0 12px; }
     .tf-label { display: block; text-align: left; font-weight: 700; color: #334155; margin: 6px 0 6px; }
     .tf-label span { font-weight: 400; color: #94a3b8; }
+    .tf-outcome-field { min-width: 0; margin: 0 0 14px; padding: 0; border: 0; }
+    .tf-outcomes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .tf-outcome { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 7px; padding: 8px; border: 1px solid #dbe3dd; border-radius: 12px; background: #fff; color: #334155; font-size: .88rem; font-weight: 700; cursor: pointer; }
+    .tf-outcome:has(input:checked) { border-color: #006b3f; background: #edf8f1; box-shadow: inset 0 0 0 1px #006b3f; }
+    .tf-recommendation { margin: 14px 0; padding: 14px; border: 1px solid #d5e8da; border-radius: 14px; background: linear-gradient(135deg, #f3faf4, #fffaf0); text-align: left; }
+    .tf-recommendation p { margin: 0 0 10px; color: #334155; font-size: .94rem; }
+    .tf-recommendation a { display: block; margin-top: 8px; color: #006b3f; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
     .tf-body textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: 12px; padding: 10px 12px; font: inherit; }
     .tf-reasons { display: grid; gap: 8px; text-align: left; margin-bottom: 8px; }
     .tf-reason { display: flex; gap: 10px; align-items: center; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 12px; cursor: pointer; background: #fff; }
@@ -90,6 +120,7 @@ Opens by itself once per day; "Later" closes it until tomorrow. The [data-open-f
     .tf-confetti { position: fixed; inset: 0; pointer-events: none; z-index: 2095; overflow: hidden; }
     .tf-confetti i { position: absolute; top: -20px; width: 9px; height: 16px; border-radius: 3px; animation: tf-fall linear forwards; }
     @keyframes tf-fall { to { transform: translate(var(--dx), 110vh) rotate(720deg); opacity: .2; } }
+    @media (max-width: 480px) { .tf-outcomes { grid-template-columns: 1fr; } }
     @media (prefers-reduced-motion: reduce) { .tf-confetti { display: none; } }
 </style>
 <script>
@@ -101,6 +132,11 @@ Opens by itself once per day; "Later" closes it until tomorrow. The [data-open-f
     function csrf() { var m = document.cookie.match(/(?:^|;\s*)csrftoken=([^;]+)/); return m ? decodeURIComponent(m[1]) : ''; }
     function today() { return new Date().toISOString().slice(0, 10); }
     function step(name) { modal.querySelectorAll('.tf-body').forEach(function (b) { b.hidden = b.dataset.step !== name; }); msg.textContent = ''; }
+    function showRecommendation(outcome) {
+        modal.querySelectorAll('.tf-recommendation').forEach(function (panel) {
+            panel.hidden = panel.dataset.outcome !== outcome;
+        });
+    }
     function open() { step('ask'); modal.hidden = false; }
     function close(later) {
         modal.hidden = true;
@@ -136,6 +172,8 @@ Opens by itself once per day; "Later" closes it until tomorrow. The [data-open-f
     modal.querySelectorAll('[data-submit]').forEach(function (b) {
         b.addEventListener('click', function () {
             var yes = b.dataset.submit === 'yes';
+            var selectedOutcome = yes ? modal.querySelector('input[name="tf-outcome"]:checked') : null;
+            var outcome = selectedOutcome ? selectedOutcome.value : '';
             var body = new URLSearchParams({ attended: yes ? 'yes' : 'no' });
             if (yes) {
                 body.set('note', document.getElementById('tf-yes-note').value);
@@ -153,6 +191,7 @@ Opens by itself once per day; "Later" closes it until tomorrow. The [data-open-f
                     b.disabled = false;
                     if (!data.ok) { msg.textContent = data.message || 'Something went wrong. Please try again.'; return; }
                     step(yes ? 'done-yes' : 'done-no');
+                    showRecommendation(outcome);
                 })
                 .catch(function () { b.disabled = false; msg.textContent = 'Could not send. Check your connection and try again.'; });
         });

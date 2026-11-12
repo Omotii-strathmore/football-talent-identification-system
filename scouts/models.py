@@ -112,6 +112,47 @@ class ScoutPlayerShortlist(models.Model):
         return f'{self.scout.full_name} interested in {self.profile.full_name}'
 
 
+class ScoutPlayerContactRequest(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending player response'),
+        ('guardian_pending', 'Waiting for guardian approval'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+    ]
+
+    scout = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='player_contact_requests',
+    )
+    profile = models.ForeignKey(
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name='scout_contact_requests',
+    )
+    message = models.CharField(max_length=500, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    player_decided_at = models.DateTimeField(blank=True, null=True)
+    guardian_approved_at = models.DateTimeField(blank=True, null=True)
+    guardian_email_sent_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['scout', 'profile'],
+                name='unique_scout_player_contact_request',
+            )
+        ]
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return f'{self.scout.full_name} contact request for {self.profile.full_name}'
+
+
 class ScoutVideoFeedback(models.Model):
     REACTION_CHOICES = [
         ('', 'No reaction'),

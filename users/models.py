@@ -71,6 +71,7 @@ class OneTimeCode(models.Model):
         ('reset', 'Password reset'),
         ('newemail', 'New login email'),
         ('contact', 'Contact email'),
+        ('login', 'Login verification'),
     ]
 
     user = models.ForeignKey('User', on_delete=models.CASCADE, related_name='otps')

@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load football %}
+
+{% block title %}Player Community{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="p-4 p-md-5 mb-4 rounded-4 text-white" style="background:linear-gradient(135deg,#07170d,#0b4d2c 65%,#006b3f)">
+        <p class="text-uppercase small fw-bold mb-1" style="letter-spacing:.14em;color:#f6c453">Talanta Soka</p>
+        <h1 class="h2 fw-bold mb-2">Player Community</h1>
+        <p class="mb-0">Discover players who chose to share their profiles, videos, or progress. Respect each player's privacy and keep all interactions supportive.</p>
+    </div>
+
+    <form method="get" class="row g-2 align-items-end mb-4">
+        <div class="col-md-9">
+            <label for="community-search" class="form-label">Find a player</label>
+            <input id="community-search" name="q" value="{{ search }}" maxlength="80" class="form-control" placeholder="Search by name, position or county">
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-success">Search</button>
+            <a href="{% url 'player_community' %}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+
+    {% if profiles %}
+        <div class="row g-3">
+            {% for profile in profiles %}
+                <div class="col-lg-6">
+                    <article class="card h-100 shadow-sm border-0">
+                        <div class="card-body">
+                            <div class="d-flex align-items-start gap-3 mb-3">
+                                {% if profile.profile_photo %}
+                                    <img src="{{ profile.profile_photo.url }}" alt="{{ profile.full_name }}" class="rounded-circle" style="width:76px;height:76px;object-fit:cover;object-position:{{ profile.photo_position|default:'50% 30%' }}">
+                                {% else %}
+                                    <div class="rounded-circle d-grid place-items-center text-success fw-bold" style="width:76px;height:76px;background:#e8f5ec;font-size:1.8rem;place-items:center">{{ profile.full_name|slice:':1'|upper }}</div>
+                                {% endif %}
+                                <div>
+                                    <h2 class="h5 fw-bold mb-1">{{ profile.full_name }}</h2>
+                                    <p class="text-muted small mb-1">
+                                        {% if profile.category %}{{ profile.category|category_person }} · {% endif %}
+                                        {{ profile.position }} · {{ profile.age }} · {{ profile.location }}
+                                    </p>
+                                    <p class="text-muted small mb-0">Preferred foot: {{ profile.get_preferred_foot_display|default:'Not specified' }}</p>
+                                </div>
+                            </div>
+
+                            {% if profile.share_profile_with_players %}
+                                <p>{{ profile.bio|default:'No bio provided.' }}</p>
+                                {% if profile.current_club %}<p class="small mb-2"><strong>Club:</strong> {{ profile.current_club }}</p>{% endif %}
+                                {% if profile.secondary_position %}<p class="small mb-2"><strong>Also plays:</strong> {{ profile.secondary_position }}</p>{% endif %}
+                                <details class="border rounded-3 p-3 mb-2">
+                                    <summary class="fw-semibold">Videos ({{ profile.videos.all|length }})</summary>
+                                    <div class="pt-2">
+                                        {% for video in profile.videos.all %}
+                                            <div class="border-top pt-2 mt-2">
+                                                <h3 class="h6 mb-1">{{ video.title }}</h3>
+                                                {% if video.description %}<p class="small text-muted">{{ video.description }}</p>{% endif %}
+                                                <video controls preload="metadata" class="w-100 rounded-3" style="max-height:300px">
+                                                    <source src="{{ video.video_file.url }}">
+                                                    Your browser does not support embedded video playback.
+                                                </video>
+                                            </div>
+                                        {% empty %}
+                                            <p class="small text-muted mb-0">No videos shared yet.</p>
+                                        {% endfor %}
+                                    </div>
+                                </details>
+                            {% endif %}
+
+                            {% if profile.share_journey_with_community %}
+                                <details class="border rounded-3 p-3">
+                                    <summary class="fw-semibold">Shared progress</summary>
+                                    <div class="pt-2">
+                                        {% for goal in profile.journey_goals.all %}
+                                            <p class="small mb-1">{% if goal.is_complete %}Completed{% else %}Goal{% endif %}: {{ goal.title }}{% if goal.target_date %} · {{ goal.target_date|date:"M j, Y" }}{% endif %}</p>
+                                        {% empty %}
+                                            <p class="small text-muted mb-1">No goals shared yet.</p>
+                                        {% endfor %}
+                                        {% for checkin in profile.journey_checkins.all|slice:":3" %}
+                                            <div class="border-top mt-2 pt-2 small">
+                                                <strong>{{ checkin.created_at|date:"M j, Y" }}</strong>
+                                                <p class="mb-1">{{ checkin.update }}</p>
+                                                {% if checkin.next_step %}<p class="text-muted mb-0">Next: {{ checkin.next_step }}</p>{% endif %}
+                                            </div>
+                                        {% empty %}
+                                            <p class="small text-muted mb-0">No progress check-ins shared yet.</p>
+                                        {% endfor %}
+                                    </div>
+                                </details>
+                            {% endif %}
+                        </div>
+                    </article>
+                </div>
+            {% endfor %}
+        </div>
+
+        {% if page_obj.has_other_pages %}
+            <nav class="mt-4" aria-label="Community pages">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?q={{ search|urlencode }}&amp;page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+                    <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+                    {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?q={{ search|urlencode }}&amp;page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="text-center rounded-4 border p-5">
+            <div class="display-5" aria-hidden="true">&#9917;</div>
+            <h2 class="h4 fw-bold mt-2">No shared players found</h2>
+            <p class="text-muted mb-0">Players appear here only after they choose to share their profile, videos, or progress. Try another search, or update your own sharing choices in My Profile and your dashboard.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

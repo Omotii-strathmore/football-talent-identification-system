@@ -56,6 +56,25 @@ class TrialFollowUpTests(TestCase):
         self.assertContains(page, 'id="tf-modal"')
         self.assertContains(self.client.get(reverse('player_dashboard')), 'id="tf-modal"')
 
+    def test_successful_application_offers_optional_preparation_videos_once(self):
+        trial = self.trial(deadline=self.today + timedelta(days=7), title='Summer Football Trial')
+        self.client.force_login(self.player)
+
+        response = self.client.post(
+            reverse('apply_opportunity', args=[trial.pk]),
+            {'motivation': 'I am ready to play.'},
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Application sent for Summer Football Trial')
+        self.assertContains(response, 'https://www.youtube.com/watch?v=FuXv1fImaFM')
+        self.assertContains(response, 'https://www.youtube.com/watch?v=jyxM2FZNeiw')
+        self.assertEqual(Application.objects.filter(player=self.player, opportunity=trial).count(), 1)
+
+        next_page = self.client.get(reverse('view_opportunities'))
+        self.assertNotContains(next_page, 'Application sent for Summer Football Trial')
+
     def test_player_answers_yes_or_no_with_a_reason(self):
         application = self.apply(self.trial(deadline=self.today - timedelta(days=1)))
         url = reverse('application_attendance', args=[application.id])
@@ -71,6 +90,18 @@ class TrialFollowUpTests(TestCase):
         page = self.client.get(reverse('my_applications'))
         self.assertContains(page, 'You went!')
         self.assertNotContains(page, 'id="tf-modal"')
+
+    def test_trial_followup_offers_outcome_specific_video_resources(self):
+        self.apply(self.trial(deadline=self.today - timedelta(days=1)))
+        self.client.force_login(self.player)
+        response = self.client.get(reverse('my_applications'))
+
+        self.assertContains(response, 'How did it feel?')
+        self.assertContains(response, 'value="not_as_hoped"')
+        self.assertContains(response, 'data-outcome="not_as_hoped"')
+        self.assertContains(response, 'https://www.youtube.com/watch?v=6G_EWIBUUMI')
+        self.assertContains(response, 'https://www.youtube.com/watch?v=FuXv1fImaFM')
+        self.assertContains(response, 'https://www.youtube.com/watch?v=jyxM2FZNeiw')
 
     def test_no_answers_before_the_day_or_for_someone_else(self):
         early = self.apply(self.trial(deadline=self.today + timedelta(days=1)))

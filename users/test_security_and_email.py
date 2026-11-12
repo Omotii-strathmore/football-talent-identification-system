@@ -1,7 +1,7 @@
 import json
 import re
 import tempfile
-from datetime import date
+from datetime import date, timedelta
 from types import SimpleNamespace
 from unittest import mock
 
@@ -9,6 +9,7 @@ from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from players.models import PlayerProfile
 from scouts.models import Scout
@@ -41,6 +42,51 @@ class LoginAndCodeLimitTests(TestCase):
             self.client.post(reverse('login'), {'email': 'amani@gmail.com', 'password': 'wrong'})
         response = self.client.post(reverse('login'), {'email': 'amani@gmail.com', 'password': 'Talanta#2026'})
         self.assertEqual(response.status_code, 302)
+
+    def test_active_login_requires_a_valid_email_code_and_code_cannot_be_replayed(self):
+        PlayerProfile.objects.create(
+            user=self.user,
+            full_name='Amani Otieno',
+            age=22,
+            position='Forward',
+            location='Nairobi',
+        )
+        response = self.client.post(reverse('login'), {
+            'email': 'amani@gmail.com',
+            'password': 'Talanta#2026',
+        })
+        self.assertRedirects(response, reverse('verify_otp'), fetch_redirect_response=False)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        otp = OneTimeCode.objects.get(user=self.user, purpose='login', used=False)
+
+        response = self.client.post(reverse('verify_otp'), {'code': otp.code})
+        self.assertRedirects(response, reverse('player_dashboard'), fetch_redirect_response=False)
+        self.assertIn('_auth_user_id', self.client.session)
+        self.client.logout()
+
+        response = self.client.post(reverse('verify_otp'), {'code': otp.code})
+        self.assertRedirects(response, reverse('login'), fetch_redirect_response=False)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_expired_login_code_does_not_authenticate(self):
+        PlayerProfile.objects.create(
+            user=self.user,
+            full_name='Amani Otieno',
+            age=22,
+            position='Forward',
+            location='Nairobi',
+        )
+        self.client.post(reverse('login'), {
+            'email': 'amani@gmail.com',
+            'password': 'Talanta#2026',
+        })
+        otp = OneTimeCode.objects.get(user=self.user, purpose='login', used=False)
+        otp.expires_at = timezone.now() - timedelta(seconds=1)
+        otp.save(update_fields=['expires_at'])
+
+        response = self.client.post(reverse('verify_otp'), {'code': otp.code})
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn('_auth_user_id', self.client.session)
 
     def test_verification_code_guessing_is_stopped(self):
         self.user.is_active = False
@@ -121,6 +167,15 @@ class EmailChangeTests(TestCase):
         self.post(action='contact_verify', code=latest_code('amani.contact@gmail.com'))
         self.profile.refresh_from_db()
         self.assertIsNotNone(self.profile.contact_email_verified_at)
+        self.assertNotContains(scout.get(reverse('scout_player_directory')), 'amani.contact@gmail.com')
+        scout.post(reverse('scout_request_player_contact'), {
+            'profile_id': self.profile.id,
+            'redirect_to': reverse('scout_player_directory'),
+        })
+        self.client.post(
+            reverse('player_contact_request_respond', args=[self.profile.scout_contact_requests.get().id]),
+            {'decision': 'accept'},
+        )
         self.assertContains(scout.get(reverse('scout_player_directory')), 'amani.contact@gmail.com')
 
     def test_contact_email_same_as_login_email_is_verified_at_once(self):

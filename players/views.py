@@ -1,19 +1,30 @@
 from datetime import timedelta
+import logging
 
 from django import forms
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
+from django.core import signing
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, render, redirect
-from django.utils import timezone
+from django.urls import reverse
+from django.utils import timezone, dateparse
 from django.views.decorators.http import require_POST
+from users.emails import send_branded_email
 
 from opportunities.models import Application
 from players.forms import PlayerProfileForm, PlayerVideoForm
-from players.guardian import can_resend, mask_email, profile_from_token, send_guardian_email
-from players.models import PlayerProfile, PlayerVideo
+from players.guardian import can_resend, mask_email, profile_from_token, send_guardian_email, visible_to_scouts_q
+from players.models import PlayerProfile, PlayerVideo, PlayerJourneyGoal, PlayerJourneyCheckIn
 from opportunities.views import pending_followup
 from players.badges import player_badges
-from scouts.models import FairPlayAward, ScoutVideoFeedback
+from scouts.models import FairPlayAward, ScoutVideoFeedback, ScoutPlayerContactRequest
+
+CONTACT_REQUEST_TOKEN_SALT = 'talanta-soka.guardian-contact-request'
+CONTACT_REQUEST_TOKEN_MAX_AGE = 60 * 60 * 24 * 7
+logger = logging.getLogger(__name__)
 
 def _profile_strength(profile, videos_count):
     """How complete a profile is (0-100), and the most useful next step."""
@@ -52,6 +63,10 @@ def dashboard(request):
 
     unread_feedback_count = feedback_entries.filter(is_seen=False).count() if profile else 0
     videos = profile.videos.all() if profile else []
+    last_checkin = profile.journey_checkins.first() if profile else None
+    checkin_reference = last_checkin.created_at if last_checkin else (profile.created_at if profile else None)
+    next_checkin_at = checkin_reference + timedelta(days=90) if checkin_reference else None
+    journey_checkin_due = bool(next_checkin_at and timezone.now() >= next_checkin_at)
 
     if unread_feedback_count:
         messages.info(request, f'You have {unread_feedback_count} unread scout feedback item(s).')
@@ -77,7 +92,236 @@ def dashboard(request):
             ),
             'guardian_pending': bool(profile and profile.needs_guardian_approval),
             'guardian_email_masked': mask_email(profile.guardian_email) if profile and profile.guardian_email else '',
+            'journey_goals': profile.journey_goals.all() if profile else [],
+            'journey_checkins': profile.journey_checkins.all()[:5] if profile else [],
+            'journey_checkin_due': journey_checkin_due,
+            'next_checkin_at': next_checkin_at,
+            'contact_requests': (
+                ScoutPlayerContactRequest.objects.select_related('scout', 'scout__scout_profile')
+                .filter(profile=profile).order_by('-updated_at')
+                if profile else []
+            ),
         }
+    )
+
+
+@login_required
+def player_community(request):
+    if request.user.role != 'player':
+        messages.error(request, 'The Player Community is available to signed-in players.')
+        return redirect('scout_dashboard')
+    search = request.GET.get('q', '').strip()[:80]
+    profiles = (
+        PlayerProfile.objects.select_related('user')
+        .prefetch_related('videos', 'journey_goals', 'journey_checkins')
+        .filter(visible_to_scouts_q())
+        .filter(Q(share_profile_with_players=True) | Q(share_journey_with_community=True))
+        .exclude(user=request.user)
+        .order_by('full_name', 'id')
+    )
+    if search:
+        profiles = profiles.filter(
+            Q(full_name__icontains=search)
+            | Q(position__icontains=search)
+            | Q(location__icontains=search)
+        )
+    page_obj = Paginator(profiles, 12).get_page(request.GET.get('page'))
+    return render(
+        request,
+        'players/player_community.html',
+        {
+            'profiles': page_obj.object_list,
+            'page_obj': page_obj,
+            'search': search,
+        },
+    )
+
+
+@login_required
+@require_POST
+def journey_update(request):
+    if request.user.role != 'player':
+        messages.error(request, 'Only players can update a player journey.')
+        return redirect('scout_dashboard')
+    profile = PlayerProfile.objects.filter(user=request.user).first()
+    if not profile:
+        messages.error(request, 'Complete registration before updating your journey.')
+        return redirect('complete_profile')
+
+    action = request.POST.get('action', '')
+    if action == 'add_goal':
+        title = request.POST.get('title', '').strip()
+        target_date_value = request.POST.get('target_date', '').strip()
+        target_date = dateparse.parse_date(target_date_value) if target_date_value else None
+        if not title or len(title) > 180:
+            messages.error(request, 'Enter a goal of up to 180 characters.')
+        elif target_date_value and not target_date:
+            messages.error(request, 'Enter a valid target date.')
+        else:
+            PlayerJourneyGoal.objects.create(profile=profile, title=title, target_date=target_date)
+            messages.success(request, 'Your football goal was added.')
+    elif action == 'check_in':
+        update = request.POST.get('update', '').strip()
+        next_step = request.POST.get('next_step', '').strip()
+        if not update or len(update) > 1200 or len(next_step) > 300:
+            messages.error(request, 'Write an update (up to 1,200 characters) and keep your next step under 300 characters.')
+        else:
+            PlayerJourneyCheckIn.objects.create(profile=profile, update=update, next_step=next_step)
+            messages.success(request, 'Your progress check-in was saved.')
+    elif action == 'complete_goal':
+        goal = get_object_or_404(PlayerJourneyGoal, pk=request.POST.get('goal_id'), profile=profile)
+        goal.is_complete = not goal.is_complete
+        goal.save(update_fields=['is_complete', 'updated_at'])
+        messages.success(request, 'Goal progress updated.')
+    elif action == 'set_visibility':
+        visibility = request.POST.get('visibility')
+        if visibility not in ('private', 'public'):
+            messages.error(request, 'Choose private or public progress visibility.')
+        else:
+            profile.share_journey_with_community = visibility == 'public'
+            profile.save(update_fields=['share_journey_with_community'])
+            visibility_label = 'signed-in players and verified scouts' if visibility == 'public' else 'only you'
+            messages.success(request, f'Your progress is now visible to {visibility_label}.')
+    else:
+        messages.error(request, 'Choose a valid journey update.')
+    return redirect('player_dashboard')
+
+
+def _send_contact_request_to_guardian(request, contact_request):
+    profile = contact_request.profile
+    token = signing.dumps(
+        {'r': contact_request.pk, 'e': profile.guardian_email.lower()},
+        salt=CONTACT_REQUEST_TOKEN_SALT,
+    )
+    link = request.build_absolute_uri(reverse('guardian_contact_review', args=[token]))
+    scout_name = contact_request.scout.full_name
+    organization = contact_request.scout.scout_profile.organization
+    subject = f'Parent approval requested for {profile.full_name} on Talanta Soka'
+    text = (
+        f'Hello {profile.guardian_name or "Parent or guardian"},\n\n'
+        f'{profile.full_name} has accepted a contact request from {scout_name}, with {organization}.\n\n'
+        'Please review this request and approve or decline whether the scout may receive the '
+        'player contact details they have chosen to share:\n'
+        f'{link}\n\n'
+        'The scout will not receive contact details unless you approve. This approval is separate '
+        'from the permission for scouts to view the player profile.\n\n'
+        f'Questions? Contact {settings.SUPPORT_EMAIL}.\n\nTalanta Soka'
+    )
+    try:
+        send_branded_email(
+            subject,
+            text,
+            'guardian_contact_request.html',
+            {
+                'link': link,
+                'guardian_name': profile.guardian_name or 'Parent or guardian',
+                'player_name': profile.full_name,
+                'scout_name': scout_name,
+                'organization': organization,
+                'message': contact_request.message,
+            },
+            [profile.guardian_email],
+            banner='team',
+        )
+    except Exception:
+        logger.exception(
+            'Failed to send guardian contact-request approval for request %s', contact_request.pk
+        )
+        return False
+    contact_request.guardian_email_sent_at = timezone.now()
+    contact_request.save(update_fields=['guardian_email_sent_at', 'updated_at'])
+    return True
+
+
+@login_required
+@require_POST
+def respond_to_contact_request(request, request_id):
+    if request.user.role != 'player':
+        messages.error(request, 'Only players can respond to contact requests.')
+        return redirect('scout_dashboard')
+    profile = PlayerProfile.objects.filter(user=request.user).first()
+    if not profile:
+        messages.error(request, 'Complete your player profile before responding.')
+        return redirect('complete_profile')
+    contact_request = get_object_or_404(
+        ScoutPlayerContactRequest.objects.select_related('scout', 'scout__scout_profile'),
+        pk=request_id,
+        profile=profile,
+    )
+    decision = request.POST.get('decision')
+    if decision == 'resend' and contact_request.status == 'guardian_pending':
+        sent_at = contact_request.guardian_email_sent_at
+        if sent_at and (timezone.now() - sent_at).total_seconds() < 120:
+            messages.info(request, 'Please wait a moment before resending the guardian approval email.')
+        elif _send_contact_request_to_guardian(request, contact_request):
+            messages.success(request, 'A new guardian approval email was sent.')
+        else:
+            messages.error(request, 'We could not resend the guardian approval email. Please try again later or contact support.')
+        return redirect('player_dashboard')
+    if contact_request.status != 'pending':
+        messages.error(request, 'This contact request is no longer awaiting your response.')
+        return redirect('player_dashboard')
+    if decision == 'decline':
+        contact_request.status = 'declined'
+        contact_request.player_decided_at = timezone.now()
+        contact_request.save(update_fields=['status', 'player_decided_at', 'updated_at'])
+        messages.success(request, 'You declined the scout contact request. No contact details were shared.')
+    elif decision == 'accept':
+        if profile.is_minor and not profile.guardian_email:
+            messages.error(request, 'Add your parent or guardian email to your profile before accepting this request.')
+            return redirect('player_dashboard')
+        contact_request.player_decided_at = timezone.now()
+        if profile.is_minor:
+            contact_request.status = 'guardian_pending'
+            contact_request.save(update_fields=['status', 'player_decided_at', 'updated_at'])
+            if _send_contact_request_to_guardian(request, contact_request):
+                messages.success(request, 'Your parent or guardian has been emailed to approve the contact request.')
+            else:
+                messages.error(request, 'The request was saved, but we could not email your parent or guardian. Please try again later or contact support.')
+        else:
+            contact_request.status = 'accepted'
+            contact_request.save(update_fields=['status', 'player_decided_at', 'updated_at'])
+            messages.success(request, 'You accepted the request. The scout can see your contact details only if you have also enabled contact sharing in your profile.')
+    else:
+        messages.error(request, 'Choose whether to accept or decline the request.')
+    return redirect('player_dashboard')
+
+
+def guardian_contact_review(request, token):
+    try:
+        token_data = signing.loads(
+            token,
+            salt=CONTACT_REQUEST_TOKEN_SALT,
+            max_age=CONTACT_REQUEST_TOKEN_MAX_AGE,
+        )
+    except signing.BadSignature:
+        messages.error(request, 'This approval link is invalid or has expired.')
+        return redirect('home')
+    contact_request = (
+        ScoutPlayerContactRequest.objects.select_related('profile', 'scout', 'scout__scout_profile')
+        .filter(pk=token_data.get('r'), status='guardian_pending')
+        .first()
+    )
+    if not contact_request or contact_request.profile.guardian_email.lower() != token_data.get('e'):
+        messages.error(request, 'This contact approval request is no longer available.')
+        return redirect('home')
+    if request.method == 'POST':
+        if request.POST.get('decision') == 'accept':
+            contact_request.status = 'accepted'
+            contact_request.guardian_approved_at = timezone.now()
+            contact_request.save(update_fields=['status', 'guardian_approved_at', 'updated_at'])
+            messages.success(request, 'You approved the contact request. The scout can only see contact details the player has chosen to share.')
+        elif request.POST.get('decision') == 'decline':
+            contact_request.status = 'declined'
+            contact_request.save(update_fields=['status', 'updated_at'])
+            messages.success(request, 'You declined the contact request. No contact details were shared.')
+        else:
+            messages.error(request, 'Choose whether to approve or decline.')
+        return redirect('home')
+    return render(
+        request,
+        'players/guardian_contact_review.html',
+        {'contact_request': contact_request},
     )
 
 

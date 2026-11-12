@@ -191,9 +191,123 @@
             <a href="{% url 'upload_video' %}" id="tour-upload-video" class="p-tile green"><span class="ic">&#127909;</span><span><strong>Upload Video ({{ videos_count }})</strong><small>Show scouts your best moments</small></span></a>
             <a href="{% url 'view_opportunities' %}" id="tour-view-opportunities" class="p-tile gold"><span class="ic">&#127942;</span><span><strong>View Opportunities</strong><small>Open trials and tournaments</small></span></a>
             <a href="{% url 'my_applications' %}" id="tour-my-applications" class="p-tile blue"><span class="ic">&#128203;</span><span><strong>My Applications ({{ applications_count }})</strong><small>Track every application</small></span></a>
+            <a href="{% url 'player_community' %}" class="p-tile green"><span class="ic">&#128101;</span><span><strong>Player Community</strong><small>Discover players who chose to share</small></span></a>
         </div>
     </div>
     </div>
+
+    {% if profile %}
+    <section class="p-card" id="player-journey">
+        <h4>&#9917; My development journey</h4>
+        <p class="text-muted small">Set your own goals and keep a record of how you are progressing, at every age and stage.</p>
+
+        {% if journey_checkin_due %}
+            <div class="alert alert-warning py-2">
+                <strong>Your quarterly check-in is due.</strong> What have you been working on, and what is your next step?
+            </div>
+        {% elif next_checkin_at %}
+            <p class="small text-muted">Next quarterly check-in due {{ next_checkin_at|date:"M j, Y" }}.</p>
+        {% endif %}
+
+        <div class="row g-3">
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Add a progress check-in</h5>
+                <form method="post" action="{% url 'player_journey_update' %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="check_in">
+                    <label class="form-label" for="journey-update">What have you worked on or achieved?</label>
+                    <textarea id="journey-update" name="update" class="form-control mb-2" rows="3" maxlength="1200" required></textarea>
+                    <label class="form-label" for="journey-next-step">What is your next step? (optional)</label>
+                    <input id="journey-next-step" name="next_step" class="form-control mb-2" maxlength="300">
+                    <button class="btn btn-success btn-sm" type="submit">Save check-in</button>
+                </form>
+            </div>
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Set a football goal</h5>
+                <form method="post" action="{% url 'player_journey_update' %}" class="row g-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_goal">
+                    <div class="col-12"><label class="form-label" for="journey-goal">Goal</label><input id="journey-goal" name="title" class="form-control" maxlength="180" required placeholder="e.g. Improve my weaker-foot passing"></div>
+                    <div class="col-7"><label class="form-label" for="journey-target-date">Target date (optional)</label><input id="journey-target-date" name="target_date" type="date" class="form-control"></div>
+                    <div class="col-5 d-flex align-items-end"><button class="btn btn-outline-success btn-sm" type="submit">Add goal</button></div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row g-3 mt-2">
+            <div class="col-lg-6">
+                <h5 class="fw-bold">My goals</h5>
+                {% for goal in journey_goals %}
+                    <div class="d-flex justify-content-between align-items-center gap-2 border rounded-3 p-2 mb-2">
+                        <span class="{% if goal.is_complete %}text-decoration-line-through text-muted{% endif %}">{{ goal.title }}{% if goal.target_date %}<small class="d-block text-muted">Target {{ goal.target_date|date:"M j, Y" }}</small>{% endif %}</span>
+                        <form method="post" action="{% url 'player_journey_update' %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="complete_goal">
+                            <input type="hidden" name="goal_id" value="{{ goal.id }}">
+                            <button class="btn btn-sm {% if goal.is_complete %}btn-outline-secondary{% else %}btn-outline-success{% endif %}" type="submit">{% if goal.is_complete %}Reopen{% else %}Complete{% endif %}</button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <p class="small text-muted">Your goals will appear here.</p>
+                {% endfor %}
+            </div>
+            <div class="col-lg-6">
+                <h5 class="fw-bold">Recent check-ins</h5>
+                {% for checkin in journey_checkins %}
+                    <div class="border rounded-3 p-2 mb-2">
+                        <strong class="small">{{ checkin.created_at|date:"M j, Y" }}</strong>
+                        <p class="small mb-1">{{ checkin.update }}</p>
+                        {% if checkin.next_step %}<p class="small text-muted mb-0">Next: {{ checkin.next_step }}</p>{% endif %}
+                    </div>
+                {% empty %}
+                    <p class="small text-muted">Your progress updates will appear here.</p>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="border rounded-3 p-3 mt-3">
+            <h5 class="fw-bold mb-1">Progress visibility</h5>
+            <p class="small text-muted">Private means only you can see your goals and check-ins. Public means signed-in players and verified scouts can see them; people without an account cannot.</p>
+            <form method="post" action="{% url 'player_journey_update' %}" class="d-flex flex-wrap gap-3 align-items-center">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="set_visibility">
+                <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="visibility" value="private" {% if not profile.share_journey_with_community %}checked{% endif %}> Private — eyes only</label>
+                <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="visibility" value="public" {% if profile.share_journey_with_community %}checked{% endif %}> Public — community</label>
+                <button class="btn btn-outline-success btn-sm" type="submit">Save visibility</button>
+            </form>
+            <p class="small text-muted mt-2 mb-0">Your profile and videos have a separate opt-in in <a href="{% url 'player_profile' %}?edit=true">My Profile</a>. Guardian approval is still required for players under 18.</p>
+        </div>
+    </section>
+
+    {% if contact_requests %}
+    <section class="p-card" id="contact-requests">
+        <h4>Scout contact requests</h4>
+        <p class="text-muted small">You decide whether to connect. Scouts cannot see your contact details before you accept, and a parent or guardian must also approve for players under 18.</p>
+        {% for contact_request in contact_requests %}
+            <div class="border rounded-3 p-3 mb-2">
+                <strong>{{ contact_request.scout.full_name }}</strong>
+                {% if contact_request.scout.scout_profile %}<span class="text-muted"> · {{ contact_request.scout.scout_profile.organization }}</span>{% endif %}
+                <p class="small mb-2">{{ contact_request.message|default:"The scout did not add a message." }}</p>
+                {% if contact_request.status == 'pending' %}
+                    <div class="d-flex gap-2">
+                        <form method="post" action="{% url 'player_contact_request_respond' contact_request.id %}">{% csrf_token %}<button class="btn btn-success btn-sm" name="decision" value="accept">Accept</button></form>
+                        <form method="post" action="{% url 'player_contact_request_respond' contact_request.id %}">{% csrf_token %}<button class="btn btn-outline-secondary btn-sm" name="decision" value="decline">Decline</button></form>
+                    </div>
+                {% elif contact_request.status == 'guardian_pending' %}
+                    <span class="badge text-bg-warning">Waiting for your parent or guardian</span>
+                    <form method="post" action="{% url 'player_contact_request_respond' contact_request.id %}" class="mt-2">
+                        {% csrf_token %}
+                        <button class="btn btn-outline-secondary btn-sm" name="decision" value="resend">Resend guardian approval email</button>
+                    </form>
+                {% elif contact_request.status == 'accepted' %}
+                    <span class="badge text-bg-success">Accepted{% if profile.is_minor %} and guardian approved{% endif %}</span>
+                {% else %}
+                    <span class="badge text-bg-secondary">Declined</span>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </section>
+    {% endif %}
+    {% endif %}
 
     {% if my_badges %}
         <section class="p-card" id="my-badges">

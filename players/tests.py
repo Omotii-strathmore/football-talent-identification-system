@@ -4,7 +4,7 @@ from django.urls import reverse
 
 from players.models import PlayerProfile, PlayerVideo
 from scouts.models import Scout, ScoutVideoFeedback
-from users.models import User
+from users.models import OneTimeCode, User
 
 
 class FeedbackAndAuthFlowTests(TestCase):
@@ -26,11 +26,13 @@ class FeedbackAndAuthFlowTests(TestCase):
         response = self.client.post(
             reverse('login'),
             {'email': user.email, 'password': 'StrongPass123'},
-            follow=True,
         )
 
-        self.assertRedirects(response, reverse('player_dashboard'))
-        self.assertContains(response, 'Login successful')
+        self.assertRedirects(response, reverse('verify_otp'), fetch_redirect_response=False)
+        self.assertNotIn('_auth_user_id', self.client.session)
+        code = OneTimeCode.objects.get(user=user, purpose='login', used=False)
+        response = self.client.post(reverse('verify_otp'), {'code': code.code})
+        self.assertRedirects(response, reverse('player_dashboard'), fetch_redirect_response=False)
 
     def test_player_can_edit_feedback_response(self):
         player = User.objects.create_user(

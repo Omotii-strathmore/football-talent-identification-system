@@ -19,6 +19,11 @@ class PlayerProfile(models.Model):
         ('Midfielder', 'Midfielder'),
         ('Forward', 'Forward'),
     )
+    PREFERRED_FOOT_CHOICES = (
+        ('right', 'Right'),
+        ('left', 'Left'),
+        ('both', 'Both'),
+    )
 
     user = models.OneToOneField(
         User,
@@ -53,6 +58,12 @@ class PlayerProfile(models.Model):
         choices=POSITION_CHOICES,
         blank=True,
         help_text='Secondary playing position (optional).'
+    )
+    preferred_foot = models.CharField(
+        max_length=10,
+        choices=PREFERRED_FOOT_CHOICES,
+        blank=True,
+        default='',
     )
     height_cm = models.PositiveIntegerField(
         blank=True,
@@ -131,6 +142,14 @@ class PlayerProfile(models.Model):
         default=False,
         help_text='Allow scouts to view your communication options.'
     )
+    share_profile_with_players = models.BooleanField(
+        default=False,
+        help_text='Allow other signed-in players to view your player profile and videos.'
+    )
+    share_journey_with_community = models.BooleanField(
+        default=False,
+        help_text='Let signed-in players and verified scouts view your progress updates and goals.'
+    )
 
     created_at = models.DateTimeField(
         auto_now_add=True
@@ -162,6 +181,46 @@ class PlayerProfile(models.Model):
 
     def __str__(self):
         return self.full_name
+
+
+class PlayerJourneyGoal(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    profile = models.ForeignKey(
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name='journey_goals',
+    )
+    title = models.CharField(max_length=180)
+    target_date = models.DateField(blank=True, null=True)
+    is_complete = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['is_complete', 'target_date', '-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class PlayerJourneyCheckIn(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    profile = models.ForeignKey(
+        PlayerProfile,
+        on_delete=models.CASCADE,
+        related_name='journey_checkins',
+    )
+    update = models.TextField(max_length=1200)
+    next_step = models.CharField(max_length=300, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'{self.profile.full_name} check-in ({self.created_at:%Y-%m-%d})'
 
 
 class PlayerVideo(models.Model):

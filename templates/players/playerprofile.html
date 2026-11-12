@@ -400,6 +400,12 @@
                         </div>
                         <div class="detail-row">
                             <div>
+                                <p class="detail-label">Preferred foot</p>
+                                <p class="detail-value">{{ profile.get_preferred_foot_display|default:'Not specified' }}</p>
+                            </div>
+                        </div>
+                        <div class="detail-row">
+                            <div>
                                 <p class="detail-label">Current club</p>
                                 <p class="detail-value">{{ profile.current_club|default:'Not specified' }}</p>
                             </div>

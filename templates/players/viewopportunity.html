@@ -62,6 +62,12 @@
 	.btn-apply:hover { background: #00552f; color: #fff; }
 	.applied { display: flex; align-items: center; gap: 10px; background: #f0fdf4; color: #14532d; border-radius: 12px; padding: 10px 14px; font-size: .9rem; }
 	.applied a { font-weight: 700; color: #0b4d2c; }
+	.prep-resources { position: relative; margin: 0 0 22px; padding: 20px 22px; border: 1px solid #cfe4d5; border-left: 5px solid #006b3f; border-radius: 16px; background: linear-gradient(120deg, #f1faf3, #fffaf0); box-shadow: 0 10px 24px rgba(11,77,44,.08); }
+	.prep-resources h2 { margin: 0 0 6px; color: #0b4d2c; font-size: 1.15rem; font-weight: 800; }
+	.prep-resources p { margin: 0 0 12px; color: #475569; }
+	.prep-links { display: flex; flex-wrap: wrap; gap: 10px; }
+	.prep-links a { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border: 1px solid #b8d7c1; border-radius: 999px; background: #fff; color: #0b4d2c; font-size: .9rem; font-weight: 700; text-decoration: none; }
+	.prep-links a:hover { border-color: #006b3f; background: #edf8f1; }
 	.not-for-you { background: #f8fafc; color: #475569; border-radius: 12px; padding: 10px 14px; font-size: .88rem; margin: 0; }
 	.trial__report { font-size: .78rem; margin: 12px 0 0; }
 	.trial__report a { color: #94a3b8; text-decoration: none; }
@@ -96,6 +102,17 @@
 			<a href="{% url 'my_applications' %}" class="btn btn-gold">&#128203; My Applications ({{ applied_ids|length }})</a>
 		</div>
 	</section>
+
+	{% if prep_opportunity %}
+		<aside class="prep-resources" aria-labelledby="prep-title">
+			<h2 id="prep-title">Application sent for {{ prep_opportunity.title }} &#9989;</h2>
+			<p>Your next opportunity is on the horizon. If you like, get ready with these optional tips from a former scout:</p>
+			<div class="prep-links">
+				<a href="https://www.youtube.com/watch?v=FuXv1fImaFM" target="_blank" rel="noopener noreferrer">&#9654; What scouts look for</a>
+				<a href="https://www.youtube.com/watch?v=jyxM2FZNeiw" target="_blank" rel="noopener noreferrer">&#9654; Common trial mistakes</a>
+			</div>
+		</aside>
+	{% endif %}
 
 	<div class="ts-filters">
 		<div class="ts-pills" aria-label="Available or past trials">

@@ -10,12 +10,19 @@ from players.models import PlayerProfile, PlayerVideo
 from scouts.forms import ScoutEditDetailsForm, ScoutResubmitForm
 from players.guardian import visible_to_scouts_q
 from players.badges import can_award_fair_play, player_badges, scout_badges
-from scouts.models import FairPlayAward, Scout, ScoutPlayerShortlist, ScoutVideoFeedback
+from scouts.models import (
+    FairPlayAward,
+    Scout,
+    ScoutPlayerContactRequest,
+    ScoutPlayerShortlist,
+    ScoutVideoFeedback,
+)
 
 
 def _scout_category(request):
     """'stars' or 'starlets' for scouts who look for one category; None for scouts who look for both."""
-    value = getattr(getattr(request.user, 'scout_profile', None), 'scouts_for', 'both') or 'both'
+    scout_profile = Scout.objects.filter(user_id=request.user.pk).first()
+    value = getattr(scout_profile, 'scouts_for', 'both') or 'both'
     return value if value in ('stars', 'starlets') else None
 
 
@@ -48,7 +55,10 @@ def dashboard(request):
         messages.error(request, 'Only scouts can access the scout dashboard.')
         return redirect('player_dashboard')
 
-    scout_profile = request.user.scout_profile
+    scout_profile = Scout.objects.filter(user_id=request.user.pk).first()
+    if scout_profile is None:
+        messages.error(request, 'Your scout profile is missing. Please complete it before continuing.')
+        return redirect('complete_profile')
     first_name = (request.user.full_name or 'Scout').split()[0]
     posted_opportunities = Opportunity.objects.filter(scout=request.user)
     active_opportunities = posted_opportunities.filter(is_active=True)
@@ -113,7 +123,7 @@ def player_directory(request):
     # Players under 18 stay hidden until a parent or guardian approves.
     profiles = (
         PlayerProfile.objects.select_related('user')
-        .prefetch_related('videos', 'fair_play_awards')
+        .prefetch_related('videos', 'fair_play_awards', 'journey_goals', 'journey_checkins')
         .annotate(
             application_total=Count('user__opportunity_applications', distinct=True),
             reply_total=Count('videos__video_feedback_entries', distinct=True,
@@ -140,6 +150,12 @@ def player_directory(request):
     selected_location = request.GET.get('location', '').strip()
     selected_age = request.GET.get('age', '').strip()
     selected_age_range = request.GET.get('age_range', '').strip()
+    preferred_foot_param = request.GET.get('preferred_foot', '').strip()
+    selected_preferred_foot = preferred_foot_param
+    if selected_preferred_foot not in dict(PlayerProfile.PREFERRED_FOOT_CHOICES):
+        if selected_preferred_foot:
+            messages.error(request, 'Select right, left, or both for preferred foot.')
+        selected_preferred_foot = ''
 
     # Default to specialization-matched position for non-general scouts until they choose another.
     if not selected_position and recommended_position and not position_param_present:
@@ -147,6 +163,9 @@ def player_directory(request):
 
     if selected_position:
         profiles = profiles.filter(position=selected_position)
+
+    if selected_preferred_foot:
+        profiles = profiles.filter(preferred_foot=selected_preferred_foot)
 
     if selected_location:
         profiles = profiles.filter(location__icontains=selected_location)
@@ -199,6 +218,13 @@ def player_directory(request):
         award.profile_id: award
         for award in FairPlayAward.objects.filter(scout=request.user, profile_id__in=profile_ids)
     }
+    contact_requests = {
+        row.profile_id: row
+        for row in ScoutPlayerContactRequest.objects.select_related('scout', 'scout__scout_profile').filter(
+            scout=request.user,
+            profile_id__in=profile_ids,
+        )
+    }
     for profile in profiles:
         profile.is_shortlisted = profile.id in shortlisted_ids
         awards = list(profile.fair_play_awards.all())
@@ -210,6 +236,13 @@ def player_directory(request):
         ]
         profile.my_fair_play = my_awards.get(profile.id)
         profile.can_fair_play = profile.is_shortlisted or profile.id in my_awards or can_award_fair_play(request.user, profile)
+        profile.contact_request = contact_requests.get(profile.id)
+        profile.can_share_contact_with_scout = bool(
+            profile.contact_request
+            and profile.contact_request.status == 'accepted'
+            and profile.consent_to_share_contact
+            and (not profile.is_minor or profile.contact_request.guardian_approved_at)
+        )
     if fair_play_only:
         # Only players who have unlocked the badge: two scouts recognised the same quality.
         profiles = [profile for profile in profiles if any(b['key'] == 'fair_play' for b in profile.earned_badges)]
@@ -229,12 +262,44 @@ def player_directory(request):
             'selected_location': selected_location,
             'selected_age': selected_age,
             'selected_age_range': selected_age_range,
+            'selected_preferred_foot': selected_preferred_foot,
+            'preferred_foot_choices': PlayerProfile.PREFERRED_FOOT_CHOICES,
             'recommended_position': recommended_position,
             'is_general_scout': is_general_scout,
             'fair_play_only': fair_play_only,
             'fair_play_qualities': FairPlayAward.QUALITY_CHOICES,
         }
     )
+
+
+@login_required
+def request_player_contact(request):
+    if request.method != 'POST':
+        return redirect('scout_player_directory')
+    if request.user.role != 'scout':
+        messages.error(request, 'Only scouts can request player contact.')
+        return redirect('player_dashboard')
+    blocked = _unverified_scout_redirect(request)
+    if blocked:
+        return blocked
+    profile = get_object_or_404(
+        PlayerProfile.objects.filter(_players_q(request)),
+        pk=request.POST.get('profile_id'),
+    )
+    contact_request, created = ScoutPlayerContactRequest.objects.get_or_create(
+        scout=request.user,
+        profile=profile,
+        defaults={'message': request.POST.get('message', '').strip()[:500]},
+    )
+    if created:
+        messages.success(request, 'Your contact request was sent. The player must accept it before any contact details are shared.')
+    elif contact_request.status == 'declined':
+        messages.info(request, 'The player declined this request. No contact details are available.')
+    elif contact_request.status == 'accepted':
+        messages.info(request, 'This contact request has already been accepted.')
+    else:
+        messages.info(request, 'You already have a pending contact request for this player.')
+    return redirect(_safe_redirect_target(request, 'scout_player_directory'))
 
 
 def _safe_redirect_target(request, fallback_url_name):
@@ -477,9 +542,11 @@ def edit_details(request):
 @login_required
 def resubmit_verification(request):
     """A scout whose documents were rejected uploads new ones; the review starts again."""
-    if request.user.role != 'scout' or not hasattr(request.user, 'scout_profile'):
+    if request.user.role != 'scout':
         return redirect('home')
-    scout_profile = request.user.scout_profile
+    scout_profile = Scout.objects.filter(user_id=request.user.pk).first()
+    if not scout_profile:
+        return redirect('home')
     if scout_profile.verification_status == 'approved':
         messages.info(request, 'Your account is already verified.')
         return redirect('scout_dashboard')

@@ -1,0 +1,11 @@
+{% extends 'emails/base_email.html' %}
+{% block preheader %}Review a scout's request to contact {{ player_name }}.{% endblock %}
+{% block headline %}A parent or guardian decision is needed{% endblock %}
+{% block body %}
+<p style="margin:0 0 16px 0;">Hello {{ guardian_name }},</p>
+<p style="margin:0 0 16px 0;"><strong>{{ player_name }}</strong> has accepted a request from <strong>{{ scout_name }}</strong> at {{ organization }} to connect.</p>
+{% if message %}<p style="margin:0 0 16px 0;">Scout's message: {{ message }}</p>{% endif %}
+<p style="margin:0 0 18px 0;">Please review the request. The scout will not receive any contact details unless you approve, and the player has enabled contact sharing.</p>
+<p style="margin:0 0 20px 0;"><a href="{{ link }}" style="display:inline-block;padding:12px 20px;background:#006b3f;color:#fff;text-decoration:none;border-radius:8px;font-weight:bold;">Review request</a></p>
+<p style="margin:0;color:#5b6b62;font-size:13px;">This approval is separate from permission to let verified scouts view the player's profile. If you did not expect this request, decline it or ignore this email.</p>
+{% endblock %}

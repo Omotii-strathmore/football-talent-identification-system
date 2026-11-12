@@ -279,7 +279,7 @@
         }
 
         .hero-tile {
-            animation:heroImageDrift 18s ease-in-out 1s infinite alternate;
+            animation:heroImageDrift 12s ease-in-out .5s infinite alternate;
         }
 
         @keyframes heroImageDrift {
@@ -513,24 +513,90 @@
         .vision-card h3 { margin-bottom:8px; font-family:var(--font-display); font-size:1.55rem; line-height:1; letter-spacing:.035em; }
         .vision-card p { color:var(--muted); font-size:.88rem; }
 
+        :root[data-theme="light"] .vision {
+            border-color:rgba(0,107,63,.16);
+            background:
+                radial-gradient(ellipse at 50% 0%,rgba(245,196,0,.22),transparent 38%),
+                radial-gradient(ellipse at 8% 78%,rgba(0,107,63,.16),transparent 38%),
+                radial-gradient(ellipse at 94% 62%,rgba(187,22,0,.08),transparent 30%),
+                linear-gradient(125deg,#F8F5E9 0%,#E8F0E7 48%,#FBF3DF 100%);
+        }
+
+        :root[data-theme="light"] .vision::before {
+            width:360px;
+            height:360px;
+            top:-188px;
+            left:calc(50% - 180px);
+            border-color:rgba(0,107,63,.22);
+            background:radial-gradient(circle,rgba(0,107,63,.09),transparent 68%);
+            box-shadow:0 0 0 38px rgba(245,196,0,.09),0 0 0 76px rgba(0,107,63,.055);
+        }
+
+        :root[data-theme="light"] .vision::after {
+            content:'';
+            position:absolute;
+            inset:0;
+            z-index:0;
+            pointer-events:none;
+            background:
+                radial-gradient(ellipse at 50% 48%,transparent 0 18%,rgba(0,107,63,.065) 18.2% 18.5%,transparent 18.7%),
+                linear-gradient(90deg,transparent calc(50% - .5px),rgba(0,107,63,.045) 50%,transparent calc(50% + .5px));
+        }
+
+        :root[data-theme="light"] .vision-heading .eyebrow {
+            color:#006B3F;
+        }
+
+        :root[data-theme="light"] .vision-title {
+            color:#153D2C;
+            text-shadow:0 3px 0 rgba(245,196,0,.2);
+        }
+
+        :root[data-theme="light"] .vision-quote {
+            border-left-color:#006B3F;
+            border-radius:0 14px 14px 0;
+            background:linear-gradient(110deg,rgba(255,255,255,.94),rgba(255,255,255,.76));
+            box-shadow:0 18px 44px rgba(18,55,34,.1);
+        }
+
+        :root[data-theme="light"] .vision-card {
+            border-color:rgba(0,107,63,.16);
+            border-top:3px solid #006B3F;
+            background:rgba(255,255,255,.78);
+            box-shadow:0 12px 30px rgba(18,55,34,.08);
+        }
+
+        :root[data-theme="light"] .vision-card:nth-child(2) { border-top-color:#A47B00; }
+        :root[data-theme="light"] .vision-card:nth-child(3) { border-top-color:#BB1600; }
+        :root[data-theme="light"] .vision-card:nth-child(4) { border-top-color:#006B3F; }
+
+        :root[data-theme="light"] .vision-card .vision-number {
+            color:#806000;
+        }
+
         html.has-scroll-reveal [data-reveal] {
             opacity:0;
-            transform:translateY(22px);
-            transition:opacity .65s ease,transform .65s cubic-bezier(.2,.7,.2,1);
+            transform:translateY(14px);
+            transition:opacity .42s ease,transform .42s cubic-bezier(.2,.7,.2,1);
         }
 
         html.has-scroll-reveal [data-reveal].is-visible { opacity:1; transform:translateY(0); }
         html.has-scroll-reveal .hero-copy > [data-reveal]:nth-child(2),
         html.has-scroll-reveal .ss-grid > [data-reveal]:nth-child(2),
-        html.has-scroll-reveal .offer-grid > [data-reveal]:nth-child(2) { transition-delay:120ms; }
+        html.has-scroll-reveal .offer-grid > [data-reveal]:nth-child(2) { transition-delay:80ms; }
         html.has-scroll-reveal .hero-copy > [data-reveal]:nth-child(3),
         html.has-scroll-reveal .mini-cards > [data-reveal]:nth-child(2),
         html.has-scroll-reveal .vision-grid [data-reveal]:nth-child(2),
-        html.has-scroll-reveal .ss-grid > [data-reveal]:nth-child(3) { transition-delay:240ms; }
+        html.has-scroll-reveal .ss-grid > [data-reveal]:nth-child(3) { transition-delay:150ms; }
         html.has-scroll-reveal .hero-copy > [data-reveal]:nth-child(4),
         html.has-scroll-reveal .mini-cards > [data-reveal]:nth-child(3),
-        html.has-scroll-reveal .vision-grid [data-reveal]:nth-child(3) { transition-delay:360ms; }
-        html.has-scroll-reveal .vision-grid [data-reveal]:nth-child(4) { transition-delay:480ms; }
+        html.has-scroll-reveal .vision-grid [data-reveal]:nth-child(3) { transition-delay:220ms; }
+        html.has-scroll-reveal .vision-grid [data-reveal]:nth-child(4) { transition-delay:290ms; }
+        html.has-scroll-reveal .hero-copy .hero-actions {
+            opacity:1;
+            transform:none;
+            transition:none;
+        }
 
         .home-toast {
             position:fixed;
@@ -1016,7 +1082,7 @@
                 <h1 data-reveal data-i18n="hero.title">YOUR TALENT<br><span class="accent">DESERVES</span><br>TO BE <span class="red">SEEN.</span></h1>
                 <p class="sub" data-reveal data-i18n="hero.sub">Talanta Soka connects Stars and Starlets, the sportsmen and sportswomen of Kenyan football, with verified scouts through profiles, videos and real football opportunities.</p>
 
-                <div class="actions" data-reveal>
+                <div class="actions hero-actions">
                     <a href="{% url 'register' %}?role=player" class="btn-primary" id="tour-register-player" data-i18n="hero.registerPlayer">Register as Player</a>
                     <a href="{% url 'register' %}?role=scout" class="btn-secondary" id="tour-register-scout" data-i18n="hero.joinScout">Join as Scout</a>
                 </div>
@@ -1074,9 +1140,9 @@
                     <p data-i18n="vision.support.desc">Encourage, guide and help young players grow.</p>
                 </article>
                 <article class="vision-card" data-reveal>
-                    <span class="vision-number">04 / <span data-i18n="vision.community.label">The next generation</span></span>
+                    <span class="vision-number">04 / <span data-i18n="vision.community.label">The football family</span></span>
                     <h3 data-i18n="vision.community.title">Football community</h3>
-                    <p data-i18n="vision.community.desc">Build a game where every player gets a fair chance to be seen.</p>
+                    <p data-i18n="vision.community.desc">A welcoming home for everyone who loves football to share, connect and celebrate the game.</p>
                 </article>
             </div>
         </div>
@@ -1219,9 +1285,9 @@
                     'vision.support.label': 'The support',
                     'vision.support.title': 'Families &amp; coaches',
                     'vision.support.desc': 'Encourage, guide and help young players grow.',
-                    'vision.community.label': 'The next generation',
+                    'vision.community.label': 'The football family',
                     'vision.community.title': 'Football community',
-                    'vision.community.desc': 'Build a game where every player gets a fair chance to be seen.',
+                    'vision.community.desc': 'A welcoming home for everyone who loves football to share, connect and celebrate the game.',
                     'ss.eyebrow': 'Football is for everyone',
                     'ss.title': 'Stars &amp; Starlets',
                     'ss.sub': 'Men’s or women’s football, your talent deserves to be seen. Named after Kenya’s own Harambee Stars and Harambee Starlets.',
@@ -1285,9 +1351,9 @@
                     'vision.support.label': 'Msaada',
                     'vision.support.title': 'Familia na makocha',
                     'vision.support.desc': 'Watie moyo na uwaongoze wachezaji wachanga wakue.',
-                    'vision.community.label': 'Kizazi kijacho',
+                    'vision.community.label': 'Familia ya soka',
                     'vision.community.title': 'Jumuiya ya soka',
-                    'vision.community.desc': 'Jenga mchezo ambamo kila mchezaji anapata nafasi ya kuonekana.',
+                    'vision.community.desc': 'Mahali pa ukarimu kwa kila anayependa soka kushiriki, kuungana na kusherehekea mchezo.',
                     'ss.eyebrow': 'Mpira ni wa kila mtu',
                     'ss.title': 'Stars na Starlets',
                     'ss.sub': 'Mpira wa wanaume au wa wanawake, talanta yako inastahili kuonekana. Tumechukua majina kutoka Harambee Stars na Harambee Starlets.',

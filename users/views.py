@@ -15,7 +15,7 @@ from users import throttle
 from django.conf import settings
 from datetime import timedelta
 import logging
-import random
+import secrets
 
 import csv
 from io import BytesIO
@@ -122,7 +122,7 @@ def submit_feedback_view(request):
 
 def send_otp_to_user(user, method='email', purpose='verify'):
     # generate 6-digit code
-    code = f"{random.randint(0, 999999):06d}"
+    code = f"{secrets.randbelow(1_000_000):06d}"
     expires = timezone.now() + timedelta(minutes=15)
     OneTimeCode.objects.create(user=user, code=code, method=method, purpose=purpose, expires_at=expires)
 
@@ -133,6 +133,14 @@ def send_otp_to_user(user, method='email', purpose='verify'):
             f'Your Talanta Soka password reset code is: {code}\n'
             'It expires in 15 minutes.\n\n'
             'If you did not request a password reset, please ignore this email.'
+        )
+    elif purpose == 'login':
+        subject = '🔐 Confirm Your Talanta Soka Login'
+        message = (
+            f'Hello {user.full_name},\n\n'
+            f'Your Talanta Soka login code is: {code}\n'
+            'It expires in 15 minutes. Enter it to finish signing in.\n\n'
+            'If you did not try to log in, change your password and contact support.'
         )
     else:
         subject = '🔑 Verification Code | Talanta Soka'
@@ -160,7 +168,7 @@ def send_otp_to_user(user, method='email', purpose='verify'):
                 subject, message, 'code.html',
                 {'code': code, 'purpose': purpose, 'full_name': user.full_name,
                  'first_name': (user.full_name or '').split(' ')[0] or 'there'},
-                [user.email], from_email=from_email, banner='player' if purpose != 'reset' else 'reset',
+                [user.email], from_email=from_email, banner='player' if purpose not in ('reset', 'login') else 'reset',
             )
             logger.info('OTP email sent to %s using backend %s', user.email, settings.EMAIL_BACKEND)
             return True
@@ -189,18 +197,25 @@ def send_otp_to_user(user, method='email', purpose='verify'):
 
 
 def verify_otp_view(request):
+    pending_login_id = request.session.get('pending_login_user_id')
+    if pending_login_id:
+        user = User.objects.filter(id=pending_login_id, is_active=True).first()
+        purpose = 'login'
+    else:
+        user = None
+        purpose = 'verify'
     pending_user_id = request.session.get('pending_user_id')
     pending_user_email = request.session.get('pending_user_email')
-    user = None
-
-    if pending_user_id:
-        user = User.objects.filter(id=pending_user_id).first()
-    elif pending_user_email:
-        user = User.objects.filter(email__iexact=pending_user_email, is_active=False).first()
 
     if not user:
-        messages.error(request, 'No pending verification found. Please request a new code below.')
-        return redirect('resend_verification_request')
+        if pending_user_id:
+            user = User.objects.filter(id=pending_user_id).first()
+        elif pending_user_email:
+            user = User.objects.filter(email__iexact=pending_user_email, is_active=False).first()
+
+    if not user:
+        messages.error(request, 'No pending verification or login was found. Please sign in again.')
+        return redirect('login')
 
     if request.method == 'POST':
         form = OTPVerifyForm(request.POST)
@@ -208,21 +223,37 @@ def verify_otp_view(request):
             messages.error(request, throttle.message('code', user.pk))
         elif form.is_valid():
             code = form.cleaned_data['code']
-            otp = OneTimeCode.objects.filter(user=user, code=code, purpose='verify', used=False).order_by('-created_at').first()
+            otp = OneTimeCode.objects.filter(user=user, code=code, purpose=purpose, used=False).order_by('-created_at').first()
             if not otp:
                 if throttle.record_failure('code', user.pk):
                     # Too many guesses: old codes stop working; the person must ask for a new one.
-                    OneTimeCode.objects.filter(user=user, purpose='verify', used=False).update(used=True)
+                    OneTimeCode.objects.filter(user=user, purpose=purpose, used=False).update(used=True)
                     messages.error(request, throttle.message('code', user.pk) + ' Then request a new code.')
                 else:
                     messages.error(request, 'Invalid verification code.')
             else:
                 throttle.reset('code', user.pk)
-                if otp.expires_at and otp.expires_at < timezone.now():
+                if (purpose == 'login' and (not otp.expires_at or otp.expires_at <= timezone.now())) or (
+                    otp.expires_at and otp.expires_at < timezone.now()
+                ):
                     messages.error(request, 'Verification code has expired. Request a new one.')
                 else:
                     otp.used = True
                     otp.save(update_fields=['used'])
+                    if purpose == 'login':
+                        request.session.pop('pending_login_user_id', None)
+                        next_url = request.session.pop('pending_login_next', '')
+                        login(request, user)
+                        messages.success(request, 'Login successful. Welcome back!')
+                        if next_url and url_has_allowed_host_and_scheme(
+                            next_url,
+                            allowed_hosts={request.get_host()},
+                            require_https=request.is_secure(),
+                        ):
+                            return redirect(next_url)
+                        return redirect('admin_dashboard' if user.is_staff else
+                                        'player_dashboard' if user.role == 'player' else
+                                        'scout_dashboard')
                     user.is_active = True
                     user.save(update_fields=['is_active'])
                     # clear pending id
@@ -233,10 +264,33 @@ def verify_otp_view(request):
     else:
         form = OTPVerifyForm()
 
-    return render(request, 'users/verify_otp.html', {'form': form, 'user_email': user.email})
+    return render(
+        request,
+        'users/verify_otp.html',
+        {'form': form, 'user_email': user.email, 'login_challenge': purpose == 'login'},
+    )
 
 
 def resend_otp_view(request):
+    pending_login_id = request.session.get('pending_login_user_id')
+    if pending_login_id:
+        user = User.objects.filter(id=pending_login_id, is_active=True).first()
+        if not user:
+            request.session.pop('pending_login_user_id', None)
+            request.session.pop('pending_login_next', None)
+            messages.error(request, 'Your login session has expired. Please sign in again.')
+            return redirect('login')
+        wait = throttle.resend_wait(user, 'login')
+        if wait:
+            messages.info(request, f'A login code was sent recently. Check your inbox and Spam, or try again in {wait} seconds.')
+            return redirect('verify_otp')
+        OneTimeCode.objects.filter(user=user, purpose='login', used=False).update(used=True)
+        if send_otp_to_user(user, method='email', purpose='login'):
+            messages.success(request, 'A new login code was sent to your email.')
+        else:
+            messages.error(request, 'We could not send your login code. Check your email settings or try again later.')
+        return redirect('verify_otp')
+
     pending_user_id = request.session.get('pending_user_id')
     pending_user_email = request.session.get('pending_user_email')
     user = None
@@ -543,40 +597,45 @@ def login_view(request):
             if user:
                 throttle.reset('login', form.cleaned_data['email'])
 
-                if user.is_staff:
-                    login(request, user)
-                    return redirect('admin_dashboard')
-
                 # Ensure role-specific profile exists before allowing dashboard access.
-                if user.role == 'player' and not hasattr(user, 'player_profile'):
+                if not user.is_staff and user.role == 'player' and not PlayerProfile.objects.filter(user_id=user.pk).exists():
                     request.session['pending_user_id'] = user.id
                     messages.info(request, 'Complete your player profile before continuing.')
                     return redirect('complete_profile')
 
-                if user.role == 'scout' and not hasattr(user, 'scout_profile'):
+                if not user.is_staff and user.role == 'scout' and not Scout.objects.filter(user_id=user.pk).exists():
                     request.session['pending_user_id'] = user.id
                     messages.info(request, 'Complete your scout profile before continuing.')
                     return redirect('complete_profile')
 
-                login(request, user)
-                messages.success(request, 'Login successful. Welcome back!')
-
-                # Links in emails (for example "Try again") send people back to the right page after login.
                 next_url = request.POST.get('next') or request.GET.get('next')
-                if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
-                    return redirect(next_url)
-
-                if user.role == 'player':
-                    return redirect('player_dashboard')
-
-                return redirect('scout_dashboard')
+                if next_url and not url_has_allowed_host_and_scheme(
+                    next_url,
+                    allowed_hosts={request.get_host()},
+                    require_https=request.is_secure(),
+                ):
+                    next_url = ''
+                request.session.pop('pending_user_id', None)
+                request.session.pop('pending_user_email', None)
+                request.session['pending_login_user_id'] = user.id
+                request.session['pending_login_next'] = next_url or ''
+                wait = throttle.resend_wait(user, 'login')
+                if wait:
+                    messages.info(request, f'A sign-in code was sent recently. Check your inbox and Spam, or try again in {wait} seconds.')
+                else:
+                    OneTimeCode.objects.filter(user=user, purpose='login', used=False).update(used=True)
+                    if send_otp_to_user(user, method='email', purpose='login'):
+                        messages.success(request, f'A sign-in code was sent to {user.email}. Enter it to complete your login.')
+                    else:
+                        messages.error(request, 'We could not send your sign-in code. You can try resending it on the next page.')
+                return redirect('verify_otp')
 
             # If authentication failed, check for an inactive user with valid credentials.
             inactive_user = User.objects.filter(email__iexact=form.cleaned_data['email'], is_active=False).first()
             if inactive_user and inactive_user.check_password(form.cleaned_data['password']):
                 request.session['pending_user_id'] = inactive_user.id
                 request.session['pending_user_email'] = inactive_user.email
-                if not hasattr(inactive_user, 'player_profile') and not hasattr(inactive_user, 'scout_profile'):
+                if not PlayerProfile.objects.filter(user_id=inactive_user.pk).exists() and not Scout.objects.filter(user_id=inactive_user.pk).exists():
                     # They stopped after step 1, so no code was ever sent. Finishing step 2 sends it.
                     messages.info(request, 'Welcome back! Finish step 2 below and we will email your verification code.')
                     return redirect('complete_profile')
@@ -607,6 +666,13 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'You have been logged out.')
     return redirect('home')
+
+
+def cancel_login_challenge_view(request):
+    request.session.pop('pending_login_user_id', None)
+    request.session.pop('pending_login_next', None)
+    messages.info(request, 'Sign-in was cancelled.')
+    return redirect('login')
 
 
 @login_required
@@ -1286,7 +1352,7 @@ def account_email_view(request):
     if not url_has_allowed_host_and_scheme(back, allowed_hosts={request.get_host()}):
         back = '/'
     action = request.POST.get('action', '')
-    profile = getattr(user, 'player_profile', None) if user.role == 'player' else None
+    profile = PlayerProfile.objects.filter(user_id=user.pk).first() if user.role == 'player' else None
     try:
         if action == 'change':
             start_login_email_change(user, request.POST.get('new_email', ''))

@@ -12,12 +12,12 @@ A web-based football talent identification system that gives young players in Ke
 
 | Who | Can |
 |---|---|
-| **Players** (Stars: men's football, Starlets: women's football, aged 12 to 28) | Build a profile, upload videos, apply to trials, reply to scout feedback |
-| **Parents** | Approve players under 18 through an emailed link; until then the player is hidden from scouts |
-| **Scouts** (verified by the admin) | Find players by position, age, county and category, keep an Interests list, give feedback, post trials |
+| **Players** (Stars: men's football, Starlets: women's football, aged 12 to 28) | Build a profile, opt in to show profiles/videos to other signed-in players, set a preferred foot, apply to trials, reply to scout feedback, and track personal goals and progress with quarterly dashboard check-ins |
+| **Parents** | Approve players under 18 through an emailed link; until then the player is hidden from scouts. They must separately approve contact requests accepted by minors |
+| **Scouts** (verified by the admin) | Find players by position, preferred foot, age, county and category, keep an Interests list, give feedback, post trials, and request contact (details stay hidden until player consent and guardian approval where needed) |
 | **Admin** | Verify scouts' documents, manage accounts, publish "What's new" updates, view reports and feedback, download a backup |
 
-Also: email verification codes, password reset, English and Swahili landing page, light and dark mode, guided tours, a phone-friendly layout, an About Us page and an optional AI writing helper.
+Also: email verification codes on every login, password reset, player-controlled journey sharing (private by default; public progress is limited to signed-in players and verified scouts), a Player Community for opted-in profiles and videos, English and Swahili landing page, light and dark mode, guided tours, a phone-friendly layout, an About Us page and an optional AI writing helper. Quarterly check-in prompts appear when a player next visits their dashboard; scheduled reminder emails are not configured. Community posts, likes and comments are not included in this first version.
 
 ## Built with
 

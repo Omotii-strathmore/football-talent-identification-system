@@ -9,6 +9,7 @@ urlpatterns = [
         name='scout_dashboard'
     ),
     path('players/', views.player_directory, name='scout_player_directory'),
+    path('players/contact-request/', views.request_player_contact, name='scout_request_player_contact'),
     path('players/shortlist/toggle/', views.scout_toggle_shortlist, name='scout_toggle_shortlist'),
     path('players/fair-play/', views.scout_award_fair_play, name='scout_award_fair_play'),
     path('players/interests/', views.scout_shortlist, name='scout_shortlist'),

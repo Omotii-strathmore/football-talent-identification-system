@@ -9,6 +9,8 @@ from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
+from players.models import PlayerProfile
+
 logger = logging.getLogger(__name__)
 
 BANNERS = {
@@ -41,7 +43,7 @@ def send_welcome_email(user):
     """Sent once the account is verified. A failure here must never block the sign-in."""
     first_name = (user.full_name or '').split(' ')[0] or 'there'
     is_scout = user.role == 'scout'
-    profile = getattr(user, 'player_profile', None) if not is_scout else None
+    profile = PlayerProfile.objects.filter(user_id=user.pk).first() if not is_scout else None
     needs_guardian = bool(profile and profile.needs_guardian_approval)
     if is_scout:
         next_steps = [

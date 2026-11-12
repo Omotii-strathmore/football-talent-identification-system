@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Review Scout Contact Request{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4 p-md-5">
+                    <h1 class="h3 fw-bold">Review contact request</h1>
+                    <p class="text-muted">{{ contact_request.profile.full_name }} accepted a request from {{ contact_request.scout.full_name }} at {{ contact_request.scout.scout_profile.organization }}.</p>
+                    {% if contact_request.message %}
+                        <div class="alert alert-light border"><strong>Scout's message:</strong><br>{{ contact_request.message }}</div>
+                    {% endif %}
+                    <p>No contact details will be shared unless you approve. This approval is separate from permission for verified scouts to view the player's profile.</p>
+                    <form method="post" class="d-flex flex-wrap gap-2">
+                        {% csrf_token %}
+                        <button type="submit" name="decision" value="accept" class="btn btn-success">Approve contact request</button>
+                        <button type="submit" name="decision" value="decline" class="btn btn-outline-secondary">Decline</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

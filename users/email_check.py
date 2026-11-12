@@ -11,6 +11,8 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
+from players.models import PlayerProfile
+from scouts.models import Scout
 from .models import User
 
 # Common misspellings of popular email domains in Kenya.
@@ -71,7 +73,7 @@ def unfinished_signup(email):
     No code was ever sent to it, so whoever signs up again with this email simply starts over.
     """
     user = User.objects.filter(email__iexact=(email or '').strip(), is_active=False, is_staff=False).first()
-    if user and not hasattr(user, 'player_profile') and not hasattr(user, 'scout_profile'):
+    if user and not PlayerProfile.objects.filter(user_id=user.pk).exists() and not Scout.objects.filter(user_id=user.pk).exists():
         return user
     return None
 

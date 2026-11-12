@@ -19,6 +19,7 @@ urlpatterns = [
     path('register/complete-profile/', views.complete_profile_view, name='complete_profile'),
 
     path('login/', views.login_view, name='login'),
+    path('login/cancel-code/', views.cancel_login_challenge_view, name='cancel_login_challenge'),
 
     path('logout/', views.logout_view, name='logout'),
 

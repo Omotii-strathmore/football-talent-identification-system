@@ -6,7 +6,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 
 from scouts.models import Scout
-from users.models import User
+from users.models import OneTimeCode, User
 
 
 @override_settings(EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend', MEDIA_ROOT=tempfile.mkdtemp())
@@ -55,6 +55,9 @@ class ScoutDecisionEmailTests(TestCase):
             reverse('login') + '?next=/scout/verification/resubmit/',
             {'email': 'coach@example.com', 'password': 'Talanta#2026', 'next': '/scout/verification/resubmit/'},
         )
+        self.assertRedirects(response, reverse('verify_otp'), fetch_redirect_response=False)
+        code = OneTimeCode.objects.get(user=self.user, purpose='login', used=False)
+        response = self.client.post(reverse('verify_otp'), {'code': code.code})
         self.assertRedirects(response, reverse('scout_resubmit_verification'), fetch_redirect_response=False)
         response = self.client.post(reverse('scout_resubmit_verification'), {
             'organization': 'Gor Mahia Youth Academy',
@@ -69,6 +72,9 @@ class ScoutDecisionEmailTests(TestCase):
         response = self.client.post(reverse('login'), {
             'email': 'coach@example.com', 'password': 'Talanta#2026', 'next': 'https://evil.example.com/',
         })
+        self.assertRedirects(response, reverse('verify_otp'), fetch_redirect_response=False)
+        code = OneTimeCode.objects.get(user=self.user, purpose='login', used=False)
+        response = self.client.post(reverse('verify_otp'), {'code': code.code})
         self.assertRedirects(response, reverse('scout_dashboard'), fetch_redirect_response=False)
 
 

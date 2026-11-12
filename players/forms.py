@@ -26,6 +26,7 @@ class PlayerProfileForm(forms.ModelForm):
             'date_of_birth',
             'position',
             'secondary_position',
+            'preferred_foot',
             'height_cm',
             'weight_kg',
             'current_club',
@@ -40,6 +41,7 @@ class PlayerProfileForm(forms.ModelForm):
             'contact_email',
             'contact_phone',
             'consent_to_share_contact',
+            'share_profile_with_players',
         ]
 
         widgets = {
@@ -76,10 +78,14 @@ class PlayerProfileForm(forms.ModelForm):
         self.fields['football_experience'].required = False
         self.fields['contact_email'].label = '✉️ Contact email'
         self.fields['contact_phone'].label = '📞 Contact phone'
-        self.fields['contact_email'].help_text = 'Optional. Interested scouts could reach out using this email.'
-        self.fields['contact_phone'].help_text = 'Optional. Interested scouts could reach out using this phone number.'
+        self.fields['contact_email'].help_text = 'Optional. Visible only to a scout whose contact request you accept, if you enable sharing.'
+        self.fields['contact_phone'].help_text = 'Optional. Visible only to a scout whose contact request you accept, if you enable sharing.'
         self.fields['consent_to_share_contact'].help_text = (
-            'With your consent, scouts can view these details and contact you directly.'
+            'Scouts can see these details only after you accept their contact request.'
+        )
+        self.fields['share_profile_with_players'].label = 'Show my profile and videos to other players'
+        self.fields['share_profile_with_players'].help_text = (
+            'Off by default. When enabled, signed-in players can find your profile and videos in the Player Community.'
         )
         self.fields['special_traits'].help_text = 'Enter special traits such as Playmaker, Flair, or Finesse shooter.'
         self.fields['football_experience'].label = 'Achievements at previous club'
@@ -150,6 +156,7 @@ class PlayerOnboardingForm(forms.ModelForm):
             'category',
             'date_of_birth',
             'position',
+            'preferred_foot',
             'location',
         ]
 

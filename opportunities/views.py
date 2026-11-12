@@ -74,6 +74,8 @@ def view_opportunities(request):
 	applied_ids = set(
 		Application.objects.filter(player=request.user).values_list('opportunity_id', flat=True)
 	)
+	prep_opportunity_id = request.session.pop('application_prep_opportunity_id', None)
+	prep_opportunity = Opportunity.objects.filter(pk=prep_opportunity_id).first() if prep_opportunity_id else None
 
 	return render(
 		request,
@@ -87,6 +89,7 @@ def view_opportunities(request):
 			'today': today,
 			'selected_category': selected_category,
 			'player_category': player_category,
+			'prep_opportunity': prep_opportunity,
 		},
 	)
 
@@ -130,6 +133,7 @@ def apply_opportunity(request, opportunity_id):
 			player=request.user,
 			motivation=form.cleaned_data['motivation'],
 		)
+		request.session['application_prep_opportunity_id'] = opportunity.pk
 		messages.success(request, 'Application submitted successfully.')
 	else:
 		messages.error(request, 'Could not submit application. Please try again.')

@@ -12,6 +12,8 @@ from datetime import timedelta
 from django.db import transaction
 from django.utils import timezone
 
+from players.models import PlayerProfile
+
 from . import throttle
 from .email_check import check_email
 from .emails import send_code_email, send_security_alert
@@ -99,7 +101,7 @@ def confirm_login_email(user, code):
         user.pending_email = ''
         user.save(update_fields=['email', 'pending_email'])
     # A contact email that matches the newly verified login email is verified too.
-    profile = getattr(user, 'player_profile', None)
+    profile = PlayerProfile.objects.filter(user_id=user.pk).first()
     if profile and (profile.contact_email or '').strip().lower() == new_email and not profile.contact_email_verified_at:
         profile.contact_email_verified_at = timezone.now()
         profile.save(update_fields=['contact_email_verified_at'])

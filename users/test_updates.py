@@ -142,6 +142,8 @@ class UpdatesViewerAndAboutTests(TestCase):
         self.assertContains(page, 'id="home-sub"')
         self.assertContains(page, 'data-open-updates')
         self.assertContains(page, reverse('about'))
+        self.assertContains(page, 'A welcoming home for everyone who loves football')
+        self.assertContains(page, 'Familia ya soka')
 
     def test_about_page_in_english_and_swahili(self):
         page = self.client.get(reverse('about'))
