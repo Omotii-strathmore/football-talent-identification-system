@@ -89,7 +89,7 @@
 
         .logo {
             font-family:var(--font-display);
-            font-size:1.55rem;
+            font-size:1.8rem;
             letter-spacing:1.5px;
             color:var(--gold);
             line-height:1;
@@ -105,8 +105,8 @@
         }
 
         .brand-mark {
-            width:34px;
-            height:34px;
+            width:42px;
+            height:42px;
             display:block;
             flex:none;
         }
@@ -831,8 +831,8 @@
 
         @media (max-width:700px) {
             .brand-lockup { gap:7px; }
-            .brand-mark { width:30px; height:30px; }
-            .logo { font-size:1.35rem; letter-spacing:1px; }
+            .brand-mark { width:36px; height:36px; }
+            .logo { font-size:1.5rem; letter-spacing:1px; }
             .mini-cards { grid-template-columns:1fr; gap:10px; margin-top:26px; }
             .mini-card { min-height:0; padding:16px; }
             .mini-step { margin-bottom:10px; }
@@ -1042,7 +1042,14 @@
     {% endif %}
     <nav>
         <div class="brand-lockup notranslate" translate="no" aria-label="Talanta Soka">
-            {% include 'includes/brand_mark.html' %}
+            <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+                <circle cx="20" cy="20" r="16" fill="none" stroke="var(--brand-mark-ring)" stroke-width="2.2"/>
+                <path d="M8.7 8.5a16 16 0 0 1 19.1-2.8" fill="none" stroke="var(--brand-mark-cycle)" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="27.8" cy="5.8" r="2.5" fill="var(--gold, #f5c400)"/>
+                <text x="20" y="24.3" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" letter-spacing="-1">
+                    <tspan fill="var(--brand-mark-t)">T</tspan><tspan fill="var(--brand-mark-s)">S</tspan>
+                </text>
+            </svg>
             <span class="logo">Talanta <span>Soka</span></span>
         </div>
         <div class="nav-right">
@@ -1198,7 +1205,14 @@
     <footer data-reveal>
         <div class="footer-col">
             <div class="footer-brand brand-lockup notranslate" translate="no" aria-label="Talanta Soka">
-                {% include 'includes/brand_mark.html' %}
+                <svg class="brand-mark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" aria-hidden="true" focusable="false">
+                    <circle cx="20" cy="20" r="16" fill="none" stroke="var(--brand-mark-ring)" stroke-width="2.2"/>
+                    <path d="M8.7 8.5a16 16 0 0 1 19.1-2.8" fill="none" stroke="var(--brand-mark-cycle)" stroke-width="3" stroke-linecap="round"/>
+                    <circle cx="27.8" cy="5.8" r="2.5" fill="var(--gold, #f5c400)"/>
+                    <text x="20" y="24.3" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="11.5" font-weight="700" letter-spacing="-1">
+                        <tspan fill="var(--brand-mark-t)">T</tspan><tspan fill="var(--brand-mark-s)">S</tspan>
+                    </text>
+                </svg>
                 <span class="logo">Talanta <span>Soka</span></span>
             </div>
             <p data-i18n="footer.line1">Football Talent Identification and Exposure System</p>
