@@ -31,6 +31,23 @@
 
         .navbar-brand{
             font-weight:bold;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+        }
+
+        .navbar-brand .brand-mark{
+            width:34px;
+            height:34px;
+            flex:none;
+            --brand-mark-ring:#E0C361;
+            --brand-mark-cycle:#F5C400;
+            --brand-mark-t:#F5C400;
+            --brand-mark-s:#F5F5F5;
+        }
+
+        .navbar-brand__name span{
+            color:#F5C400;
         }
 
         .content-wrapper{
@@ -139,7 +156,8 @@
     <div class="container">
 
         <a class="navbar-brand notranslate" translate="no" title="My dashboard" href="{% if public_page %}{% url 'home' %}{% elif user.is_authenticated and user.is_staff %}{% url 'admin_dashboard' %}{% elif user.is_authenticated and user.role == 'player' %}{% url 'player_dashboard' %}{% elif user.is_authenticated and user.role == 'scout' %}{% url 'scout_dashboard' %}{% else %}{% url 'home' %}{% endif %}">
-            Talanta Soka
+            {% include 'includes/brand_mark.html' %}
+            <span class="navbar-brand__name"><span>Talanta</span> Soka</span>
         </a>
 
         <button class="navbar-toggler"

@@ -25,6 +25,10 @@
             --ink-on-accent:#111827;
             --font-display:'Bebas Neue', sans-serif;
             --font-body:'Inter', sans-serif;
+            --brand-mark-ring:#E0C361;
+            --brand-mark-cycle:#F5C400;
+            --brand-mark-t:#F5C400;
+            --brand-mark-s:#F5F5F5;
 
             /* Dark theme is the default palette */
             --bg:#0D0D0D;
@@ -48,6 +52,10 @@
             --nav-bg:rgba(251,249,243,.92);
             --frame-bg:rgba(255,255,255,.85);
             --tile-border:rgba(0,0,0,.08);
+            --brand-mark-ring:#D7C892;
+            --brand-mark-cycle:#006B3F;
+            --brand-mark-t:#006B3F;
+            --brand-mark-s:#C9A532;
         }
 
         * { box-sizing:border-box; margin:0; padding:0; }
@@ -99,16 +107,8 @@
         .brand-mark {
             width:34px;
             height:34px;
-            display:grid;
-            place-items:center;
-            border:1px solid rgba(245,196,0,.7);
-            border-radius:9px 3px 9px 3px;
-            background:linear-gradient(145deg,rgba(0,107,63,.42),rgba(13,13,13,.9));
-            color:var(--gold);
-            font-family:var(--font-display);
-            font-size:1.1rem;
-            letter-spacing:-.04em;
-            box-shadow:inset 0 0 0 2px rgba(245,196,0,.08);
+            display:block;
+            flex:none;
         }
 
         .links {
@@ -723,7 +723,6 @@
         .footer-brand .brand-mark {
             width:42px;
             height:42px;
-            font-size:1.35rem;
         }
 
         .footer-brand .logo { font-size:1.6rem; }
@@ -832,7 +831,7 @@
 
         @media (max-width:700px) {
             .brand-lockup { gap:7px; }
-            .brand-mark { width:30px; height:30px; font-size:1rem; }
+            .brand-mark { width:30px; height:30px; }
             .logo { font-size:1.35rem; letter-spacing:1px; }
             .mini-cards { grid-template-columns:1fr; gap:10px; margin-top:26px; }
             .mini-card { min-height:0; padding:16px; }
@@ -1043,7 +1042,7 @@
     {% endif %}
     <nav>
         <div class="brand-lockup notranslate" translate="no" aria-label="Talanta Soka">
-            <span class="brand-mark" aria-hidden="true">TS</span>
+            {% include 'includes/brand_mark.html' %}
             <span class="logo">Talanta <span>Soka</span></span>
         </div>
         <div class="nav-right">
@@ -1199,7 +1198,7 @@
     <footer data-reveal>
         <div class="footer-col">
             <div class="footer-brand brand-lockup notranslate" translate="no" aria-label="Talanta Soka">
-                <span class="brand-mark" aria-hidden="true">TS</span>
+                {% include 'includes/brand_mark.html' %}
                 <span class="logo">Talanta <span>Soka</span></span>
             </div>
             <p data-i18n="footer.line1">Football Talent Identification and Exposure System</p>
