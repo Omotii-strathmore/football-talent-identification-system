@@ -237,8 +237,12 @@ class OTPVerifyForm(forms.Form):
 		label='Verification code',
 		widget=forms.TextInput(
 			attrs={
-				'placeholder': 'Enter the code sent to you',
-				'class': 'form-control form-control-lg',
+				'placeholder': 'Enter your 6-digit code',
+				'class': 'form-control form-control-lg otp-code-input',
+				'autocomplete': 'one-time-code',
+				'inputmode': 'numeric',
+				'pattern': '[0-9]*',
+				'aria-describedby': 'otp-code-help',
 			}
 		)
 	)

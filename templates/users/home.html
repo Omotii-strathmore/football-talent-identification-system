@@ -96,7 +96,22 @@
             white-space:nowrap;
         }
 
-        .logo span { color:var(--ink); }
+        .logo__soka {
+            display:inline-flex;
+            align-items:center;
+            color:var(--ink);
+            vertical-align:-.08em;
+        }
+
+        .logo__soka-letter { color:var(--ink); }
+
+        .logo .brand-ball-o {
+            width:1.08em;
+            height:1.08em;
+            flex:none;
+            margin:0 .02em;
+            color:var(--gold);
+        }
 
         .brand-lockup {
             display:inline-flex;
@@ -1050,7 +1065,7 @@
                     <tspan fill="var(--brand-mark-t)">T</tspan><tspan fill="var(--brand-mark-s)">S</tspan>
                 </text>
             </svg>
-            <span class="logo">Talanta <span>Soka</span></span>
+            <span class="logo">Talanta <span class="logo__soka"><span class="logo__soka-letter">S</span>{% include 'includes/brand_ball_o.html' %}<span class="logo__soka-letter">ka</span></span></span>
         </div>
         <div class="nav-right">
             <ul class="links" id="site-links">
@@ -1213,7 +1228,7 @@
                         <tspan fill="var(--brand-mark-t)">T</tspan><tspan fill="var(--brand-mark-s)">S</tspan>
                     </text>
                 </svg>
-                <span class="logo">Talanta <span>Soka</span></span>
+                <span class="logo">Talanta <span class="logo__soka"><span class="logo__soka-letter">S</span>{% include 'includes/brand_ball_o.html' %}<span class="logo__soka-letter">ka</span></span></span>
             </div>
             <p data-i18n="footer.line1">Football Talent Identification and Exposure System</p>
             <p class="footer-description" data-i18n="footer.line2">Connecting grassroots players and verified scouts across Kenya.</p>

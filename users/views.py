@@ -1,6 +1,7 @@
 from collections import Counter
 
 from django.contrib import messages
+from django.contrib.sessions.models import Session
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Count, Q
@@ -617,18 +618,31 @@ def login_view(request):
                     next_url = ''
                 request.session.pop('pending_user_id', None)
                 request.session.pop('pending_user_email', None)
-                request.session['pending_login_user_id'] = user.id
-                request.session['pending_login_next'] = next_url or ''
-                wait = throttle.resend_wait(user, 'login')
-                if wait:
-                    messages.info(request, f'A sign-in code was sent recently. Check your inbox and Spam, or try again in {wait} seconds.')
-                else:
-                    OneTimeCode.objects.filter(user=user, purpose='login', used=False).update(used=True)
-                    if send_otp_to_user(user, method='email', purpose='login'):
-                        messages.success(request, f'A sign-in code was sent to {user.email}. Enter it to complete your login.')
+                request.session.pop('pending_login_user_id', None)
+                request.session.pop('pending_login_next', None)
+
+                same_session = request.user.is_authenticated and request.user.pk == user.pk
+                if not same_session and _has_other_active_login_session(user, request.session.session_key):
+                    request.session['pending_login_user_id'] = user.id
+                    request.session['pending_login_next'] = next_url or ''
+                    wait = throttle.resend_wait(user, 'login')
+                    if wait:
+                        messages.info(request, f'A sign-in code was sent recently. Check your inbox and Spam, or try again in {wait} seconds.')
                     else:
-                        messages.error(request, 'We could not send your sign-in code. You can try resending it on the next page.')
-                return redirect('verify_otp')
+                        OneTimeCode.objects.filter(user=user, purpose='login', used=False).update(used=True)
+                        if send_otp_to_user(user, method='email', purpose='login'):
+                            messages.success(request, f'A sign-in code was sent to {user.email}. Enter it to complete your login.')
+                        else:
+                            messages.error(request, 'We could not send your sign-in code. You can try resending it on the next page.')
+                    return redirect('verify_otp')
+
+                login(request, user)
+                messages.success(request, 'Login successful. Welcome back!')
+                if next_url:
+                    return redirect(next_url)
+                return redirect('admin_dashboard' if user.is_staff else
+                                'player_dashboard' if user.role == 'player' else
+                                'scout_dashboard')
 
             # If authentication failed, check for an inactive user with valid credentials.
             inactive_user = User.objects.filter(email__iexact=form.cleaned_data['email'], is_active=False).first()
@@ -660,6 +674,22 @@ def login_view(request):
             'next': request.POST.get('next') or request.GET.get('next', ''),
         }
     )
+
+
+def _has_other_active_login_session(user, current_session_key):
+    session_store = Session.get_session_store_class()()
+    sessions = Session.objects.filter(expire_date__gt=timezone.now()).only('session_key', 'session_data')
+    for session in sessions.iterator():
+        if session.session_key == current_session_key:
+            continue
+        data = session_store.decode(session.session_data)
+        # Ignore sessions Django would invalidate after a password change.
+        if (
+            data.get('_auth_user_id') == str(user.pk)
+            and data.get('_auth_user_hash') == user.get_session_auth_hash()
+        ):
+            return True
+    return False
 
 
 def logout_view(request):

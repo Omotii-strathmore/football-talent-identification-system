@@ -46,13 +46,34 @@
             --brand-mark-s:#F5F5F5;
         }
 
-        .navbar-brand__name span{
-            color:#F5C400;
-        }
-
         .navbar-brand__name{
+            display:inline-flex;
+            align-items:center;
             font-size:1.45rem;
             line-height:1;
+        }
+
+        .navbar-brand__name .brand-wordmark__talanta{
+            color:#F5C400;
+            margin-right:.2em;
+        }
+
+        .navbar-brand__name .brand-wordmark__soka{
+            display:inline-flex;
+            align-items:center;
+            color:#F5F5F2;
+        }
+
+        .navbar-brand__name .brand-wordmark__letter{
+            color:#F5F5F2;
+        }
+
+        .navbar-brand__name .brand-ball-o{
+            width:1.08em;
+            height:1.08em;
+            flex:none;
+            margin:0 .02em;
+            color:#F5C400;
         }
 
         .content-wrapper{
@@ -160,9 +181,11 @@
 
     <div class="container">
 
-        <a class="navbar-brand notranslate" translate="no" title="My dashboard" href="{% if public_page %}{% url 'home' %}{% elif user.is_authenticated and user.is_staff %}{% url 'admin_dashboard' %}{% elif user.is_authenticated and user.role == 'player' %}{% url 'player_dashboard' %}{% elif user.is_authenticated and user.role == 'scout' %}{% url 'scout_dashboard' %}{% else %}{% url 'home' %}{% endif %}">
+        <a class="navbar-brand notranslate" translate="no" title="My dashboard" aria-label="Talanta Soka" href="{% if public_page %}{% url 'home' %}{% elif user.is_authenticated and user.is_staff %}{% url 'admin_dashboard' %}{% elif user.is_authenticated and user.role == 'player' %}{% url 'player_dashboard' %}{% elif user.is_authenticated and user.role == 'scout' %}{% url 'scout_dashboard' %}{% else %}{% url 'home' %}{% endif %}">
             {% include 'includes/brand_mark.html' %}
-            <span class="navbar-brand__name"><span>Talanta</span> Soka</span>
+            <span class="navbar-brand__name">
+                <span class="brand-wordmark__talanta">Talanta</span><span class="brand-wordmark__soka"><span class="brand-wordmark__letter">S</span>{% include 'includes/brand_ball_o.html' %}<span class="brand-wordmark__letter">ka</span></span>
+            </span>
         </a>
 
         <button class="navbar-toggler"

@@ -7,7 +7,7 @@ from unittest import mock
 
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import TestCase, override_settings
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -43,7 +43,7 @@ class LoginAndCodeLimitTests(TestCase):
         response = self.client.post(reverse('login'), {'email': 'amani@gmail.com', 'password': 'Talanta#2026'})
         self.assertEqual(response.status_code, 302)
 
-    def test_active_login_requires_a_valid_email_code_and_code_cannot_be_replayed(self):
+    def test_active_login_does_not_repeat_signup_verification(self):
         PlayerProfile.objects.create(
             user=self.user,
             full_name='Amani Otieno',
@@ -55,20 +55,79 @@ class LoginAndCodeLimitTests(TestCase):
             'email': 'amani@gmail.com',
             'password': 'Talanta#2026',
         })
-        self.assertRedirects(response, reverse('verify_otp'), fetch_redirect_response=False)
-        self.assertNotIn('_auth_user_id', self.client.session)
-        otp = OneTimeCode.objects.get(user=self.user, purpose='login', used=False)
-
-        response = self.client.post(reverse('verify_otp'), {'code': otp.code})
         self.assertRedirects(response, reverse('player_dashboard'), fetch_redirect_response=False)
         self.assertIn('_auth_user_id', self.client.session)
-        self.client.logout()
+        self.assertFalse(OneTimeCode.objects.filter(user=self.user, purpose='login').exists())
 
-        response = self.client.post(reverse('verify_otp'), {'code': otp.code})
-        self.assertRedirects(response, reverse('login'), fetch_redirect_response=False)
+        response = self.client.post(reverse('login'), {
+            'email': 'amani@gmail.com',
+            'password': 'Talanta#2026',
+        })
+        self.assertRedirects(response, reverse('player_dashboard'), fetch_redirect_response=False)
+        self.assertFalse(OneTimeCode.objects.filter(user=self.user, purpose='login').exists())
+
+    def test_concurrent_login_on_another_session_requires_email_code(self):
+        PlayerProfile.objects.create(
+            user=self.user,
+            full_name='Amani Otieno',
+            age=22,
+            position='Forward',
+            location='Nairobi',
+        )
+        first_device = self.client
+        response = first_device.post(reverse('login'), {
+            'email': 'amani@gmail.com',
+            'password': 'Talanta#2026',
+        })
+        self.assertRedirects(response, reverse('player_dashboard'), fetch_redirect_response=False)
+
+        second_device = Client()
+        response = second_device.post(reverse('login'), {
+            'email': 'amani@gmail.com',
+            'password': 'Talanta#2026',
+        })
+        self.assertRedirects(response, reverse('verify_otp'), fetch_redirect_response=False)
+        self.assertNotIn('_auth_user_id', second_device.session)
+        self.assertIn('_auth_user_id', first_device.session)
+
+        otp = OneTimeCode.objects.get(user=self.user, purpose='login', used=False)
+        response = second_device.post(reverse('verify_otp'), {'code': otp.code})
+        self.assertRedirects(response, reverse('player_dashboard'), fetch_redirect_response=False)
+        self.assertIn('_auth_user_id', second_device.session)
+        self.assertTrue(OneTimeCode.objects.get(pk=otp.pk).used)
+
+    def test_inactive_account_still_requires_signup_verification(self):
+        PlayerProfile.objects.create(
+            user=self.user,
+            full_name='Amani Otieno',
+            age=22,
+            position='Forward',
+            location='Nairobi',
+        )
+        self.user.is_active = False
+        self.user.save(update_fields=['is_active'])
+        OneTimeCode.objects.create(
+            user=self.user,
+            code='123456',
+            method='email',
+            purpose='verify',
+            expires_at=timezone.now() + timedelta(minutes=15),
+        )
+
+        response = self.client.post(reverse('login'), {
+            'email': 'amani@gmail.com',
+            'password': 'Talanta#2026',
+        })
+        self.assertRedirects(response, reverse('verify_otp'), fetch_redirect_response=False)
         self.assertNotIn('_auth_user_id', self.client.session)
 
-    def test_expired_login_code_does_not_authenticate(self):
+        response = self.client.post(reverse('verify_otp'), {'code': '123456'})
+        self.assertRedirects(response, reverse('login'), fetch_redirect_response=False)
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.is_active)
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    def test_expired_concurrent_login_code_does_not_authenticate(self):
         PlayerProfile.objects.create(
             user=self.user,
             full_name='Amani Otieno',
@@ -80,13 +139,18 @@ class LoginAndCodeLimitTests(TestCase):
             'email': 'amani@gmail.com',
             'password': 'Talanta#2026',
         })
+        second_device = Client()
+        second_device.post(reverse('login'), {
+            'email': 'amani@gmail.com',
+            'password': 'Talanta#2026',
+        })
         otp = OneTimeCode.objects.get(user=self.user, purpose='login', used=False)
         otp.expires_at = timezone.now() - timedelta(seconds=1)
         otp.save(update_fields=['expires_at'])
 
-        response = self.client.post(reverse('verify_otp'), {'code': otp.code})
+        response = second_device.post(reverse('verify_otp'), {'code': otp.code})
         self.assertEqual(response.status_code, 200)
-        self.assertNotIn('_auth_user_id', self.client.session)
+        self.assertNotIn('_auth_user_id', second_device.session)
 
     def test_verification_code_guessing_is_stopped(self):
         self.user.is_active = False

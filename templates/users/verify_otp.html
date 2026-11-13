@@ -2,62 +2,341 @@
 
 {% block title %}{% if login_challenge %}Confirm Login{% else %}Verify Account{% endif %}{% endblock %}
 
+{% block extra_css %}
+<style>
+    .otp-page {
+        display: grid;
+        place-items: center;
+        padding: 12px 0 44px;
+    }
+
+    .otp-card {
+        width: min(100%, 560px);
+        overflow: hidden;
+        border: 1px solid #e4e9e5;
+        border-radius: 24px;
+        background: #fff;
+        box-shadow: 0 18px 48px rgba(15, 23, 42, .12);
+    }
+
+    .otp-card__accent {
+        height: 5px;
+        background: linear-gradient(90deg, #006b3f 0 68%, #f5c400 68%);
+    }
+
+    .otp-card__body {
+        padding: clamp(24px, 5vw, 42px);
+    }
+
+    .otp-heading {
+        text-align: center;
+    }
+
+    .otp-icon {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 18px;
+        border: 1px solid #dcebe1;
+        border-radius: 18px;
+        background: #eff7f1;
+        color: #006b3f;
+    }
+
+    .otp-icon svg {
+        width: 30px;
+        height: 30px;
+    }
+
+    .otp-kicker {
+        margin-bottom: 8px;
+        color: #557064;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .13em;
+        text-transform: uppercase;
+    }
+
+    .otp-step {
+        display: inline-block;
+        margin-left: 6px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: #f2f4f2;
+        color: #66746b;
+        font-size: .65rem;
+        letter-spacing: .04em;
+        vertical-align: 1px;
+    }
+
+    .otp-title {
+        margin: 0 0 10px;
+        color: #173c2b;
+        font-size: clamp(1.7rem, 4vw, 2.1rem);
+        font-weight: 800;
+        letter-spacing: -.03em;
+        line-height: 1.15;
+    }
+
+    .otp-intro {
+        max-width: 39ch;
+        margin: 0 auto;
+        color: #5e6c63;
+        line-height: 1.55;
+    }
+
+    .otp-email {
+        display: inline-block;
+        max-width: 100%;
+        margin-top: 14px;
+        padding: 8px 13px;
+        overflow-wrap: anywhere;
+        border: 1px solid #e2e9e3;
+        border-radius: 10px;
+        background: #f7faf7;
+        color: #173c2b;
+        font-size: .95rem;
+        font-weight: 700;
+    }
+
+    .otp-form {
+        margin-top: 27px;
+    }
+
+    .otp-label {
+        display: block;
+        margin-bottom: 9px;
+        color: #263d30;
+        font-size: .9rem;
+        font-weight: 700;
+    }
+
+    .otp-code-input {
+        height: 62px;
+        border: 1px solid #cbd8cf;
+        border-radius: 13px;
+        background: #fbfcfb;
+        color: #173c2b;
+        font-size: 1.55rem !important;
+        font-weight: 700;
+        letter-spacing: .42em;
+        text-align: center;
+        padding-left: .42em;
+    }
+
+    .otp-code-input::placeholder {
+        color: #89968d;
+        font-size: .95rem;
+        font-weight: 500;
+        letter-spacing: .02em;
+    }
+
+    .otp-code-input:focus {
+        border-color: #006b3f;
+        background: #fff;
+        box-shadow: 0 0 0 .22rem rgba(0, 107, 63, .14);
+    }
+
+    .otp-help {
+        margin-top: 8px;
+        color: #738077;
+        font-size: .8rem;
+    }
+
+    .otp-errors .errorlist {
+        margin: 7px 0 0;
+        padding: 0;
+        color: #b42318;
+        font-size: .85rem;
+        list-style: none;
+    }
+
+    .otp-submit {
+        min-height: 52px;
+        margin-top: 20px;
+        border: 0;
+        border-radius: 12px;
+        background: #006b3f;
+        color: #fff;
+        font-size: 1rem;
+        font-weight: 750;
+    }
+
+    .otp-submit:hover,
+    .otp-submit:focus-visible {
+        background: #00552f;
+        color: #fff;
+    }
+
+    .otp-submit:focus-visible,
+    .otp-resend-button:focus-visible,
+    .otp-footer a:focus-visible {
+        outline: 3px solid rgba(245, 196, 0, .7);
+        outline-offset: 3px;
+        box-shadow: none;
+    }
+
+    .otp-delivery {
+        margin-top: 28px;
+        padding-top: 20px;
+        border-top: 1px solid #e8ede9;
+        text-align: center;
+    }
+
+    .otp-delivery__title {
+        margin-bottom: 4px;
+        color: #263d30;
+        font-size: .92rem;
+        font-weight: 750;
+    }
+
+    .otp-delivery__hint {
+        margin: 0;
+        color: #738077;
+        font-size: .82rem;
+        line-height: 1.45;
+    }
+
+    .otp-resend-actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 15px;
+    }
+
+    .otp-resend-actions--single {
+        grid-template-columns: 1fr;
+    }
+
+    .otp-resend-form {
+        margin: 0;
+    }
+
+    .otp-resend-button {
+        width: 100%;
+        min-height: 43px;
+        border: 1px solid #d3dfd6;
+        border-radius: 11px;
+        background: #fff;
+        color: #23583d;
+        font-size: .86rem;
+        font-weight: 700;
+    }
+
+    .otp-resend-button:hover {
+        border-color: #006b3f;
+        background: #f4f8f5;
+        color: #174a30;
+    }
+
+    .otp-recovery {
+        display: inline-block;
+        margin-top: 13px;
+        color: #456b55;
+        font-size: .82rem;
+        font-weight: 600;
+        text-decoration: underline;
+        text-decoration-color: #b8c9bc;
+        text-underline-offset: 3px;
+    }
+
+    .otp-footer {
+        margin-top: 22px;
+        text-align: center;
+    }
+
+    .otp-footer a {
+        color: #52665a;
+        font-size: .86rem;
+        font-weight: 650;
+        text-decoration: none;
+    }
+
+    .otp-footer a:hover {
+        color: #006b3f;
+        text-decoration: underline;
+    }
+
+    @media (max-width: 575.98px) {
+        .otp-page {
+            padding: 4px 0 28px;
+        }
+
+        .otp-card {
+            border-radius: 19px;
+        }
+
+        .otp-card__body {
+            padding: 25px 20px;
+        }
+
+        .otp-resend-actions:not(.otp-resend-actions--single) {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-6 col-md-8">
-            <div class="card shadow-sm border-0 rounded-4 overflow-hidden">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        {% if not login_challenge %}<p class="text-uppercase text-muted small mb-1">Step 3 of 3</p>{% endif %}
-                        <h2 class="fw-bold">{% if login_challenge %}Confirm your login{% else %}Verify your account{% endif %}</h2>
-                        <p class="text-muted mb-0">A one-time code was sent to <strong>{{ user_email }}</strong>. {% if login_challenge %}Enter it to securely finish signing in.{% else %}Enter it below to activate your account and then log in.{% endif %}</p>
-                    </div>
-
-                    <div class="alert alert-warning py-2 small mb-4">
-                        📩 Don't see it? Check your <strong>Spam</strong> or <strong>Promotions</strong> folder — automated codes sometimes land there. Mark it "Not spam" so future codes go straight to your inbox.
-                    </div>
-
-                    <form method="post" class="mb-3">
-                        {% csrf_token %}
-                        <div class="mb-4">
-                            {{ form.code.label_tag }}
-                            {{ form.code }}
-                            {% if form.code.errors %}
-                                <div class="text-danger small mt-2">{{ form.code.errors }}</div>
-                            {% endif %}
-                        </div>
-                        <button class="btn btn-primary w-100 btn-lg" type="submit">{% if login_challenge %}Confirm and log in{% else %}Verify code{% endif %}</button>
-                    </form>
-
-                    <div class="text-center text-muted mb-3">Didn't receive a code?</div>
-                    <div class="d-grid gap-2">
-                        <form method="post" action="{% url 'resend_otp' %}">
-                            {% csrf_token %}
-                            <input type="hidden" name="method" value="email">
-                            <button class="btn btn-outline-secondary" type="submit">Resend via email</button>
-                        </form>
-                        {% if not login_challenge %}
-                            <form method="post" action="{% url 'resend_otp' %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="method" value="sms">
-                                <button class="btn btn-outline-secondary" type="submit">Resend via SMS</button>
-                            </form>
-                        {% endif %}
-                    </div>
-
-                    {% if not login_challenge %}
-                    <div class="text-center mt-3">
-                        <a href="{% url 'resend_verification_request' %}" class="text-decoration-none">Resend buttons not working? Request a new code by email</a>
-                    </div>
-                    {% endif %}
-
-                    <div class="text-center mt-4">
-                        {% if login_challenge %}<a href="{% url 'cancel_login_challenge' %}" class="text-decoration-none">Cancel sign-in</a>{% else %}<a href="{% url 'login' %}" class="text-decoration-none">Already verified? Login instead</a>{% endif %}
-                    </div>
+<div class="otp-page">
+    <section class="otp-card" aria-labelledby="otp-title">
+        <div class="otp-card__accent"></div>
+        <div class="otp-card__body">
+            <header class="otp-heading">
+                <div class="otp-icon" aria-hidden="true">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+                        <rect x="5.5" y="10" width="37" height="28" rx="6" stroke="currentColor" stroke-width="2.5"/>
+                        <path d="m8 14 16 12 16-12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="m16 32 4 4 9-9" stroke="#c9a532" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
                 </div>
-            </div>
+                <p class="otp-kicker">
+                    {% if login_challenge %}Secure sign-in{% else %}Account verification{% endif %}
+                    {% if not login_challenge %}<span class="otp-step">Step 3 of 3</span>{% endif %}
+                </p>
+                <h1 class="otp-title" id="otp-title">{% if login_challenge %}Confirm it's you{% else %}Verify your account{% endif %}</h1>
+                <p class="otp-intro">Enter the 6-digit code we sent to:</p>
+                <div class="otp-email">{{ user_email }}</div>
+            </header>
+
+            <form method="post" class="otp-form">
+                {% csrf_token %}
+                <label class="otp-label" for="{{ form.code.id_for_label }}">Verification code</label>
+                {{ form.code }}
+                {% if form.code.errors %}
+                    <div class="otp-errors">{{ form.code.errors }}</div>
+                {% endif %}
+                <p class="otp-help" id="otp-code-help">Enter all 6 digits. Never share your code.</p>
+                <button class="btn otp-submit w-100" type="submit">{% if login_challenge %}Confirm and sign in{% else %}Verify account{% endif %}</button>
+            </form>
+
+            <section class="otp-delivery" aria-label="Code delivery help">
+                <p class="otp-delivery__title">Didn't get the email?</p>
+                <p class="otp-delivery__hint">Check Spam or Promotions. Automated codes can land there.</p>
+                <div class="otp-resend-actions{% if login_challenge %} otp-resend-actions--single{% endif %}">
+                    <form method="post" action="{% url 'resend_otp' %}" class="otp-resend-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="method" value="email">
+                        <button class="btn otp-resend-button" type="submit">Resend by email</button>
+                    </form>
+                    {% if not login_challenge %}
+                        <form method="post" action="{% url 'resend_otp' %}" class="otp-resend-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="method" value="sms">
+                            <button class="btn otp-resend-button" type="submit">Resend by SMS</button>
+                        </form>
+                    {% endif %}
+                </div>
+                {% if not login_challenge %}
+                    <a href="{% url 'resend_verification_request' %}" class="otp-recovery">Need a new code? Request one by email</a>
+                {% endif %}
+            </section>
+
+            <footer class="otp-footer">
+                {% if login_challenge %}<a href="{% url 'cancel_login_challenge' %}">Cancel sign-in</a>{% else %}<a href="{% url 'login' %}">Already verified? Go to login</a>{% endif %}
+            </footer>
         </div>
-    </div>
+    </section>
 </div>
 {% endblock %}

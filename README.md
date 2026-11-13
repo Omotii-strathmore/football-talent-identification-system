@@ -17,7 +17,7 @@ A web-based football talent identification system that gives young players in Ke
 | **Scouts** (verified by the admin) | Find players by position, preferred foot, age, county and category, keep an Interests list, give feedback, post trials, and request contact (details stay hidden until player consent and guardian approval where needed) |
 | **Admin** | Verify scouts' documents, manage accounts, publish "What's new" updates, view reports and feedback, download a backup |
 
-Also: email verification codes on every login, password reset, player-controlled journey sharing (private by default; public progress is limited to signed-in players and verified scouts), a Player Community for opted-in profiles and videos, English and Swahili landing page, light and dark mode, guided tours, a phone-friendly layout, an About Us page and an optional AI writing helper. Quarterly check-in prompts appear when a player next visits their dashboard; scheduled reminder emails are not configured. Community posts, likes and comments are not included in this first version.
+Also: email verification after profile setup, email OTP for a concurrent login from another session, password reset, player-controlled journey sharing (private by default; public progress is limited to signed-in players and verified scouts), a Player Community for opted-in profiles and videos, English and Swahili landing page, light and dark mode, guided tours, a phone-friendly layout, an About Us page and an optional AI writing helper. Quarterly check-in prompts appear when a player next visits their dashboard; scheduled reminder emails are not configured. Community posts, likes and comments are not included in this first version.
 
 ## Built with
 
