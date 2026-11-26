@@ -1,0 +1,174 @@
+<section class="development-journey-panel profile-section mt-4" aria-labelledby="development-journey-heading">
+    <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
+        <div>
+            <p class="profile-label mb-1">PLAYER DEVELOPMENT</p>
+            <h4 class="mb-1" id="development-journey-heading">Your development journey</h4>
+            <p class="text-muted mb-0">Set football goals and keep track of the progress you make.</p>
+        </div>
+        <button class="btn btn-success fw-bold px-4" type="button" data-bs-toggle="modal" data-bs-target="#development-journey">
+            Open my journey
+        </button>
+    </div>
+    <div class="development-journey-progress mt-3">
+        <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+            <span>Profile strength</span>
+            <strong>{{ strength.percent }}%{% if strength.percent >= 80 %} &middot; Strong{% endif %}</strong>
+        </div>
+        <div class="progress" role="progressbar" aria-label="Profile strength" aria-valuenow="{{ strength.percent }}" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar" style="width: {{ strength.percent }}%"></div>
+        </div>
+        {% if strength.percent >= 80 %}
+            <p class="small mb-0 mt-2">Your profile is strong. Your journey is ready whenever you are.</p>
+        {% else %}
+            <p class="small mb-0 mt-2">Reach 80% profile strength for your journey introduction. Next: {{ strength.next|default:"keep your profile up to date" }}.</p>
+        {% endif %}
+    </div>
+</section>
+
+<div class="modal fade development-journey-modal" id="development-journey" tabindex="-1"
+     aria-labelledby="development-journey-title" aria-hidden="true"
+     data-auto-open="{% if journey_auto_open %}true{% else %}false{% endif %}">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <span class="journey-modal-eyebrow">&#9917; PLAYER DEVELOPMENT</span>
+                    <h2 class="modal-title" id="development-journey-title">My development journey</h2>
+                    <p class="mb-0">Small, focused steps can make a big difference to your game.</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white ms-3" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="journey-status-card {% if journey_checkin_due %}is-due{% endif %}">
+                    <span class="journey-status-icon" aria-hidden="true">{% if journey_checkin_due %}&#9200;{% else %}&#128161;{% endif %}</span>
+                    <div>
+                        {% if journey_checkin_due %}
+                            <strong>Your quarterly check-in is due.</strong>
+                            <p class="mb-0">What have you been working on, and what would you like to focus on next?</p>
+                        {% else %}
+                            <strong>Keep building at your own pace</strong>
+                            <p class="mb-0">Your next quarterly check-in is due {{ next_checkin_at|date:"M j, Y" }}.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-lg-6">
+                        <section class="journey-form-card h-100">
+                            <div class="journey-form-heading">
+                                <span class="journey-form-number">01</span>
+                                <div>
+                                    <h3>Progress check-in</h3>
+                                    <p>Record a recent improvement, training session, or achievement.</p>
+                                </div>
+                            </div>
+                            <form method="post" action="{% url 'player_journey_update' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="check_in">
+                                <div class="mb-3">
+                                    <label class="form-label" for="journey-update">What have you worked on?</label>
+                                    <textarea id="journey-update" name="update" class="form-control" rows="4" maxlength="1200" required
+                                              placeholder="For example: I trained my weaker foot three times this week and used it in a match."></textarea>
+                                    <div class="form-text">Be specific about what you practised or achieved. Up to 1,200 characters.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="journey-next-step">What will you focus on next? <span class="fw-normal">(optional)</span></label>
+                                    <input id="journey-next-step" name="next_step" class="form-control" maxlength="300"
+                                           placeholder="For example: Keep practising my first touch under pressure.">
+                                </div>
+                                <button class="btn btn-success fw-bold" type="submit">Save progress update</button>
+                            </form>
+                        </section>
+                    </div>
+                    <div class="col-lg-6">
+                        <section class="journey-form-card h-100">
+                            <div class="journey-form-heading">
+                                <span class="journey-form-number is-gold">02</span>
+                                <div>
+                                    <h3>Set a football goal</h3>
+                                    <p>Choose one clear target you can work towards.</p>
+                                </div>
+                            </div>
+                            <form method="post" action="{% url 'player_journey_update' %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="add_goal">
+                                <div class="mb-3">
+                                    <label class="form-label" for="journey-goal">My goal</label>
+                                    <input id="journey-goal" name="title" class="form-control" maxlength="180" required
+                                           placeholder="For example: Improve my weaker-foot passing.">
+                                    <div class="form-text">Keep it clear and focused. Up to 180 characters.</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label" for="journey-target-date">Target date <span class="fw-normal">(optional)</span></label>
+                                    <input id="journey-target-date" name="target_date" type="date" class="form-control">
+                                </div>
+                                <button class="btn btn-outline-success fw-bold" type="submit">Add this goal</button>
+                            </form>
+                        </section>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-1">
+                    <div class="col-lg-6">
+                        <section class="journey-list-card h-100">
+                            <h3>My goals</h3>
+                            {% for goal in journey_goals %}
+                                <div class="journey-list-item">
+                                    <div>
+                                        <strong class="{% if goal.is_complete %}text-decoration-line-through text-muted{% endif %}">{{ goal.title }}</strong>
+                                        {% if goal.target_date %}<span class="d-block small text-muted">Target {{ goal.target_date|date:"M j, Y" }}</span>{% endif %}
+                                    </div>
+                                    <form method="post" action="{% url 'player_journey_update' %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="complete_goal">
+                                        <input type="hidden" name="goal_id" value="{{ goal.id }}">
+                                        <button class="btn btn-sm {% if goal.is_complete %}btn-outline-secondary{% else %}btn-outline-success{% endif %}" type="submit">
+                                            {% if goal.is_complete %}Reopen{% else %}Complete{% endif %}
+                                        </button>
+                                    </form>
+                                </div>
+                            {% empty %}
+                                <p class="journey-empty mb-0">Your goals will appear here. Start with one small, achievable target.</p>
+                            {% endfor %}
+                        </section>
+                    </div>
+                    <div class="col-lg-6">
+                        <section class="journey-list-card h-100">
+                            <h3>Recent check-ins</h3>
+                            {% for checkin in journey_checkins %}
+                                <article class="journey-checkin">
+                                    <time class="journey-checkin-date" datetime="{{ checkin.created_at|date:'c' }}">{{ checkin.created_at|date:"M j, Y" }}</time>
+                                    <p>{{ checkin.update }}</p>
+                                    {% if checkin.next_step %}<p class="journey-next-step mb-0"><strong>Next step:</strong> {{ checkin.next_step }}</p>{% endif %}
+                                </article>
+                            {% empty %}
+                                <p class="journey-empty mb-0">Your progress updates will appear here after your first check-in.</p>
+                            {% endfor %}
+                        </section>
+                    </div>
+                </div>
+
+                <section class="journey-visibility-card mt-3">
+                    <div>
+                        <h3>Progress visibility</h3>
+                        <p>Your goals and check-ins are private unless you choose to share them.</p>
+                    </div>
+                    <form method="post" action="{% url 'player_journey_update' %}" class="journey-visibility-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="set_visibility">
+                        <label class="journey-visibility-option {% if not profile.share_journey_with_community %}is-selected{% endif %}">
+                            <input class="form-check-input" type="radio" name="visibility" value="private" {% if not profile.share_journey_with_community %}checked{% endif %}>
+                            <span><strong>Private</strong><small>Only you can see your progress.</small></span>
+                        </label>
+                        <label class="journey-visibility-option {% if profile.share_journey_with_community %}is-selected{% endif %}">
+                            <input class="form-check-input" type="radio" name="visibility" value="public" {% if profile.share_journey_with_community %}checked{% endif %}>
+                            <span><strong>Share with the community</strong><small>Signed-in players and verified scouts can see it.</small></span>
+                        </label>
+                        <button class="btn btn-outline-secondary btn-sm fw-bold" type="submit">Save visibility</button>
+                    </form>
+                    <p class="small text-muted mb-0 mt-2">Your profile and videos have a separate sharing setting. Guardian approval is still required for players under 18.</p>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>

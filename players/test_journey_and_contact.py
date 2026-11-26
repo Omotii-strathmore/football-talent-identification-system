@@ -41,7 +41,11 @@ class PlayerJourneyTests(TestCase):
             'title': 'Improve my weaker-foot passing',
             'target_date': '2026-09-01',
         })
-        self.assertRedirects(response, reverse('player_dashboard'), fetch_redirect_response=False)
+        self.assertRedirects(
+            response,
+            f'{reverse("player_profile")}#development-journey',
+            fetch_redirect_response=False,
+        )
         goal = PlayerJourneyGoal.objects.get(profile=self.profile)
         self.assertEqual(goal.title, 'Improve my weaker-foot passing')
         self.assertFalse(goal.is_complete)
@@ -66,8 +70,47 @@ class PlayerJourneyTests(TestCase):
             created_at=timezone.now() - timedelta(days=91)
         )
         self.client.force_login(self.player)
-        response = self.client.get(reverse('player_dashboard'))
+        response = self.client.get(reverse('player_profile'))
         self.assertContains(response, 'Your quarterly check-in is due.')
+
+    def test_development_journey_is_on_profile_not_dashboard(self):
+        self.client.force_login(self.player)
+        dashboard = self.client.get(reverse('player_dashboard'))
+        self.assertNotContains(dashboard, 'id="player-journey"')
+        self.assertNotContains(dashboard, 'name="action" value="add_goal"')
+
+        profile = self.client.get(reverse('player_profile'))
+        self.assertContains(profile, 'id="development-journey"')
+        self.assertContains(profile, 'Open my journey')
+        self.assertContains(profile, 'data-auto-open="false"')
+
+    def test_journey_popup_auto_opens_once_at_eighty_percent_profile_strength(self):
+        self.profile.profile_photo = SimpleUploadedFile(
+            'profile.jpg',
+            b'profile image',
+            content_type='image/jpeg',
+        )
+        self.profile.bio = 'A committed forward who works hard every day.'
+        self.profile.secondary_position = 'Midfielder'
+        self.profile.height_cm = 175
+        self.profile.weight_kg = 68
+        self.profile.football_experience = 'Played for my school team.'
+        self.profile.current_club = 'Nairobi Academy'
+        self.profile.save()
+        PlayerVideo.objects.create(
+            profile=self.profile,
+            title='First highlights',
+            video_file=SimpleUploadedFile('highlights.mp4', b'video'),
+        )
+        self.client.force_login(self.player)
+
+        response = self.client.get(reverse('player_profile'))
+        self.assertEqual(response.context['strength']['percent'], 88)
+        self.assertTrue(response.context['journey_auto_open'])
+        self.assertContains(response, 'data-auto-open="true"')
+
+        response = self.client.get(reverse('player_profile'))
+        self.assertFalse(response.context['journey_auto_open'])
 
     def test_player_can_choose_public_or_private_progress(self):
         self.client.force_login(self.player)

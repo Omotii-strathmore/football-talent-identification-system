@@ -63,10 +63,6 @@ def dashboard(request):
 
     unread_feedback_count = feedback_entries.filter(is_seen=False).count() if profile else 0
     videos = profile.videos.all() if profile else []
-    last_checkin = profile.journey_checkins.first() if profile else None
-    checkin_reference = last_checkin.created_at if last_checkin else (profile.created_at if profile else None)
-    next_checkin_at = checkin_reference + timedelta(days=90) if checkin_reference else None
-    journey_checkin_due = bool(next_checkin_at and timezone.now() >= next_checkin_at)
 
     if unread_feedback_count:
         messages.info(request, f'You have {unread_feedback_count} unread scout feedback item(s).')
@@ -92,10 +88,6 @@ def dashboard(request):
             ),
             'guardian_pending': bool(profile and profile.needs_guardian_approval),
             'guardian_email_masked': mask_email(profile.guardian_email) if profile and profile.guardian_email else '',
-            'journey_goals': profile.journey_goals.all() if profile else [],
-            'journey_checkins': profile.journey_checkins.all()[:5] if profile else [],
-            'journey_checkin_due': journey_checkin_due,
-            'next_checkin_at': next_checkin_at,
             'contact_requests': (
                 ScoutPlayerContactRequest.objects.select_related('scout', 'scout__scout_profile')
                 .filter(profile=profile).order_by('-updated_at')
@@ -184,7 +176,7 @@ def journey_update(request):
             messages.success(request, f'Your progress is now visible to {visibility_label}.')
     else:
         messages.error(request, 'Choose a valid journey update.')
-    return redirect('player_dashboard')
+    return redirect(f'{reverse("player_profile")}#development-journey')
 
 
 def _send_contact_request_to_guardian(request, contact_request):
@@ -353,6 +345,24 @@ def profile_view(request):
     else:
         form = PlayerProfileForm(instance=profile)
 
+    videos = profile.videos.all()
+    videos_count = videos.count()
+    strength = _profile_strength(profile, videos_count)
+    journey_goals = profile.journey_goals.all()
+    journey_checkins = profile.journey_checkins.all()[:5]
+    last_checkin = profile.journey_checkins.first()
+    checkin_reference = last_checkin.created_at if last_checkin else profile.created_at
+    next_checkin_at = checkin_reference + timedelta(days=90)
+    journey_checkin_due = timezone.now() >= next_checkin_at
+    journey_prompt_key = f'player_journey_prompt_seen_{profile.pk}'
+    journey_auto_open = (
+        strength['percent'] >= 80
+        and not edit_mode
+        and not request.session.get(journey_prompt_key)
+    )
+    if journey_auto_open:
+        request.session[journey_prompt_key] = True
+
     trait_list = []
     if profile.special_traits:
         trait_list = [trait.strip() for trait in profile.special_traits.split(',') if trait.strip()]
@@ -364,8 +374,14 @@ def profile_view(request):
             'profile': profile,
             'form': form,
             'edit_mode': edit_mode,
-            'videos': profile.videos.all(),
+            'videos': videos,
             'trait_list': trait_list,
+            'strength': strength,
+            'journey_goals': journey_goals,
+            'journey_checkins': journey_checkins,
+            'journey_checkin_due': journey_checkin_due,
+            'next_checkin_at': next_checkin_at,
+            'journey_auto_open': journey_auto_open,
         },
     )
 
