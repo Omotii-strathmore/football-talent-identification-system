@@ -232,6 +232,8 @@ SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL', 'anelmcall@gmail.com')
 # Public address of the live site, used for images and links inside emails.
 SITE_URL = os.environ.get('SITE_URL', 'https://talanta-soka.onrender.com').rstrip('/')
 GOATCOUNTER_SITE_CODE = os.environ.get('GOATCOUNTER_SITE_CODE', '').strip()
+if not GOATCOUNTER_SITE_CODE and os.environ.get('RENDER'):
+    GOATCOUNTER_SITE_CODE = 'talanta-soka'
 
 # "Draft with AI" on the admin Updates page. Leave ANTHROPIC_API_KEY empty to keep it switched off.
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
