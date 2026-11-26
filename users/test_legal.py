@@ -2,9 +2,10 @@ from datetime import date
 
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.test import TestCase
-from django.urls import reverse
+from django.test import RequestFactory, TestCase, override_settings
+from django.urls import resolve, reverse
 
+from config.context_processors import goatcounter
 from players.models import PlayerProfile, PlayerVideo
 from users.models import User
 
@@ -18,6 +19,28 @@ class LegalPagesAndConsentTests(TestCase):
     def test_privacy_and_terms_pages_render(self):
         self.assertContains(self.client.get(reverse('privacy')), 'Privacy Policy')
         self.assertContains(self.client.get(reverse('terms')), 'Terms of Use')
+
+    @override_settings(GOATCOUNTER_SITE_CODE='talanta-soka')
+    def test_goatcounter_is_added_to_both_shared_templates(self):
+        tracker = 'https://talanta-soka.goatcounter.com/count'
+        self.assertContains(self.client.get(reverse('home')), tracker)
+        self.assertContains(self.client.get(reverse('login')), tracker)
+
+    @override_settings(GOATCOUNTER_SITE_CODE='')
+    def test_goatcounter_is_disabled_without_a_site_code(self):
+        self.assertNotContains(self.client.get(reverse('home')), 'data-goatcounter=')
+
+    def test_goatcounter_excludes_private_token_pages(self):
+        private_routes = (
+            ('guardian_review', {'token': 'private-token'}),
+            ('guardian_contact_review', {'token': 'private-token'}),
+            ('updates_unsubscribe', {'token': 'private-token'}),
+        )
+        for route_name, kwargs in private_routes:
+            path = reverse(route_name, kwargs=kwargs)
+            request = RequestFactory().get(path)
+            request.resolver_match = resolve(path)
+            self.assertTrue(goatcounter(request)['goatcounter_exclude_page'])
 
     def _register(self, email, accept_terms=True):
         data = {

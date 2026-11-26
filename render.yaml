@@ -23,3 +23,5 @@ services:
         sync: false
       - key: DEFAULT_FROM_EMAIL
         sync: false
+      - key: GOATCOUNTER_SITE_CODE
+        value: talanta-soka

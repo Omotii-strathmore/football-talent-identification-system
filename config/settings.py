@@ -114,6 +114,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'users.context_processors.site_extras',
+                'config.context_processors.goatcounter',
             ],
         },
     },
@@ -230,6 +231,7 @@ LOGIN_URL = 'login'
 SUPPORT_EMAIL = os.environ.get('SUPPORT_EMAIL', 'anelmcall@gmail.com')
 # Public address of the live site, used for images and links inside emails.
 SITE_URL = os.environ.get('SITE_URL', 'https://talanta-soka.onrender.com').rstrip('/')
+GOATCOUNTER_SITE_CODE = os.environ.get('GOATCOUNTER_SITE_CODE', '').strip()
 
 # "Draft with AI" on the admin Updates page. Leave ANTHROPIC_API_KEY empty to keep it switched off.
 ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
