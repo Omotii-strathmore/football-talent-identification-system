@@ -1,7 +1,6 @@
 from collections import Counter
 
 from django.contrib import messages
-from django.contrib.sessions.models import Session
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Count, Q
@@ -53,6 +52,7 @@ from .forms import (
     SiteUpdateForm,
 )
 from .models import AdminNotification, User, OneTimeCode, SiteFeedback, SiteUpdate, UpdateReceipt
+from .constants import OTP_EXPIRY_MINUTES
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ def submit_feedback_view(request):
 def send_otp_to_user(user, method='email', purpose='verify'):
     # generate 6-digit code
     code = f"{secrets.randbelow(1_000_000):06d}"
-    expires = timezone.now() + timedelta(minutes=15)
+    expires = timezone.now() + timedelta(minutes=OTP_EXPIRY_MINUTES)
     OneTimeCode.objects.create(user=user, code=code, method=method, purpose=purpose, expires_at=expires)
 
     if purpose == 'reset':
@@ -132,7 +132,7 @@ def send_otp_to_user(user, method='email', purpose='verify'):
         message = (
             f'Hello {user.full_name},\n\n'
             f'Your Talanta Soka password reset code is: {code}\n'
-            'It expires in 15 minutes.\n\n'
+            f'It expires in {OTP_EXPIRY_MINUTES} minutes.\n\n'
             'If you did not request a password reset, please ignore this email.'
         )
     elif purpose == 'login':
@@ -140,7 +140,7 @@ def send_otp_to_user(user, method='email', purpose='verify'):
         message = (
             f'Hello {user.full_name},\n\n'
             f'Your Talanta Soka login code is: {code}\n'
-            'It expires in 15 minutes. Enter it to finish signing in.\n\n'
+            f'It expires in {OTP_EXPIRY_MINUTES} minutes. Enter it to finish signing in.\n\n'
             'If you did not try to log in, change your password and contact support.'
         )
     else:
@@ -148,7 +148,7 @@ def send_otp_to_user(user, method='email', purpose='verify'):
         message = (
             f'Hello {user.full_name},\n\n'
             f'Your Talanta Soka verification code is: {code}\n'
-            'It expires in 15 minutes.\n\n'
+            f'It expires in {OTP_EXPIRY_MINUTES} minutes.\n\n'
             'If you did not request this, please ignore this email.'
         )
     sender_address = None
@@ -168,6 +168,7 @@ def send_otp_to_user(user, method='email', purpose='verify'):
             send_branded_email(
                 subject, message, 'code.html',
                 {'code': code, 'purpose': purpose, 'full_name': user.full_name,
+                 'expiry_minutes': OTP_EXPIRY_MINUTES,
                  'first_name': (user.full_name or '').split(' ')[0] or 'there'},
                 [user.email], from_email=from_email, banner='player' if purpose not in ('reset', 'login') else 'reset',
             )
@@ -234,9 +235,7 @@ def verify_otp_view(request):
                     messages.error(request, 'Invalid verification code.')
             else:
                 throttle.reset('code', user.pk)
-                if (purpose == 'login' and (not otp.expires_at or otp.expires_at <= timezone.now())) or (
-                    otp.expires_at and otp.expires_at < timezone.now()
-                ):
+                if not otp.expires_at or otp.expires_at <= timezone.now():
                     messages.error(request, 'Verification code has expired. Request a new one.')
                 else:
                     otp.used = True
@@ -597,6 +596,7 @@ def login_view(request):
 
             if user:
                 throttle.reset('login', form.cleaned_data['email'])
+                logout(request)
 
                 # Ensure role-specific profile exists before allowing dashboard access.
                 if not user.is_staff and user.role == 'player' and not PlayerProfile.objects.filter(user_id=user.pk).exists():
@@ -616,33 +616,18 @@ def login_view(request):
                     require_https=request.is_secure(),
                 ):
                     next_url = ''
-                request.session.pop('pending_user_id', None)
-                request.session.pop('pending_user_email', None)
-                request.session.pop('pending_login_user_id', None)
-                request.session.pop('pending_login_next', None)
-
-                same_session = request.user.is_authenticated and request.user.pk == user.pk
-                if not same_session and _has_other_active_login_session(user, request.session.session_key):
-                    request.session['pending_login_user_id'] = user.id
-                    request.session['pending_login_next'] = next_url or ''
-                    wait = throttle.resend_wait(user, 'login')
-                    if wait:
-                        messages.info(request, f'A sign-in code was sent recently. Check your inbox and Spam, or try again in {wait} seconds.')
+                request.session['pending_login_user_id'] = user.id
+                request.session['pending_login_next'] = next_url or ''
+                wait = throttle.resend_wait(user, 'login')
+                if wait:
+                    messages.info(request, f'A sign-in code was sent recently. Check your inbox and Spam, or try again in {wait} seconds.')
+                else:
+                    OneTimeCode.objects.filter(user=user, purpose='login', used=False).update(used=True)
+                    if send_otp_to_user(user, method='email', purpose='login'):
+                        messages.success(request, f'A sign-in code was sent to {user.email}. Enter it to complete your login.')
                     else:
-                        OneTimeCode.objects.filter(user=user, purpose='login', used=False).update(used=True)
-                        if send_otp_to_user(user, method='email', purpose='login'):
-                            messages.success(request, f'A sign-in code was sent to {user.email}. Enter it to complete your login.')
-                        else:
-                            messages.error(request, 'We could not send your sign-in code. You can try resending it on the next page.')
-                    return redirect('verify_otp')
-
-                login(request, user)
-                messages.success(request, 'Login successful. Welcome back!')
-                if next_url:
-                    return redirect(next_url)
-                return redirect('admin_dashboard' if user.is_staff else
-                                'player_dashboard' if user.role == 'player' else
-                                'scout_dashboard')
+                        messages.error(request, 'We could not send your sign-in code. You can try resending it on the next page.')
+                return redirect('verify_otp')
 
             # If authentication failed, check for an inactive user with valid credentials.
             inactive_user = User.objects.filter(email__iexact=form.cleaned_data['email'], is_active=False).first()
@@ -674,22 +659,6 @@ def login_view(request):
             'next': request.POST.get('next') or request.GET.get('next', ''),
         }
     )
-
-
-def _has_other_active_login_session(user, current_session_key):
-    session_store = Session.get_session_store_class()()
-    sessions = Session.objects.filter(expire_date__gt=timezone.now()).only('session_key', 'session_data')
-    for session in sessions.iterator():
-        if session.session_key == current_session_key:
-            continue
-        data = session_store.decode(session.session_data)
-        # Ignore sessions Django would invalidate after a password change.
-        if (
-            data.get('_auth_user_id') == str(user.pk)
-            and data.get('_auth_user_hash') == user.get_session_auth_hash()
-        ):
-            return True
-    return False
 
 
 def logout_view(request):

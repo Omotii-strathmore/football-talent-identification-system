@@ -10,6 +10,7 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
 from players.models import PlayerProfile
+from .constants import OTP_EXPIRY_MINUTES
 
 logger = logging.getLogger(__name__)
 
@@ -156,9 +157,10 @@ def send_security_alert(user, kind, new_email='', to_email=None):
 def send_code_email(user, code, purpose, to_email):
     """Email a 6-digit code to an address the user wants to start using."""
     subject = '\U0001F511 Confirm Your Email | Talanta Soka'
-    text = f'Hello {user.full_name},\n\nYour Talanta Soka confirmation code is: {code}\nIt expires in 15 minutes.\n\nIf you did not ask for this, ignore this email.'
+    text = f'Hello {user.full_name},\n\nYour Talanta Soka confirmation code is: {code}\nIt expires in {OTP_EXPIRY_MINUTES} minutes.\n\nIf you did not ask for this, ignore this email.'
     send_branded_email(
         subject, text, 'code.html',
-        {'code': code, 'purpose': purpose, 'full_name': user.full_name, 'first_name': (user.full_name or '').split(' ')[0]},
+        {'code': code, 'purpose': purpose, 'full_name': user.full_name,
+         'first_name': (user.full_name or '').split(' ')[0], 'expiry_minutes': OTP_EXPIRY_MINUTES},
         [to_email], from_email=f'{settings.EMAIL_FROM_NAME} <{settings.DEFAULT_FROM_EMAIL}>', banner='player',
     )

@@ -5,11 +5,16 @@
             <h4 class="mb-1" id="development-journey-heading">Your development journey</h4>
             <p class="text-muted mb-0">Set football goals and keep track of the progress you make.</p>
         </div>
-        <button class="btn btn-success fw-bold px-4" type="button" data-bs-toggle="modal" data-bs-target="#development-journey">
-            Open my journey
-        </button>
+        <div class="d-flex flex-wrap gap-2">
+            <button class="btn btn-success fw-bold px-4" type="button" data-bs-toggle="modal" data-bs-target="#development-journey">
+                Open my journey
+            </button>
+            <button class="btn btn-outline-success fw-bold journey-tour-button" type="button" id="journey-tour-launch">
+                &#129517; Take the journey tour
+            </button>
+        </div>
     </div>
-    <div class="development-journey-progress mt-3">
+    <div class="development-journey-progress mt-3" id="journey-tour-profile-strength">
         <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
             <span>Profile strength</span>
             <strong>{{ strength.percent }}%{% if strength.percent >= 80 %} &middot; Strong{% endif %}</strong>
@@ -39,7 +44,7 @@
                 <button type="button" class="btn-close btn-close-white ms-3" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="journey-status-card {% if journey_checkin_due %}is-due{% endif %}">
+                <div class="journey-status-card {% if journey_checkin_due %}is-due{% endif %}" id="journey-tour-reminder">
                     <span class="journey-status-icon" aria-hidden="true">{% if journey_checkin_due %}&#9200;{% else %}&#128161;{% endif %}</span>
                     <div>
                         {% if journey_checkin_due %}
@@ -54,7 +59,7 @@
 
                 <div class="row g-3 mt-1">
                     <div class="col-lg-6">
-                        <section class="journey-form-card h-100">
+                        <section class="journey-form-card h-100" id="journey-tour-checkin">
                             <div class="journey-form-heading">
                                 <span class="journey-form-number">01</span>
                                 <div>
@@ -81,7 +86,7 @@
                         </section>
                     </div>
                     <div class="col-lg-6">
-                        <section class="journey-form-card h-100">
+                        <section class="journey-form-card h-100" id="journey-tour-goal">
                             <div class="journey-form-heading">
                                 <span class="journey-form-number is-gold">02</span>
                                 <div>
@@ -108,7 +113,7 @@
                     </div>
                 </div>
 
-                <div class="row g-3 mt-1">
+                <div class="row g-3 mt-1" id="journey-tour-history">
                     <div class="col-lg-6">
                         <section class="journey-list-card h-100">
                             <h3>My goals</h3>
@@ -148,7 +153,7 @@
                     </div>
                 </div>
 
-                <section class="journey-visibility-card mt-3">
+                <section class="journey-visibility-card mt-3" id="journey-tour-visibility">
                     <div>
                         <h3>Progress visibility</h3>
                         <p>Your goals and check-ins are private unless you choose to share them.</p>

@@ -15,7 +15,7 @@ class WelcomeEmailTests(TestCase):
         user.is_active = False
         user.save()
         OneTimeCode.objects.create(user=user, code='123456', method='email', purpose='verify',
-                                   expires_at=timezone.now() + timedelta(minutes=15))
+                                   expires_at=timezone.now() + timedelta(minutes=5))
         session = self.client.session
         session['pending_user_id'] = user.id
         session.save()

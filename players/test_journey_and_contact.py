@@ -83,6 +83,29 @@ class PlayerJourneyTests(TestCase):
         self.assertContains(profile, 'id="development-journey"')
         self.assertContains(profile, 'Open my journey')
         self.assertContains(profile, 'data-auto-open="false"')
+        self.assertContains(profile, 'id="journey-tour-launch"')
+        self.assertContains(profile, 'storageKey: \'talantaSokaDevelopmentJourneyTourDone\'')
+        self.assertContains(profile, 'id="journey-tour-checkin"')
+        self.assertContains(profile, 'id="journey-tour-goal"')
+        self.assertContains(profile, 'id="journey-tour-history"')
+        self.assertContains(profile, 'id="journey-tour-visibility"')
+
+    def test_dashboard_tour_covers_the_current_player_dashboard(self):
+        self.client.force_login(self.player)
+        dashboard = self.client.get(reverse('player_dashboard'))
+        for target in (
+            'tour-dashboard-stats',
+            'tour-my-profile',
+            'tour-upload-video',
+            'tour-view-opportunities',
+            'tour-my-applications',
+            'tour-player-community',
+        ):
+            with self.subTest(target=target):
+                self.assertContains(dashboard, f'id="{target}"')
+        self.assertContains(dashboard, 'Profile strength')
+        self.assertContains(dashboard, 'Track the status of every opportunity')
+        self.assertContains(dashboard, 'Discover other players who chose to share')
 
     def test_journey_popup_auto_opens_once_at_eighty_percent_profile_strength(self):
         self.profile.profile_photo = SimpleUploadedFile(

@@ -175,7 +175,7 @@
     {% endfor %}
 
     <div class="dash-stack">
-    <div class="row g-3 mb-4 p-stats">
+    <div class="row g-3 mb-4 p-stats" id="tour-dashboard-stats">
         <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#0b4d2c"><div class="card-body"><span class="stat-icon">&#128203;</span><div class="stat-value">{{ applications_count }}</div><p class="text-muted mb-0">Applications</p></div></div></div>
         <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#16a34a"><div class="card-body"><span class="stat-icon">&#127909;</span><div class="stat-value">{{ videos_count }}</div><p class="text-muted mb-0">Uploaded Videos</p></div></div></div>
         <div class="col-6 col-md-4"><div class="card stat-card h-100 text-center" style="--c:#f6c453"><div class="card-body"><span class="stat-icon">&#9917;</span><div class="stat-value">{{ profile.position|default:'-' }}</div><p class="text-muted mb-0">Primary Position</p></div></div></div>
@@ -191,7 +191,7 @@
             <a href="{% url 'upload_video' %}" id="tour-upload-video" class="p-tile green"><span class="ic">&#127909;</span><span><strong>Upload Video ({{ videos_count }})</strong><small>Show scouts your best moments</small></span></a>
             <a href="{% url 'view_opportunities' %}" id="tour-view-opportunities" class="p-tile gold"><span class="ic">&#127942;</span><span><strong>View Opportunities</strong><small>Open trials and tournaments</small></span></a>
             <a href="{% url 'my_applications' %}" id="tour-my-applications" class="p-tile blue"><span class="ic">&#128203;</span><span><strong>My Applications ({{ applications_count }})</strong><small>Track every application</small></span></a>
-            <a href="{% url 'player_community' %}" class="p-tile green"><span class="ic">&#128101;</span><span><strong>Player Community</strong><small>Discover players who chose to share</small></span></a>
+            <a href="{% url 'player_community' %}" id="tour-player-community" class="p-tile green"><span class="ic">&#128101;</span><span><strong>Player Community</strong><small>Discover players who chose to share</small></span></a>
         </div>
     </div>
     </div>
@@ -248,17 +248,22 @@
         {
             target: null,
             title: 'Welcome to your Player Dashboard',
-            desc: 'This is your home base. This quick tour shows what each quick action does — skip anytime.'
+            desc: 'This is your home base for building your profile, sharing your game and following opportunities. The progress bar and summary cards keep your next steps visible. Skip anytime.'
+        },
+        {
+            target: '#tour-dashboard-stats',
+            title: 'Your dashboard overview',
+            desc: 'The profile strength bar above suggests what to complete next. These cards summarize your applications, videos, positions and physical details.'
         },
         {
             target: '#tour-my-profile',
             title: 'My Profile',
-            desc: 'View and edit your player profile: position, age, location, bio, and football experience.'
+            desc: 'Edit your profile details, football experience and photo. Your profile also holds your separate development journey.'
         },
         {
             target: '#tour-upload-video',
             title: 'Upload Video',
-            desc: 'Upload highlight clips, match footage, training, or skills videos for scouts to review — and reply to their feedback here.'
+            desc: 'Share highlight clips, match footage or training videos so scouts can see you play. You can also review their feedback here.'
         },
         {
             target: '#tour-view-opportunities',
@@ -268,7 +273,12 @@
         {
             target: '#tour-my-applications',
             title: 'My Applications',
-            desc: 'Track the status of every opportunity you have applied for.'
+            desc: 'Track the status of every opportunity you have applied for and check back for updates.'
+        },
+        {
+            target: '#tour-player-community',
+            title: 'Player Community',
+            desc: 'Discover other players who chose to share their profiles and progress with the community.'
         }
     ], {
         storageKey: 'talantaSokaPlayerDashboardTourDone',

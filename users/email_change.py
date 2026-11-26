@@ -6,7 +6,7 @@ does the login email change (the old one keeps working until then, and is told a
 Contact email (players): the email scouts may use to reach a player. It shows as "Verified" once the
 player enters a code sent to it; scouts only ever see verified contact emails.
 """
-import random
+import secrets
 from datetime import timedelta
 
 from django.db import transaction
@@ -15,11 +15,10 @@ from django.utils import timezone
 from players.models import PlayerProfile
 
 from . import throttle
+from .constants import OTP_EXPIRY_MINUTES
 from .email_check import check_email
 from .emails import send_code_email, send_security_alert
 from .models import OneTimeCode, User
-
-CODE_MINUTES = 15
 
 
 class EmailChangeError(Exception):
@@ -31,9 +30,9 @@ def _send_code(user, purpose, to_email):
     if wait:
         raise EmailChangeError(f'A code was sent a moment ago. Check your inbox and Spam, or try again in {wait} seconds.')
     OneTimeCode.objects.filter(user=user, purpose=purpose, used=False).update(used=True)
-    code = f'{random.randint(0, 999999):06d}'
+    code = f'{secrets.randbelow(1_000_000):06d}'
     OneTimeCode.objects.create(user=user, code=code, method='email', purpose=purpose, target_email=to_email,
-                               expires_at=timezone.now() + timedelta(minutes=CODE_MINUTES))
+                               expires_at=timezone.now() + timedelta(minutes=OTP_EXPIRY_MINUTES))
     try:
         send_code_email(user, code, purpose, to_email)
     except Exception:
@@ -81,7 +80,7 @@ def _check_code(user, purpose, code, target):
             OneTimeCode.objects.filter(user=user, purpose=purpose, used=False).update(used=True)
             raise EmailChangeError(throttle.message('code', user.pk) + ' Then send a new code.')
         raise EmailChangeError('That code is not right. Check the latest email from us and try again.')
-    if otp.expires_at and otp.expires_at < timezone.now():
+    if not otp.expires_at or otp.expires_at <= timezone.now():
         raise EmailChangeError('That code has expired. Send a new one.')
     otp.used = True
     otp.save(update_fields=['used'])

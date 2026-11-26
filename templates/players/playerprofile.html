@@ -5,6 +5,7 @@
 {% block title %}Player Profile{% endblock %}
 
 {% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/site-tour.css' %}">
 <link rel="stylesheet" href="{% static 'css/dob-picker.css' %}">
 <link rel="stylesheet" href="{% static 'css/brand-ui.css' %}">
 <style>
@@ -322,6 +323,27 @@
     .development-journey-progress {
         max-width: 620px;
         color: #334155;
+    }
+
+    .journey-tour-button {
+        border-width: 2px;
+    }
+
+    .st-tooltip.st-journey-tour {
+        border-top: 4px solid #0b4d2c;
+    }
+
+    .st-journey-tour .st-step-label {
+        color: #0b4d2c;
+    }
+
+    .st-journey-tour .st-next {
+        border-color: #0b4d2c;
+        background: #0b4d2c;
+    }
+
+    .st-journey-tour .st-dot.is-active {
+        background: #f6c453;
     }
 
     .development-journey-progress .progress {
@@ -876,6 +898,62 @@
         if (window.location.hash === '#development-journey' || modalElement.dataset.autoOpen === 'true') {
             modal.show();
         }
+    })();
+</script>
+<script src="{% static 'js/site-tour.js' %}"></script>
+<script>
+    (function () {
+        const modalElement = document.getElementById('development-journey');
+        const launchButton = document.getElementById('journey-tour-launch');
+        if (!modalElement || !launchButton || !window.bootstrap || !window.SiteTour) return;
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        const journeyTour = SiteTour.create([
+            {
+                target: '#development-journey-title',
+                title: 'Your player development journey',
+                desc: 'Use this space to set football goals and record the progress you make. Your updates stay private unless you choose to share them.'
+            },
+            {
+                target: '#journey-tour-reminder',
+                title: 'Quarterly check-ins',
+                desc: 'This reminder tells you when it is time to reflect on your training and decide what to focus on next.'
+            },
+            {
+                target: '#journey-tour-checkin',
+                title: 'Record your progress',
+                desc: 'Write what you have practised or achieved, then add an optional next step. Your check-ins build a record of your development.'
+            },
+            {
+                target: '#journey-tour-goal',
+                title: 'Set a clear football goal',
+                desc: 'Choose one focused target and, if helpful, set a date to work towards. You can update your goals as you improve.'
+            },
+            {
+                target: '#journey-tour-history',
+                title: 'Review your progress',
+                desc: 'Your goals and recent check-ins appear here. Mark goals complete when you reach them, or reopen them if you want to keep practising.'
+            },
+            {
+                target: '#journey-tour-visibility',
+                title: 'You control what you share',
+                desc: 'Progress is private by default. You can choose to share it with the community; players under 18 still need guardian approval.'
+            }
+        ], {
+            storageKey: 'talantaSokaDevelopmentJourneyTourDone',
+            autoStart: false,
+            showReplayButton: false,
+            startDelay: 350,
+            tooltipClass: 'st-journey-tour',
+            onStart: function () {
+                if (!modalElement.classList.contains('show')) {
+                    modal.show();
+                }
+            }
+        });
+
+        launchButton.addEventListener('click', journeyTour.start);
+        modalElement.addEventListener('hidden.bs.modal', journeyTour.end);
     })();
 </script>
 {% endif %}

@@ -5,6 +5,8 @@ window.SiteTour = (function () {
         var btnPosKey = storageKey + 'BtnPos';
         var autoStart = options.autoStart !== false;
         var autoStartDelay = options.autoStartDelay || 700;
+        var startDelay = options.startDelay || 0;
+        var showReplayButton = options.showReplayButton !== false;
 
         var dim = document.createElement('div');
         dim.className = 'st-dim';
@@ -14,6 +16,9 @@ window.SiteTour = (function () {
 
         var tooltip = document.createElement('div');
         tooltip.className = 'st-tooltip';
+        if (options.tooltipClass) {
+            tooltip.classList.add(options.tooltipClass);
+        }
         tooltip.setAttribute('role', 'dialog');
         tooltip.innerHTML =
             '<p class="st-step-label"></p>' +
@@ -31,9 +36,9 @@ window.SiteTour = (function () {
         var replayBtn = document.createElement('button');
         replayBtn.type = 'button';
         replayBtn.className = 'st-replay-btn';
-        replayBtn.setAttribute('aria-label', 'Take the tour');
-        replayBtn.setAttribute('title', 'Take the tour');
-        replayBtn.textContent = '🎬';
+        replayBtn.setAttribute('aria-label', options.replayButtonLabel || 'Take the tour');
+        replayBtn.setAttribute('title', options.replayButtonTitle || 'Take the tour');
+        replayBtn.textContent = options.replayButtonText || '🎬';
 
         var welcome = options.welcome || null;
         var welcomeKey = storageKey + 'WelcomeSeen';
@@ -84,7 +89,9 @@ window.SiteTour = (function () {
         if (welcomeModal) {
             document.body.appendChild(welcomeModal);
         }
-        document.body.appendChild(replayBtn);
+        if (showReplayButton) {
+            document.body.appendChild(replayBtn);
+        }
 
         var stepLabel = tooltip.querySelector('.st-step-label');
         var titleEl = tooltip.querySelector('.st-title');
@@ -171,15 +178,29 @@ window.SiteTour = (function () {
             currentStep = 0;
             dim.classList.add('is-active');
             tooltip.classList.add('is-active');
-            renderStep();
+            if (typeof options.onStart === 'function') {
+                options.onStart();
+            }
+            if (startDelay) {
+                setTimeout(function () {
+                    if (active) {
+                        renderStep();
+                    }
+                }, startDelay);
+            } else {
+                renderStep();
+            }
         }
 
         function endTour() {
+            var wasActive = active;
             active = false;
             dim.classList.remove('is-active');
             tooltip.classList.remove('is-active');
             highlight.classList.remove('is-active');
-            try { localStorage.setItem(storageKey, '1'); } catch (e) {}
+            if (wasActive) {
+                try { localStorage.setItem(storageKey, '1'); } catch (e) {}
+            }
         }
 
         nextBtn.addEventListener('click', function () {
@@ -218,44 +239,46 @@ window.SiteTour = (function () {
             }
         })();
 
-        replayBtn.addEventListener('pointerdown', function (e) {
-            dragged = false;
-            var rect = replayBtn.getBoundingClientRect();
-            dragStart = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
-            replayBtn.setPointerCapture(e.pointerId);
-            replayBtn.classList.add('is-dragging');
-        });
-
-        replayBtn.addEventListener('pointermove', function (e) {
-            if (!dragStart) {
-                return;
-            }
-            var dx = e.clientX - dragStart.x;
-            var dy = e.clientY - dragStart.y;
-            if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
-                dragged = true;
-            }
-            if (dragged) {
-                var size = replayBtn.offsetWidth;
-                var newLeft = Math.min(Math.max(4, dragStart.left + dx), window.innerWidth - size - 4);
-                var newTop = Math.min(Math.max(4, dragStart.top + dy), window.innerHeight - size - 4);
-                replayBtn.style.left = newLeft + 'px';
-                replayBtn.style.top = newTop + 'px';
-                replayBtn.style.right = 'auto';
-                replayBtn.style.bottom = 'auto';
-            }
-        });
-
-        replayBtn.addEventListener('pointerup', function () {
-            replayBtn.classList.remove('is-dragging');
-            if (dragged) {
+        if (showReplayButton) {
+            replayBtn.addEventListener('pointerdown', function (e) {
+                dragged = false;
                 var rect = replayBtn.getBoundingClientRect();
-                try { localStorage.setItem(btnPosKey, JSON.stringify({ left: rect.left, top: rect.top })); } catch (e) {}
-            } else {
-                startTour();
-            }
-            dragStart = null;
-        });
+                dragStart = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
+                replayBtn.setPointerCapture(e.pointerId);
+                replayBtn.classList.add('is-dragging');
+            });
+
+            replayBtn.addEventListener('pointermove', function (e) {
+                if (!dragStart) {
+                    return;
+                }
+                var dx = e.clientX - dragStart.x;
+                var dy = e.clientY - dragStart.y;
+                if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+                    dragged = true;
+                }
+                if (dragged) {
+                    var size = replayBtn.offsetWidth;
+                    var newLeft = Math.min(Math.max(4, dragStart.left + dx), window.innerWidth - size - 4);
+                    var newTop = Math.min(Math.max(4, dragStart.top + dy), window.innerHeight - size - 4);
+                    replayBtn.style.left = newLeft + 'px';
+                    replayBtn.style.top = newTop + 'px';
+                    replayBtn.style.right = 'auto';
+                    replayBtn.style.bottom = 'auto';
+                }
+            });
+
+            replayBtn.addEventListener('pointerup', function () {
+                replayBtn.classList.remove('is-dragging');
+                if (dragged) {
+                    var rect = replayBtn.getBoundingClientRect();
+                    try { localStorage.setItem(btnPosKey, JSON.stringify({ left: rect.left, top: rect.top })); } catch (e) {}
+                } else {
+                    startTour();
+                }
+                dragStart = null;
+            });
+        }
 
         window.addEventListener('resize', function () {
             if (active) {
